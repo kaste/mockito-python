@@ -40,3 +40,24 @@ class MockitoTest(TestBase):
     mock.foo()
     
     self.assertRaises(VerificationError, verify(mock, times(2)).foo)
+    
+  def testVerifiesNoMoreInteractions(self):
+    mock, mockTwo = Mock(), Mock()
+    mock.foo()
+    
+    verify(mock).foo()
+    verifyNoMoreInteractions(mock, mockTwo)    
+    
+  def testFailsNoMoreInteractions(self):
+    mock = Mock()
+    mock.foo()
+    
+    self.assertRaises(VerificationError, verifyNoMoreInteractions, mock)
+    
+  def TODOtestVerifiesIgnoringArgument(self):
+    mock = Mock()
+    mock.foo(1, "bar")
+    
+    verify(mock).foo(1, anything())
+    verify(mock).foo(anything(), "bar")
+    verify(mock).foo(anything(), anything())

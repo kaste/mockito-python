@@ -15,7 +15,7 @@ class Mock:
       
     return InvocationMemorizer(self, method_name)
   
-  def _finishStubbing(self, invocation):
+  def finishStubbing(self, invocation):
     if (self.stubbed_invocations.count(invocation)):
       self.stubbed_invocations.remove(invocation)
       
@@ -27,6 +27,7 @@ class Invocation:
     self.method_name = method_name
     self.mock = mock
     self.answers = []
+    self.verified = False
     
   def __cmp__(self, other):
     if self.matches(other):
@@ -39,7 +40,7 @@ class Invocation:
   
   def stubWith(self, answer):
     self.answers.append(answer)
-    self.mock._finishStubbing(self)
+    self.mock.finishStubbing(self)
   
 class InvocationMemorizer(Invocation):
   def __call__(self, *params, **named_params):
@@ -59,6 +60,7 @@ class InvocationVerifier(Invocation):
     for invocation in self.mock.invocations:
       if self.matches(invocation):
         matches+=1
+        invocation.verified = True
   
     if (matches != self.mock.mocking_mode):
       raise VerificationError()
@@ -105,3 +107,13 @@ def times(count):
 def when(mock):
   mock.mocking_mode = _STUBBING_
   return mock
+
+def verifyNoMoreInteractions(*mocks):
+  for mock in mocks:
+    for i in mock.invocations:
+      if not i.verified:
+        raise VerificationError("Unwanted interaction: " + i.method_name)
+      
+def anything():
+  #not implemented yet
+  return False
