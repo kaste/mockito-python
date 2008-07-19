@@ -1,7 +1,7 @@
-import unittest
-from mockito import * 
+from test_base import *
+from mockito import *
 
-class MockitoTest(unittest.TestCase):
+class MockitoTest(TestBase):
   
   def testVerifies(self):
     mock = Mock()
@@ -15,11 +15,15 @@ class MockitoTest(unittest.TestCase):
     mock = Mock()
     mock.foo("boo")
 
-    try:
-      verify(mock).foo("ah")
-      self.fail
-    except VerificationError:
-      pass
+    self.assertRaises(VerificationError, verify(mock).foo, "not boo")
+
+  def testVerifiesAnyTimes(self):
+    mock = Mock()
+    mock.foo()
+    
+    verify(mock).foo()
+    verify(mock).foo()
+    verify(mock).foo()
     
   def testVerifiesMultipleCalls(self):
     mock = Mock()
@@ -35,8 +39,4 @@ class MockitoTest(unittest.TestCase):
     mock.foo()
     mock.foo()
     
-    try:
-      verify(mock, times(2)).foo()
-      self.fail
-    except VerificationError:
-      pass
+    self.assertRaises(VerificationError, verify(mock, times(2)).foo)
