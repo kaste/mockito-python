@@ -1,4 +1,4 @@
-__STUBBING__=-2
+_STUBBING_=-2
 
 class Mock:
   def __init__(self):
@@ -7,13 +7,20 @@ class Mock:
     self.mocking_mode = None
   
   def __getattr__(self, method_name):
-    if self.mocking_mode == __STUBBING__:
+    if self.mocking_mode == _STUBBING_:
       return InvocationStubber(self, method_name)
 
     if self.mocking_mode != None:
       return InvocationVerifier(self, method_name)
       
     return InvocationMemorizer(self, method_name)
+  
+  def _finishStubbing(self, invocation):
+    if (self.stubbed_invocations.count(invocation)):
+      self.stubbed_invocations.remove(invocation)
+      
+    self.stubbed_invocations.append(invocation)
+    self.mocking_mode = None
   
 class Invocation:
   def __init__(self, mock, method_name):
@@ -29,6 +36,10 @@ class Invocation:
     
   def matches(self, invocation):
     return self.method_name == invocation.method_name and self.params == invocation.params
+  
+  def stubWith(self, answer):
+    self.answers.append(answer)
+    self.mock._finishStubbing(self)
   
 class InvocationMemorizer(Invocation):
   def __call__(self, *params, **named_params):
@@ -62,20 +73,10 @@ class AnswerSelector():
     self.invocation = invocation
     
   def thenReturn(self, return_value):
-    self.invocation.answers.append(Returns(return_value))     
-    #TODO: single method:
-    if (self.invocation.mock.stubbed_invocations.count(self.invocation)):
-      self.invocation.mock.stubbed_invocations.remove(self.invocation)
-      
-    self.invocation.mock.stubbed_invocations.append(self.invocation)
-    self.invocation.mock.mocking_mode = None
+    self.invocation.stubWith(Returns(return_value))
     
   def thenRaise(self, exception):
-    self.invocation.answers.append(Throws(exception))     
-    #TODO: single method:
-    self.invocation.mock.stubbed_invocations.append(self.invocation)
-    self.invocation.mock.mocking_mode = None
-#    self.invocation.finishStubbing(Throws(exception))
+    self.invocation.stubWith(Throws(exception))     
 
 class Returns():
   def __init__(self, return_value):
@@ -102,5 +103,5 @@ def times(count):
   return count
 
 def when(mock):
-  mock.mocking_mode = __STUBBING__
+  mock.mocking_mode = _STUBBING_
   return mock
