@@ -7,46 +7,46 @@ class MockitoTest(TestBase):
     mock = Mock()
     mock.foo(1, "bar")
     
-    verify(mock).foo(1, any)
-    verify(mock).foo(any, "bar")
-    verify(mock).foo(any, any)
+    verify(mock).foo(1, any())
+    verify(mock).foo(any(), "bar")
+    verify(mock).foo(any(), any())
 
   def testVerifiesUsingAnyIntMatcher(self):
     mock = Mock()
     mock.foo(1, "bar")
     
-    verify(mock).foo(anyInt, "bar")
+    verify(mock).foo(any(int), "bar")
 
   def testFailsVerificationUsingAnyIntMatcher(self):
     mock = Mock()
     mock.foo(1, "bar")
     
-    self.assertRaises(VerificationError, verify(mock).foo, 1, anyInt)
-    self.assertRaises(VerificationError, verify(mock).foo, anyInt)
+    self.assertRaises(VerificationError, verify(mock).foo, 1, any(int))
+    self.assertRaises(VerificationError, verify(mock).foo, any(int))
 
   def testVerifiesUsingAnyStrMatcher(self):
     mock = Mock()
     mock.foo(1, "bar")
     
-    verify(mock).foo(1, anyStr)
+    verify(mock).foo(1, any(str))
 
   def testFailsVerificationUsingAnyStrMatcher(self):
     mock = Mock()
     mock.foo(1, "bar")
     
-    self.assertRaises(VerificationError, verify(mock).foo, anyStr, 1)
-    self.assertRaises(VerificationError, verify(mock).foo, anyStr)
+    self.assertRaises(VerificationError, verify(mock).foo, any(str), 1)
+    self.assertRaises(VerificationError, verify(mock).foo, any(str))
 
   def testVerifiesUsingAnyFloatMatcher(self):
     mock = Mock()
     mock.foo(1.1, "bar")
     
-    verify(mock).foo(anyFloat, "bar")
+    verify(mock).foo(any(float), "bar")
 
   def testFailsVerificationUsingAnyFloatMatcher(self):
     mock = Mock()
     mock.foo(1.1, "bar")
     
-    self.assertRaises(VerificationError, verify(mock).foo, anyFloat, anyFloat)
-    self.assertRaises(VerificationError, verify(mock).foo, anyFloat)
-    self.assertRaises(VerificationError, verify(mock).foo, 1.1, anyFloat)
+    self.assertRaises(VerificationError, verify(mock).foo, any(float), any(float))
+    self.assertRaises(VerificationError, verify(mock).foo, any(float))
+    self.assertRaises(VerificationError, verify(mock).foo, 1.1, any(float))

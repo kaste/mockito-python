@@ -45,7 +45,7 @@ class Invocation:
   def __compareUsingMatchers(self, invocation):  
     for x, p1 in enumerate(self.params):
         p2 = invocation.params[x]
-        if isinstance(p1, Any):
+        if isinstance(p1, Matcher):
             if not p1.satisfiedBy(p2):
                 return False
         elif p1 != p2:
@@ -128,23 +128,16 @@ def verifyNoMoreInteractions(*mocks):
       if not i.verified:
         raise VerificationError("Unwanted interaction: " + i.method_name)
       
-class Any:
-    def satisfiedBy(self, arg):
-        return True
+class Matcher:
+  def satisfiedBy(self, arg):
+      pass
+  
+class Any(Matcher):           
+  def __init__(self, type):
+      self.type = type
+    
+  def satisfiedBy(self, arg):
+      return isinstance(arg, self.type) if self.type else True
 
-class AnyInt(Any):
-    def satisfiedBy(self, arg):
-        return isinstance(arg, int)
-
-class AnyStr(Any):
-    def satisfiedBy(self, arg):
-        return isinstance(arg, str)
-
-class AnyFloat(Any):
-    def satisfiedBy(self, arg):
-        return isinstance(arg, float)
-
-any = Any()
-anyInt = AnyInt()
-anyStr = AnyStr()
-anyFloat = AnyFloat()
+def any(type=None):
+    return Any(type)
