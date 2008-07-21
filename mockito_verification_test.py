@@ -10,7 +10,15 @@ class MockitoTest(TestBase):
 
     verify(mock).foo()
     verify(mock).someOtherMethod(1, "foo", "bar")
-    
+
+  def testVerifiesWhenMethodIsUsingKeywordArguments(self):
+    mock = Mock()
+    mock.foo()
+    mock.someOtherMethod(1, fooarg="foo", bararg="bar")
+
+    verify(mock).foo()
+    verify(mock).someOtherMethod(1, bararg="bar", fooarg="foo")
+
   def testFailsVerification(self):
     mock = Mock()
     mock.foo("boo")
@@ -53,11 +61,3 @@ class MockitoTest(TestBase):
     mock.foo()
     
     self.assertRaises(VerificationError, verifyNoMoreInteractions, mock)
-    
-  def TODOtestVerifiesIgnoringArgument(self):
-    mock = Mock()
-    mock.foo(1, "bar")
-    
-    verify(mock).foo(1, anything())
-    verify(mock).foo(anything(), "bar")
-    verify(mock).foo(anything(), anything())
