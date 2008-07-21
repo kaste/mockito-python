@@ -49,10 +49,9 @@ class Invocation:
   
   def stubWith(self, answer, chained_mode):
     if chained_mode:
-        prev_answer = self.answers.pop()        
-        prev_answer.append(answer.current())
-        answer = prev_answer
-    self.answers.append(answer)
+        self.answers[-1].append(answer.current())
+    else:
+        self.answers.append(answer)
     self.mock.finishStubbing(self)
   
 class InvocationMemorizer(Invocation):
