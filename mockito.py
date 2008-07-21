@@ -36,7 +36,21 @@ class Invocation:
       return 1
     
   def matches(self, invocation):
-    return self.method_name == invocation.method_name and self.params == invocation.params
+    if self.method_name == invocation.method_name and self.params == invocation.params:
+        return True
+    if len(self.params) != len(invocation.params):
+        return False
+    return self.__compareUsingMatchers(invocation)
+
+  def __compareUsingMatchers(self, invocation):  
+    for x, p1 in enumerate(self.params):
+        p2 = invocation.params[x]
+        if isinstance(p1, Any):
+            if not p1.satisfiedBy(p2):
+                return False
+        elif p1 != p2:
+            return False
+    return True
   
   def stubWith(self, answer):
     self.answers.append(answer)
@@ -114,6 +128,23 @@ def verifyNoMoreInteractions(*mocks):
       if not i.verified:
         raise VerificationError("Unwanted interaction: " + i.method_name)
       
-def anything():
-  #not implemented yet
-  return False
+class Any:
+    def satisfiedBy(self, arg):
+        return True
+
+class AnyInt(Any):
+    def satisfiedBy(self, arg):
+        return isinstance(arg, int)
+
+class AnyStr(Any):
+    def satisfiedBy(self, arg):
+        return isinstance(arg, str)
+
+class AnyFloat(Any):
+    def satisfiedBy(self, arg):
+        return isinstance(arg, float)
+
+any = Any()
+anyInt = AnyInt()
+anyStr = AnyStr()
+anyFloat = AnyFloat()
