@@ -61,3 +61,25 @@ class MockitoTest(TestBase):
     mock.foo()
     
     self.assertRaises(VerificationError, verifyNoMoreInteractions, mock)
+
+  def testVerifiesUsingAnyMatcher(self):
+    mock = Mock()
+    mock.foo(1, "bar")
+    
+    verify(mock).foo(1, any())
+    verify(mock).foo(any(), "bar")
+    verify(mock).foo(any(), any())
+
+  def testVerifiesUsingAnyIntMatcher(self):
+    mock = Mock()
+    mock.foo(1, "bar")
+    
+    verify(mock).foo(any(int), "bar")
+
+  def testFailsVerificationUsingAnyIntMatcher(self):
+    mock = Mock()
+    mock.foo(1, "bar")
+    
+    self.assertRaises(VerificationError, verify(mock).foo, 1, any(int))
+    self.assertRaises(VerificationError, verify(mock).foo, any(int))
+    

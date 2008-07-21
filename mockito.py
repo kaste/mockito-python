@@ -43,7 +43,7 @@ class Invocation:
     for x, p1 in enumerate(self.params):
         p2 = invocation.params[x]
         if isinstance(p1, Matcher):
-            if not p1.satisfiedBy(p2): return False
+            if not p1.satisfies(p2): return False
         elif p1 != p2: return False
     return True
   
@@ -147,15 +147,20 @@ def verifyNoMoreInteractions(*mocks):
         raise VerificationError("Unwanted interaction: " + i.method_name)
       
 class Matcher:
-  def satisfiedBy(self, arg):
+  def satisfies(self, arg):
       pass
   
-class Any(Matcher):           
-  def __init__(self, type):
+class any(Matcher):           
+  def __init__(self, type=None):
       self.type = type
     
-  def satisfiedBy(self, arg):
+  def satisfies(self, arg):
       return isinstance(arg, self.type) if self.type else True
 
-def any(type=None):
-    return Any(type)
+class contains(Matcher):
+  def __init__(self, sub):
+      self.sub = sub
+      
+  def satisfies(self, arg):
+      return self.sub and len(self.sub) > 0 and arg.find(self.sub) > -1
+ 
