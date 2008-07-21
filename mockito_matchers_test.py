@@ -2,51 +2,25 @@ from test_base import *
 from mockito import *
 
 class MockitoMatchersTest(TestBase):
-  
-  def testVerifiesUsingAnyMatcher(self):
+  def testVerifiesUsingContainsMatcher(self):
     mock = Mock()
-    mock.foo(1, "bar")
+    mock.foo("foobar")
     
-    verify(mock).foo(1, any())
-    verify(mock).foo(any(), "bar")
-    verify(mock).foo(any(), any())
+    verify(mock).foo(contains("foo"))
+    verify(mock).foo(contains("bar"))
 
-  def testVerifiesUsingAnyIntMatcher(self):
-    mock = Mock()
-    mock.foo(1, "bar")
-    
-    verify(mock).foo(any(int), "bar")
+class ContainsMatcherTest(TestBase):
+  def testShouldSatisfiySubstringOfGivenString(self):
+    self.assertTrue(contains("foo").satisfies("foobar"))      
 
-  def testFailsVerificationUsingAnyIntMatcher(self):
-    mock = Mock()
-    mock.foo(1, "bar")
-    
-    self.assertRaises(VerificationError, verify(mock).foo, 1, any(int))
-    self.assertRaises(VerificationError, verify(mock).foo, any(int))
+  def testShouldSatisfySameString(self):
+    self.assertTrue(contains("foobar").satisfies("foobar"))      
 
-  def testVerifiesUsingAnyStrMatcher(self):
-    mock = Mock()
-    mock.foo(1, "bar")
-    
-    verify(mock).foo(1, any(str))
+  def testShouldNotSatisfiyStringWhichIsNotSubstringOfGivenString(self):
+    self.assertFalse(contains("barfoo").satisfies("foobar"))      
 
-  def testFailsVerificationUsingAnyStrMatcher(self):
-    mock = Mock()
-    mock.foo(1, "bar")
-    
-    self.assertRaises(VerificationError, verify(mock).foo, any(str), 1)
-    self.assertRaises(VerificationError, verify(mock).foo, any(str))
+  def testShouldNotSatisfiyEmptyString(self):
+    self.assertFalse(contains("").satisfies("foobar"))      
 
-  def testVerifiesUsingAnyFloatMatcher(self):
-    mock = Mock()
-    mock.foo(1.1, "bar")
-    
-    verify(mock).foo(any(float), "bar")
-
-  def testFailsVerificationUsingAnyFloatMatcher(self):
-    mock = Mock()
-    mock.foo(1.1, "bar")
-    
-    self.assertRaises(VerificationError, verify(mock).foo, any(float), any(float))
-    self.assertRaises(VerificationError, verify(mock).foo, any(float))
-    self.assertRaises(VerificationError, verify(mock).foo, 1.1, any(float))
+  def testShouldNotSatisfiyNone(self):
+    self.assertFalse(contains(None).satisfies("foobar"))      
