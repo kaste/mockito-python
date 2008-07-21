@@ -1,4 +1,4 @@
-_STUBBING_=-2
+_STUBBING_ = -2
 
 class Mock:
   def __init__(self):
@@ -30,10 +30,7 @@ class Invocation:
     self.verified = False
     
   def __cmp__(self, other):
-    if self.matches(other):
-      return 0
-    else:
-      return 1
+    return 0 if self.matches(other) else 1
     
   def matches(self, invocation):
     if self.method_name == invocation.method_name and self.params == invocation.params:
@@ -46,13 +43,15 @@ class Invocation:
     for x, p1 in enumerate(self.params):
         p2 = invocation.params[x]
         if isinstance(p1, Matcher):
-            if not p1.satisfiedBy(p2):
-                return False
-        elif p1 != p2:
-            return False
+            if not p1.satisfiedBy(p2): return False
+        elif p1 != p2: return False
     return True
   
-  def stubWith(self, answer):
+  def stubWith(self, answer, chained_mode):
+    if chained_mode:
+        prev_answer = self.answers.pop()        
+        prev_answer.append(answer.current())
+        answer = prev_answer
     self.answers.append(answer)
     self.mock.finishStubbing(self)
   
@@ -73,7 +72,7 @@ class InvocationVerifier(Invocation):
     matches = 0
     for invocation in self.mock.invocations:
       if self.matches(invocation):
-        matches+=1
+        matches += 1
         invocation.verified = True
   
     if (matches != self.mock.mocking_mode):
@@ -87,26 +86,46 @@ class InvocationStubber(Invocation):
 class AnswerSelector():
   def __init__(self, invocation):
     self.invocation = invocation
+    self.chained_mode = False
     
   def thenReturn(self, return_value):
-    self.invocation.stubWith(Returns(return_value))
+    self.invocation.stubWith(Returns(return_value), self.chained_mode)
+    self.chained_mode = True
+    return self
     
   def thenRaise(self, exception):
-    self.invocation.stubWith(Throws(exception))     
+    self.invocation.stubWith(Throws(exception), self.chained_mode)     
+    self.chained_mode = True
+    return self
 
-class Returns():
-  def __init__(self, return_value):
-    self.return_value = return_value
-  
-  def answer(self):
-    return self.return_value
+_RETURNS_ = 1
+_THROWS_ = 2
 
-class Throws():
-  def __init__(self, exception):
-    self.exception = exception
-  
+class Answer():
+  def __init__(self, value, type):
+    self.answers = [[value, type]]
+    self.index = 0
+
+  def current(self):
+    return self.answers[self.index]
+
+  def append(self, answer):
+    self.answers.append(answer)
+
   def answer(self):
-    raise self.exception
+    answer = self.current()[0] 
+    type = self.current()[1] 
+    self.index += 1
+    if type == _THROWS_: raise answer
+    return answer
+
+class Returns(Answer):
+  def __init__(self, value):
+    Answer.__init__(self, value, _RETURNS_)
+
+class Throws(Answer):
+  def __init__(self, value):
+    Answer.__init__(self, value, _THROWS_)
       
 class VerificationError(AssertionError):
   pass
