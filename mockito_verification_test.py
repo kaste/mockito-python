@@ -82,4 +82,3 @@ class MockitoTest(TestBase):
     
     self.assertRaises(VerificationError, verify(mock).foo, 1, any(int))
     self.assertRaises(VerificationError, verify(mock).foo, any(int))
-    
