@@ -44,6 +44,16 @@ class MockitoStubbingTest(TestBase):
     
     self.assertEquals("bar", mock.foo())
 
+  def testStubsAndInvokesTwiceAndVerifies(self):
+    mock = Mock()
+    
+    when(mock).foo().thenReturn("foo")
+    
+    self.assertEquals("foo", mock.foo())
+    self.assertEquals("foo", mock.foo())
+
+    verify(mock, times(2)).foo()
+
   def testStubsAndReturnValuesForMethodWithSameNameAndDifferentArguments(self):
     mock = Mock()
     when(mock).getStuff(1).thenReturn("foo")

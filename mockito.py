@@ -21,7 +21,32 @@ class Mock:
       
     self.stubbed_invocations.append(invocation)
     self.mocking_mode = None
-  
+
+class ClassMock(Mock):
+    def __init__(self, klass):
+        self.klass = klass
+        Mock.__init__(self);
+        
+    def __is_instance_method(self, method_name):
+        try:
+            return getattr(self.klass, method_name).im_self is not None
+        except AttributeError:
+            return False
+    
+    def __getattr__(self, method_name):
+      if self.mocking_mode == _STUBBING_:
+        inv_stubber = InvocationStubber(self, method_name)
+        if self.__is_instance_method(method_name):
+            method = eval("lambda cls: InvocationMemorizer(cls.mock, '#{method_name}')()");
+            setattr(self.klass, "mock", self)
+            setattr(self.klass, method_name, classmethod(method))
+        return inv_stubber
+
+      if self.mocking_mode != None:
+        return InvocationVerifier(self, method_name)
+    
+      return None
+    
 class Invocation:
   def __init__(self, mock, method_name):
     self.method_name = method_name
@@ -111,10 +136,11 @@ class Answer():
   def append(self, answer):
     self.answers.append(answer)
 
-  def answer(self):
+  def answer(self):      
     answer = self.current()[0] 
-    type = self.current()[1] 
+    type = self.current()[1]
     self.index += 1
+    if self.index >= len(self.answers): self.index = len(self.answers) - 1
     if type == _THROWS_: raise answer
     return answer
 
@@ -137,7 +163,7 @@ def times(count):
   return count
 
 def when(mock):
-  mock.mocking_mode = _STUBBING_
+  mock.mocking_mode = _STUBBING_  
   return mock
 
 def verifyNoMoreInteractions(*mocks):
