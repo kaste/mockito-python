@@ -36,10 +36,18 @@ class ClassMock(Mock):
     def __getattr__(self, method_name):
       if self.mocking_mode == _STUBBING_:
         inv_stubber = InvocationStubber(self, method_name)
+
         if self.__is_instance_method(method_name):
-            method = eval("lambda cls: InvocationMemorizer(cls.mock, '#{method_name}')()");
+            method = eval("lambda cls: InvocationMemorizer(cls.mock, '#{method_name}')()")
             setattr(self.klass, "mock", self)
             setattr(self.klass, method_name, classmethod(method))
+        else:
+            # TODO: failing test case in mockito_staticmetod 
+            #       mocks should be saved somewhere (mock per class)
+            #       and then should be taken from the same place by method created in eval 
+            ClassMock.mock = self
+            method = eval("lambda: InvocationMemorizer(ClassMock.mock, '#{method_name}')()")
+            setattr(self.klass, method_name, staticmethod(method))
         return inv_stubber
 
       if self.mocking_mode != None:
