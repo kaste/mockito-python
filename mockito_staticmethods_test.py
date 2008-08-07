@@ -13,15 +13,16 @@ class Cat():
 
 class MockitoStaticmethodsTest(TestBase):   
 
-  def testVerifiesMultipleCallsOnClassmethod(self):     
+  def testVerifiesSuccesfully(self):     
     dog = ClassMock(Dog)
     when(dog).bark().thenReturn("miau!")
 
-    for i in range(0, 10): Dog.bark()
+    Dog.bark()
+    Dog.bark()
     
-    verify(dog, times(10)).bark()
+    verify(dog, times(2)).bark()
     
-  def testFailsVerificationOfMultipleCallsOnClassmethod(self):
+  def testFailsVerification(self):
     dog = ClassMock(Dog)
     when(dog).bark().thenReturn("miau!")
 
