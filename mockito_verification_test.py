@@ -1,6 +1,7 @@
 from test_base import *
 from mockito import *
 
+#TODO remove Mockito prefix from all classes
 class MockitoVerificationTest(TestBase):
   
   def testVerifies(self):
