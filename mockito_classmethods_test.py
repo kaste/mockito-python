@@ -6,7 +6,7 @@ class Dog():
   def bark(cls):
     return "woof!"
 
-class MockitoClassmethodsTest(TestBase):   
+class MockitoClassMethodsTest(TestBase):   
 
   def testVerifiesMultipleCallsOnClassmethod(self):     
     dog = ClassMock(Dog)

@@ -15,7 +15,7 @@ class Cat():
   def meow():
     return "miau!"
 
-class MockitoStaticmethodsTest(TestBase):   
+class MockitoStaticMethodsTest(TestBase):   
 
   def testStubs(self):     
     self.assertEquals("woof!", Dog.bark())

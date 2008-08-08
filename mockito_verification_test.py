@@ -1,7 +1,7 @@
 from test_base import *
 from mockito import *
 
-class MockitoTest(TestBase):
+class MockitoVerificationTest(TestBase):
   
   def testVerifies(self):
     mock = Mock()
