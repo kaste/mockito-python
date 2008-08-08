@@ -31,3 +31,6 @@ class MockitoClassmethodsTest(TestBase):
     self.assertEquals("miau!", Dog.bark())
     
     verify(dog).bark()
+    
+if __name__ == '__main__':
+  unittest.main()    

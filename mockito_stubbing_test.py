@@ -100,3 +100,6 @@ class MockitoStubbingTest(TestBase):
     self.assertEquals(exception, mock.getStuff())
 
 #TODO verify after stubbing and vice versa
+
+if __name__ == '__main__':
+  unittest.main()
