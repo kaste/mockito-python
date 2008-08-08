@@ -24,3 +24,6 @@ class ContainsMatcherTest(TestBase):
 
   def testShouldNotSatisfiyNone(self):
     self.assertFalse(contains(None).satisfies("foobar"))      
+
+if __name__ == '__main__':
+  unittest.main()
