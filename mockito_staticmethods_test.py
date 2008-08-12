@@ -15,7 +15,15 @@ class Cat():
   def meow():
     return "miau!"
 
-class MockitoStaticMethodsTest(TestBase):   
+class MockitoStaticMethodsTest(TestBase):  
+  
+  def tearDown(self):
+    unstub() 
+
+  def testUnstubs(self):     
+    when(Dog).bark().thenReturn("miau!")
+    unstub()
+    self.assertEquals("woof!", Dog.bark())
 
   def testStubs(self):     
     self.assertEquals("woof!", Dog.bark())
@@ -31,49 +39,69 @@ class MockitoStaticMethodsTest(TestBase):
     
     self.assertEquals("miau!", Dog.barkHardly(1, 2))
 
-  def xtestStubsButDoesNotMachArguments(self): 
+  def testStubsButDoesNotMachArguments(self): 
     self.assertEquals("woof woof!", Dog.barkHardly(1, "anything"))
     
     when(Dog).barkHardly(1, 2).thenReturn("miau!")
     
     self.assertEquals(None, Dog.barkHardly(1))
-
-  def xtestUnstubs(self):     
-    when(Dog).bark().thenReturn("miau!")
-    unstub(Dog)
-    self.assertEquals("woof!", Dog.bark())
     
-  def xtestVerifiesSuccesfully(self):     
-    when(Dog).bark().thenReturn("miau!")
+  def testStubsMultipleClasses(self): 
+    when(Dog).barkHardly(1, 2).thenReturn(1)
+    when(Dog).bark().thenReturn(2)
+    when(Cat).meow().thenReturn(3)
+    
+    self.assertEquals(None, Dog.barkHardly(10, 10))
+    self.assertEquals(1, Dog.barkHardly(1, 2))
+    self.assertEquals(2, Dog.bark())
+    self.assertEquals(3, Cat.meow())
+
+    unstub()
+
+    self.assertEquals("woof!", Dog.bark())
+    self.assertEquals("miau!", Cat.meow())
+
+  def testVerifiesSuccesfully(self):     
+    when(Dog).bark().thenReturn("boo")
     
     Dog.bark()
     
     verify(Dog).bark()
     
-  def xtestFailsVerification(self):
-    when(Dog).bark().thenReturn("miau!")
+  def testVerifiesWithArguments(self):     
+    when(Dog).barkHardly(1, 2).thenReturn("boo")
+    
+    Dog.barkHardly(1, 2)
+    
+    verify(Dog).barkHardly(1, any())
+
+  def testFailsVerification(self):
+    when(Dog).bark().thenReturn("boo")
+
+    Dog.bark()
+    
+    self.assertRaises(VerificationError, verify(Dog).barkHardly, (1,2))
+    
+  def testFailsOnInvalidArguments(self):
+    when(Dog).bark().thenReturn("boo")
+
+    Dog.barkHardly(1, 2)
+    
+    self.assertRaises(VerificationError, verify(Dog).barkHardly, (1,20))    
+    
+  def testFailsOnNumberOfCalls(self):
+    when(Dog).bark().thenReturn("boo")
 
     Dog.bark()
     
     self.assertRaises(VerificationError, verify(Dog, times(2)).bark)
-
-  def xtestStubsAndVerifiesClassmethod(self):
-    dog = ClassMock(Dog)
-    when(dog).bark().thenReturn("miau!")
     
-    self.assertEquals("miau!", Dog.bark())
+  def testStubsAndVerifies(self):
+    when(Dog).bark().thenReturn("boo")
     
-    verify(dog).bark()
-
-  # TODO: fix the code for failing test
-  #def testStubsTwoMethodsFromTwoDifferentClasses(self):
-  #  dog = ClassMock(Dog)
-  #  when(dog).bark().thenReturn("miau!")
-  #  cat = ClassMock(Cat)
-  #  when(cat).meow().thenReturn("woof!")
-  #  
-  #  self.assertEquals("miau!", Dog.bark())
-  #  self.assertEquals("woof!", Cat.meow())
+    self.assertEquals("boo", Dog.bark())
+    
+    verify(Dog).bark()
 
 if __name__ == '__main__':
   unittest.main()
