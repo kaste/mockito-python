@@ -32,6 +32,13 @@ class MockitoStaticMethodsTest(TestBase):
     
     self.assertEquals("miau!", Dog.bark())
     
+  def testStubsConsecutiveCalls(self):     
+    when(Dog).bark().thenReturn(1).thenReturn(2)
+    
+    self.assertEquals(1, Dog.bark())
+    self.assertEquals(2, Dog.bark())
+    self.assertEquals(2, Dog.bark())    
+    
   def testStubsWithArgs(self):     
     self.assertEquals("woof woof!", Dog.barkHardly(1, 2))
     
