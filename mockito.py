@@ -3,7 +3,16 @@ import types
 _STUBBING_ = -2
 _STUBBING_STATICS_ = -3
 
+#TODO merge into some cool object
+_STUBBED_STATICS_ = []
+_STATIC_MOCKS_ = {}
+
 class Mock:
+  
+  @staticmethod
+  def getStubbedStatics():
+    return _STUBBED_STATICS_
+  
   def __init__(self):
     self.invocations = []
     self.stubbed_invocations = []
@@ -26,12 +35,17 @@ class Mock:
     self.stubbed_invocations.append(invocation)
     
     if (self.mocking_mode == _STUBBING_STATICS_):
+      _STATIC_MOCKS_[self.mocked] = self
       mock = self
       def f(*params, **named_params): 
         i = mock.__getattr__(invocation.method_name)
-        return i.__call__(*params[1:], **named_params)
+        #TODO here you have to find out if method is a static method or a class method and get rid of first argument? - maybe not necessary, though...
+        return i.__call__(*params, **named_params)
       
-      setattr(self.mocked, invocation.method_name, classmethod(f))
+      #TODO smelly, create static StaticStubber class
+      s = (self.mocked, getattr(self.mocked, invocation.method_name))
+      Mock.getStubbedStatics().append(s)
+      setattr(self.mocked, invocation.method_name, staticmethod(f))
       
     self.mocking_mode = None
 
@@ -79,11 +93,7 @@ class Invocation:
     return 0 if self.matches(other) else 1
     
   def matches(self, invocation):
-    print "Trying to match: " + self.method_name + ", invocation: " + invocation.method_name
-    print "Trying to match: " + str(self.params) + ", invocation: " + str(invocation.params)
-    
     if self.method_name == invocation.method_name and self.params == invocation.params:
-        print "direct match!"
         return True
     if len(self.params) != len(invocation.params):
         return False
@@ -110,12 +120,9 @@ class InvocationMemorizer(Invocation):
     self.params = params
     self.mock.invocations.append(self)
     
-    print "calling memorizer!!!"
     for invocation in self.mock.stubbed_invocations:
       if self.matches(invocation):
-        a = invocation.answers[0].answer()
-        print "answering with: " + str(a)
-        return a
+        return invocation.answers[0].answer()
     
     return None
   
@@ -171,7 +178,6 @@ class Answer():
     self.index += 1
     if self.index >= len(self.answers): self.index = len(self.answers) - 1
     if type == _THROWS_: raise answer
-    print "answer returns his: " + str(answer)
     return answer
 
 class Returns(Answer):
@@ -185,8 +191,13 @@ class Throws(Answer):
 class VerificationError(AssertionError):
   pass
   
-def verify(mock, count=1):
+def verify(obj, count=1):
   #TODO verify count is at least 0
+  if (isinstance(obj, types.ClassType)):
+    mock = _STATIC_MOCKS_[obj]
+  else:
+    mock = obj
+  
   mock.mocking_mode = count
   return mock
 
@@ -204,10 +215,11 @@ def when(obj):
   obj.mocking_mode = _STUBBING_  
   return obj
 
-def unstub(obj):
-  #TODO verify obj is a class or a mock
-  if (isinstance(obj, types.ClassType)):
-    pass
+def unstub():
+  """Unstubs all stubbed static methods / class methods"""
+  while Mock.getStubbedStatics():
+    cls, original_method = Mock.getStubbedStatics().pop();
+    setattr(cls, original_method.__name__, staticmethod(original_method))    
 
 def verifyNoMoreInteractions(*mocks):
   for mock in mocks:
@@ -232,4 +244,3 @@ class contains(Matcher):
       
   def satisfies(self, arg):
       return self.sub and len(self.sub) > 0 and arg.find(self.sub) > -1
- 

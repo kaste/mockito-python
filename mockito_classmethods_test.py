@@ -1,6 +1,7 @@
 from test_base import *
 from mockito import *
 
+#TODO redo along patters from mocking static methods
 class Dog():
   @classmethod
   def bark(cls):
