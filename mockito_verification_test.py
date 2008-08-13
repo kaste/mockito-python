@@ -83,6 +83,17 @@ class MockitoVerificationTest(TestBase):
     
     self.assertRaises(VerificationError, verify(mock).foo, 1, any(int))
     self.assertRaises(VerificationError, verify(mock).foo, any(int))
+    
+  def testNumberOfTimesDefinedDirectlyInVerify(self):
+    mock = Mock()
+    mock.foo("bar")
+    
+    verify(mock, times=1).foo("bar")
+
+  def testFailsWhenTimesIsLessThanZero(self):
+      self.assertRaises(VerificationError, verify(Mock(), times=-1))
+      self.assertRaises(VerificationError, verify(Mock(), times=-5))
+      self.assertRaises(VerificationError, verify(Mock(), times=-15))
 
 if __name__ == '__main__':
   unittest.main()

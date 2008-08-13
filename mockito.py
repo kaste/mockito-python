@@ -106,7 +106,7 @@ class InvocationVerifier(Invocation):
         invocation.verified = True
   
     if (matches != self.mock.mocking_mode):
-      raise VerificationError("Wanted times: " + str(self.mock.mocking_mode) + ", actual times: " + str(matches));
+      raise VerificationError("Wanted times: " + str(self.mock.mocking_mode) + ", actual times: " + str(matches))
 
 class InvocationStubber(Invocation):
   def __call__(self, *params, **named_params):
@@ -150,14 +150,16 @@ class Answer():
 class VerificationError(AssertionError):
   pass
   
-def verify(obj, count=1):
-  #TODO verify count is at least 0
+def verify(obj, times=1):
+  if times < 0:
+    raise VerificationError("Verified method should be invoked at least 0 times. You wanted to set it to: " + str(times))
+      
   if (isinstance(obj, types.ClassType)):
     mock = _STATIC_MOCKS_[obj]
   else:
     mock = obj
   
-  mock.mocking_mode = count
+  mock.mocking_mode = times
   return mock
 
 def times(count):
