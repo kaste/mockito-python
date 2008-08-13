@@ -1,11 +1,10 @@
 import types
+from static_mocker import *
 
 _STUBBING_ = -2
 _STUBBING_STATICS_ = -3
 
-#TODO merge into some cool object
-_STUBBED_STATICS_ = []
-_STATIC_MOCKS_ = {}
+_STATIC_MOCKER_ = StaticMocker()
 
 _RETURNS_ = 1
 _THROWS_ = 2
@@ -14,7 +13,7 @@ class Mock:
   
   @staticmethod
   def getStubbedStatics():
-    return _STUBBED_STATICS_
+    return _STATIC_MOCKER_.stubbed_statics
   
   def __init__(self):
     self.invocations = []
@@ -38,7 +37,7 @@ class Mock:
     self.stubbed_invocations.append(invocation)
     
     if (self.mocking_mode == _STUBBING_STATICS_):
-      _STATIC_MOCKS_[self.mocked] = self
+      _STATIC_MOCKER_.static_mocks[self.mocked] = self
       mock = self
       def f(*params, **named_params): 
         i = mock.__getattr__(invocation.method_name)
@@ -158,7 +157,7 @@ def verify(obj, times=1):
     raise ArgumentError("'times' argument has invalid value. It should be at least 0. You wanted to set it to: " + str(times))
       
   if (isinstance(obj, types.ClassType)):
-    mock = _STATIC_MOCKS_[obj]
+    mock = _STATIC_MOCKER_.static_mocks[obj]
   else:
     mock = obj
   
