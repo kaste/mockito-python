@@ -11,10 +11,6 @@ _THROWS_ = 2
 
 class Mock:
   
-  @staticmethod
-  def getStubbedStatics():
-    return _STATIC_MOCKER_.stubbed_statics
-  
   def __init__(self):
     self.invocations = []
     self.stubbed_invocations = []
@@ -46,7 +42,7 @@ class Mock:
       
       #TODO smelly, create static StaticStubber class
       s = (self.mocked, getattr(self.mocked, invocation.method_name))
-      Mock.getStubbedStatics().append(s)
+      _STATIC_MOCKER_.stubbed_statics.append(s)
       setattr(self.mocked, invocation.method_name, staticmethod(f))
       
     self.mocking_mode = None
@@ -180,8 +176,8 @@ def when(obj):
 
 def unstub():
   """Unstubs all stubbed static methods / class methods"""
-  while Mock.getStubbedStatics():
-    cls, original_method = Mock.getStubbedStatics().pop();
+  while _STATIC_MOCKER_.stubbed_statics:
+    cls, original_method = _STATIC_MOCKER_.stubbed_statics.pop();
     setattr(cls, original_method.__name__, staticmethod(original_method))    
 
 def verifyNoMoreInteractions(*mocks):
