@@ -53,7 +53,7 @@ class MockitoClassMethodsTest(TestBase):
     verify(Dog).bark()
     
   def testPreservesClassArgumentAfterUnstub(self):
-    self.assertEquals("__main__.Cat foo", Cat.meow("foo"))
+    self.assertTrue(Cat.meow("foo").endswith("Cat foo"))
 
     when(Cat).meow("foo").thenReturn("bar")
     
@@ -61,7 +61,7 @@ class MockitoClassMethodsTest(TestBase):
     
     unstub()
     
-    self.assertEquals("__main__.Cat foo", Cat.meow("foo"))
+    self.assertTrue(Cat.meow("foo").endswith("Cat foo"))
     
 if __name__ == '__main__':
   unittest.main()    
