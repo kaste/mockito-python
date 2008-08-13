@@ -1,7 +1,8 @@
 from test_base import *
 from mockito import *
 
-#TODO redo along patters from mocking static methods
+# TODO: add more test cases (create a base test class for both static and class methods?)
+
 class Dog():
   @classmethod
   def bark(cls):
@@ -9,29 +10,41 @@ class Dog():
 
 class MockitoClassMethodsTest(TestBase):   
 
-  def testVerifiesMultipleCallsOnClassmethod(self):     
-    dog = ClassMock(Dog)
-    when(dog).bark().thenReturn("miau!")
+  def tearDown(self):
+    unstub() 
 
-    for i in range(0, 10): Dog.bark()
+  def testUnstubs(self):     
+    when(Dog).bark().thenReturn("miau!")
+    unstub()
+    self.assertEquals("woof!", Dog.bark())
+  
+  def testStubs(self):     
+    self.assertEquals("woof!", Dog.bark())
     
-    verify(dog, times(10)).bark()
-    
-  def testFailsVerificationOfMultipleCallsOnClassmethod(self):
-    dog = ClassMock(Dog)
-    when(dog).bark().thenReturn("miau!")
-
-    Dog.bark()
-    
-    self.assertRaises(VerificationError, verify(dog, times(2)).bark)
-
-  def testStubsAndVerifiesClassmethod(self):
-    dog = ClassMock(Dog)
-    when(dog).bark().thenReturn("miau!")
+    when(Dog).bark().thenReturn("miau!")
     
     self.assertEquals("miau!", Dog.bark())
     
-    verify(dog).bark()
+  def testVerifiesMultipleCallsOnClassmethod(self):     
+    when(Dog).bark().thenReturn("miau!")
+
+    for i in range(0, 10): Dog.bark()
+    
+    verify(Dog, times(10)).bark()
+    
+  def testFailsVerificationOfMultipleCallsOnClassmethod(self):
+    when(Dog).bark().thenReturn("miau!")
+
+    Dog.bark()
+    
+    self.assertRaises(VerificationError, verify(Dog, times(2)).bark)
+
+  def testStubsAndVerifiesClassmethod(self):
+    when(Dog).bark().thenReturn("miau!")
+    
+    self.assertEquals("miau!", Dog.bark())
+    
+    verify(Dog).bark()
     
 if __name__ == '__main__':
   unittest.main()    
