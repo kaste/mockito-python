@@ -52,7 +52,7 @@ class MockitoClassMethodsTest(TestBase):
     
     verify(Dog).bark()
     
-  def testPreservesClassArgumentAfterStub(self):
+  def testPreservesClassArgumentAfterUnstub(self):
     self.assertEquals("__main__.Cat foo", Cat.meow("foo"))
 
     when(Cat).meow("foo").thenReturn("bar")
