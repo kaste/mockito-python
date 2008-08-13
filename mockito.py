@@ -149,10 +149,13 @@ class Answer():
 
 class VerificationError(AssertionError):
   pass
+
+class ArgumentError(Exception):
+  pass
   
 def verify(obj, times=1):
   if times < 0:
-    raise VerificationError("Verified method should be invoked at least 0 times. You wanted to set it to: " + str(times))
+    raise ArgumentError("'times' argument has invalid value. It should be at least 0. You wanted to set it to: " + str(times))
       
   if (isinstance(obj, types.ClassType)):
     mock = _STATIC_MOCKS_[obj]

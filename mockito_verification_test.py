@@ -91,9 +91,7 @@ class MockitoVerificationTest(TestBase):
     verify(mock, times=1).foo("bar")
 
   def testFailsWhenTimesIsLessThanZero(self):
-      self.assertRaises(VerificationError, verify(Mock(), times=-1))
-      self.assertRaises(VerificationError, verify(Mock(), times=-5))
-      self.assertRaises(VerificationError, verify(Mock(), times=-15))
+    self.assertRaises(ArgumentError, verify, None, -1)
 
 if __name__ == '__main__':
   unittest.main()
