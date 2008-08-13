@@ -33,17 +33,7 @@ class Mock:
     self.stubbed_invocations.append(invocation)
     
     if (self.mocking_mode == _STUBBING_STATICS_):
-      _STATIC_MOCKER_.static_mocks[self.mocked] = self
-      mock = self
-      def f(*params, **named_params): 
-        i = mock.__getattr__(invocation.method_name)
-        #TODO here you have to find out if method is a static method or a class method and get rid of first argument? - maybe not necessary, though...
-        return i.__call__(*params, **named_params)
-      
-      #TODO smelly, create static StaticStubber class
-      s = (self.mocked, getattr(self.mocked, invocation.method_name))
-      _STATIC_MOCKER_.stubbed_statics.append(s)
-      setattr(self.mocked, invocation.method_name, staticmethod(f))
+      _STATIC_MOCKER_.stub(self, invocation)
       
     self.mocking_mode = None
     
