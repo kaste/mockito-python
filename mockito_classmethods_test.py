@@ -7,6 +7,11 @@ class Dog():
   @classmethod
   def bark(cls):
     return "woof!"
+  
+class Cat():
+  @classmethod
+  def meow(cls, m):
+    return str(cls) + " " + str(m)
 
 class MockitoClassMethodsTest(TestBase):   
 
@@ -28,9 +33,10 @@ class MockitoClassMethodsTest(TestBase):
   def testVerifiesMultipleCallsOnClassmethod(self):     
     when(Dog).bark().thenReturn("miau!")
 
-    for i in range(0, 10): Dog.bark()
+    Dog.bark()
+    Dog.bark()
     
-    verify(Dog, times(10)).bark()
+    verify(Dog, times(2)).bark()
     
   def testFailsVerificationOfMultipleCallsOnClassmethod(self):
     when(Dog).bark().thenReturn("miau!")
@@ -45,6 +51,17 @@ class MockitoClassMethodsTest(TestBase):
     self.assertEquals("miau!", Dog.bark())
     
     verify(Dog).bark()
+    
+  def testPreservesClassArgumentAfterStub(self):
+    self.assertEquals("__main__.Cat foo", Cat.meow("foo"))
+
+    when(Cat).meow("foo").thenReturn("bar")
+    
+    self.assertEquals("bar", Cat.meow("foo"))
+    
+    unstub()
+    
+    self.assertEquals("__main__.Cat foo", Cat.meow("foo"))
     
 if __name__ == '__main__':
   unittest.main()    
