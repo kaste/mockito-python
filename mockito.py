@@ -7,6 +7,9 @@ _STUBBING_STATICS_ = -3
 _STUBBED_STATICS_ = []
 _STATIC_MOCKS_ = {}
 
+_RETURNS_ = 1
+_THROWS_ = 2
+
 class Mock:
   
   @staticmethod
@@ -48,39 +51,6 @@ class Mock:
       setattr(self.mocked, invocation.method_name, staticmethod(f))
       
     self.mocking_mode = None
-
-class ClassMock(Mock):
-    def __init__(self, klass):
-        self.klass = klass
-        Mock.__init__(self);
-        
-    def __is_instance_method(self, method_name):
-        try:
-            return getattr(self.klass, method_name).im_self is not None
-        except AttributeError:
-            return False
-    
-    def __getattr__(self, method_name):
-      if self.mocking_mode == _STUBBING_:
-        inv_stubber = InvocationStubber(self, method_name)
-
-        if self.__is_instance_method(method_name):
-            method = eval("lambda cls: InvocationMemorizer(cls.mock, '#{method_name}')()")
-            setattr(self.klass, "mock", self)
-            setattr(self.klass, method_name, classmethod(method))
-        else:
-            # TODO: failing test case in mockito_staticmetod 
-            #       mocks should be saved somewhere (mock per class)
-            #       and then should be taken from the same place by method created in eval 
-            ClassMock.mock = self
-            method = eval("lambda: InvocationMemorizer(ClassMock.mock, '#{method_name}')()")
-            setattr(self.klass, method_name, staticmethod(method))
-        return inv_stubber
-
-      if self.mocking_mode != None:
-        return InvocationVerifier(self, method_name)
-    
-      return None
     
 class Invocation:
   def __init__(self, mock, method_name):
@@ -149,17 +119,15 @@ class AnswerSelector():
     self.chained_mode = False
     
   def thenReturn(self, return_value):
-    self.invocation.stubWith(Returns(return_value), self.chained_mode)
-    self.chained_mode = True
-    return self
+    return self.__then(Answer(return_value, _RETURNS_))
     
   def thenRaise(self, exception):
-    self.invocation.stubWith(Throws(exception), self.chained_mode)     
-    self.chained_mode = True
-    return self
+    return self.__then(Answer(exception, _THROWS_))
 
-_RETURNS_ = 1
-_THROWS_ = 2
+  def __then(self, answer):
+    self.invocation.stubWith(answer, self.chained_mode)     
+    self.chained_mode = True
+    return self      
 
 class Answer():
   def __init__(self, value, type):
@@ -175,19 +143,10 @@ class Answer():
   def answer(self):
     answer = self.current()[0] 
     type = self.current()[1]
-    self.index += 1
-    if self.index >= len(self.answers): self.index = len(self.answers) - 1
+    if self.index < len(self.answers) - 1: self.index += 1
     if type == _THROWS_: raise answer
     return answer
 
-class Returns(Answer):
-  def __init__(self, value):
-    Answer.__init__(self, value, _RETURNS_)
-
-class Throws(Answer):
-  def __init__(self, value):
-    Answer.__init__(self, value, _THROWS_)
-      
 class VerificationError(AssertionError):
   pass
   
