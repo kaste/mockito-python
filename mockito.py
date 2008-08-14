@@ -182,12 +182,14 @@ class Matcher:
   def matches(self, arg):
     pass
   
-class any(Matcher):           
-  def __init__(self, type=None):
-    self.type = type
+class any(Matcher):     
+  """Matches any() argument OR any(SomeClass) argument"""
+        
+  def __init__(self, wanted_type=None):
+    self.wanted_type = wanted_type
     
   def matches(self, arg):
-    return isinstance(arg, self.type) if self.type else True
+    return isinstance(arg, self.wanted_type) if self.wanted_type else True
 
 class contains(Matcher):
   def __init__(self, sub):

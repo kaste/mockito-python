@@ -11,19 +11,19 @@ class MockitoMatchersTest(TestBase):
 
 class ContainsMatcherTest(TestBase):
   def testShouldSatisfiySubstringOfGivenString(self):
-    self.assertTrue(contains("foo").satisfies("foobar"))      
+    self.assertTrue(contains("foo").matches("foobar"))      
 
   def testShouldSatisfySameString(self):
-    self.assertTrue(contains("foobar").satisfies("foobar"))      
+    self.assertTrue(contains("foobar").matches("foobar"))      
 
   def testShouldNotSatisfiyStringWhichIsNotSubstringOfGivenString(self):
-    self.assertFalse(contains("barfoo").satisfies("foobar"))      
+    self.assertFalse(contains("barfoo").matches("foobar"))      
 
   def testShouldNotSatisfiyEmptyString(self):
-    self.assertFalse(contains("").satisfies("foobar"))      
+    self.assertFalse(contains("").matches("foobar"))      
 
   def testShouldNotSatisfiyNone(self):
-    self.assertFalse(contains(None).satisfies("foobar"))      
+    self.assertFalse(contains(None).matches("foobar"))      
 
 if __name__ == '__main__':
   unittest.main()
