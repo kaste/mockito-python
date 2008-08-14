@@ -3,7 +3,6 @@ import matchers
 from static_mocker import *
 
 _STUBBING_ = -2
-_STUBBING_STATICS_ = -3
 
 _STATIC_MOCKER_ = StaticMocker()
 
@@ -19,7 +18,7 @@ class Mock:
     self.mocked_obj = None
   
   def __getattr__(self, method_name):
-    if self.mocking_mode == _STUBBING_ or self.mocking_mode == _STUBBING_STATICS_:
+    if self.mocking_mode == _STUBBING_ or self.isStubbingStatic():
       return InvocationStubber(self, method_name)
     
     if self.mocking_mode >= 0:
@@ -27,13 +26,16 @@ class Mock:
       
     return InvocationMemorizer(self, method_name)
   
+  def isStubbingStatic(self):
+    return self.mocking_mode == _STUBBING_ and isinstance(self.mocked_obj, types.ClassType)
+  
   def finishStubbing(self, invocation):
     if (self.stubbed_invocations.count(invocation)):
       self.stubbed_invocations.remove(invocation)
       
     self.stubbed_invocations.append(invocation)
     
-    if (self.mocking_mode == _STUBBING_STATICS_):
+    if (self.isStubbingStatic()):
       _STATIC_MOCKER_.stub(invocation)
       
     self.mocking_mode = None
@@ -161,7 +163,7 @@ def when(obj):
   #TODO verify obj is a class or a mock
   if (isinstance(obj, types.ClassType)):
     mock = Mock()
-    mock.mocking_mode = _STUBBING_STATICS_
+    mock.mocking_mode = _STUBBING_
     mock.mocked_obj = obj
     return mock
   
