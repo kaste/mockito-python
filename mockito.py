@@ -146,7 +146,7 @@ def verify(obj, times=1):
     raise ArgumentError("'times' argument has invalid value. It should be at least 0. You wanted to set it to: " + str(times))
       
   if (isinstance(obj, types.ClassType)):
-    mock = _STATIC_MOCKER_.static_mocks[obj]
+    mock = _STATIC_MOCKER_.getMockFor(obj)
   else:
     mock = obj
   
