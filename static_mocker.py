@@ -17,3 +17,8 @@ class StaticMocker():
     
   def getMockFor(self, cls):
     return self.static_mocks[cls]
+  
+  def unstub(self):
+    while self.stubbed_statics:
+      cls, original_method = self.stubbed_statics.pop();
+      setattr(cls, original_method.__name__, staticmethod(original_method))   
