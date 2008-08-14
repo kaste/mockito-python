@@ -15,7 +15,7 @@ class Mock:
     self.invocations = []
     self.stubbed_invocations = []
     self.mocking_mode = None
-    self.mocked = None
+    self.mocked_obj = None
   
   def __getattr__(self, method_name):
     if self.mocking_mode == _STUBBING_ or self.mocking_mode == _STUBBING_STATICS_:
@@ -44,8 +44,8 @@ class Invocation:
     self.answers = []
     self.verified = False
   
-  def getMocked(self):
-    return self.mock.mocked
+  def getMockedObj(self):
+    return self.mock.mocked_obj
     
   def __cmp__(self, other):
     return 0 if self.matches(other) else 1
@@ -161,7 +161,7 @@ def when(obj):
   if (isinstance(obj, types.ClassType)):
     mock = Mock()
     mock.mocking_mode = _STUBBING_STATICS_
-    mock.mocked = obj
+    mock.mocked_obj = obj
     return mock
   
   obj.mocking_mode = _STUBBING_  
