@@ -61,7 +61,7 @@ class Invocation:
     for x, p1 in enumerate(self.params):
       p2 = invocation.params[x]
       if isinstance(p1, Matcher):
-        if not p1.satisfies(p2): return False
+        if not p1.matches(p2): return False
       elif p1 != p2: return False
     return True
   
@@ -168,7 +168,7 @@ def when(obj):
   return obj
 
 def unstub():
-  """Unstubs all stubbed static methods / class methods"""
+  """Unstubs all stubbed static methods and class methods"""
   
   _STATIC_MOCKER_.unstub()
 
@@ -179,19 +179,19 @@ def verifyNoMoreInteractions(*mocks):
         raise VerificationError("Unwanted interaction: " + i.method_name)
       
 class Matcher:
-  def satisfies(self, arg):
+  def matches(self, arg):
     pass
   
 class any(Matcher):           
   def __init__(self, type=None):
     self.type = type
     
-  def satisfies(self, arg):
+  def matches(self, arg):
     return isinstance(arg, self.type) if self.type else True
 
 class contains(Matcher):
   def __init__(self, sub):
     self.sub = sub
       
-  def satisfies(self, arg):
+  def matches(self, arg):
     return self.sub and len(self.sub) > 0 and arg.find(self.sub) > -1
