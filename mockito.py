@@ -43,6 +43,9 @@ class Invocation:
     self.mock = mock
     self.answers = []
     self.verified = False
+  
+  def getMocked(self):
+    return self.mock.mocked
     
   def __cmp__(self, other):
     return 0 if self.matches(other) else 1
