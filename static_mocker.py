@@ -14,3 +14,6 @@ class StaticMocker():
     s = (invocation.getMockedObj(), getattr(invocation.getMockedObj(), invocation.method_name))
     self.stubbed_statics.append(s)
     setattr(invocation.getMockedObj(), invocation.method_name, staticmethod(new_static_method))
+    
+  def getMockFor(self, cls):
+    return self.static_mocks[cls]
