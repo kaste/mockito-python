@@ -1,4 +1,5 @@
 class StaticMocker():
+  """Deals with both static AND class methods"""
   
   def __init__(self):
     self.stubbed_statics = []
@@ -6,10 +7,10 @@ class StaticMocker():
     
   def stub(self, invocation):
     self.static_mocks[invocation.getMockedObj()] = invocation.mock
-    def f(*params, **named_params): 
+    def new_static_method(*params, **named_params): 
       i = invocation.mock.__getattr__(invocation.method_name)
       return i.__call__(*params, **named_params)
       
     s = (invocation.getMockedObj(), getattr(invocation.getMockedObj(), invocation.method_name))
     self.stubbed_statics.append(s)
-    setattr(invocation.getMockedObj(), invocation.method_name, staticmethod(f))
+    setattr(invocation.getMockedObj(), invocation.method_name, staticmethod(new_static_method))
