@@ -161,14 +161,14 @@ def times(count):
 
 def when(obj):
   #TODO verify obj is a class or a mock
+  
+  mock = obj
   if (isinstance(obj, types.ClassType)):
     mock = Mock()
-    mock.mocking_mode = _STUBBING_
     mock.mocked_obj = obj
-    return mock
   
-  obj.mocking_mode = _STUBBING_  
-  return obj
+  mock.mocking_mode = _STUBBING_
+  return mock
 
 def unstub():
   """Unstubs all stubbed static methods and class methods"""
