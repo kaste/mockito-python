@@ -1,4 +1,5 @@
 import types
+import matchers
 from static_mocker import *
 
 _STUBBING_ = -2
@@ -60,7 +61,7 @@ class Invocation:
   def __compareUsingMatchers(self, invocation):  
     for x, p1 in enumerate(self.params):
       p2 = invocation.params[x]
-      if isinstance(p1, Matcher):
+      if isinstance(p1, matchers.Matcher):
         if not p1.matches(p2): return False
       elif p1 != p2: return False
     return True
@@ -178,26 +179,14 @@ def verifyNoMoreInteractions(*mocks):
       if not i.verified:
         raise VerificationError("Unwanted interaction: " + i.method_name)
       
-class Matcher:
-  def matches(self, arg):
-    pass
-  
-class any(Matcher):     
+def any(wanted_type = None):
   """Matches any() argument OR any(SomeClass) argument
      Examples:
        when(mock).foo(any()).thenReturn(1)
        verify(mock).foo(any(int))
   """
-        
-  def __init__(self, wanted_type=None):
-    self.wanted_type = wanted_type
-    
-  def matches(self, arg):
-    return isinstance(arg, self.wanted_type) if self.wanted_type else True
 
-class contains(Matcher):
-  def __init__(self, sub):
-    self.sub = sub
-      
-  def matches(self, arg):
-    return self.sub and len(self.sub) > 0 and arg.find(self.sub) > -1
+  return matchers.Any(wanted_type)     
+        
+def contains(sub):
+  return matchers.Contains(sub)
