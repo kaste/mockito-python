@@ -4,16 +4,16 @@ from mockito import *
 class Dog():
   @staticmethod
   def bark():
-    return "woof!"
+    return "woof"
   
   @staticmethod
   def barkHardly(*args):
-    return "woof woof!"
+    return "woof woof"
 
 class Cat():
   @staticmethod
   def meow():
-    return "miau!"
+    return "miau"
 
 class MockitoStaticMethodsTest(TestBase):  
   
@@ -21,16 +21,16 @@ class MockitoStaticMethodsTest(TestBase):
     unstub() 
 
   def testUnstubs(self):     
-    when(Dog).bark().thenReturn("miau!")
+    when(Dog).bark().thenReturn("miau")
     unstub()
-    self.assertEquals("woof!", Dog.bark())
+    self.assertEquals("woof", Dog.bark())
 
   def testStubs(self):     
-    self.assertEquals("woof!", Dog.bark())
+    self.assertEquals("woof", Dog.bark())
     
-    when(Dog).bark().thenReturn("miau!")
+    when(Dog).bark().thenReturn("miau")
     
-    self.assertEquals("miau!", Dog.bark())
+    self.assertEquals("miau", Dog.bark())
     
   def testStubsConsecutiveCalls(self):     
     when(Dog).bark().thenReturn(1).thenReturn(2)
@@ -40,16 +40,16 @@ class MockitoStaticMethodsTest(TestBase):
     self.assertEquals(2, Dog.bark())    
     
   def testStubsWithArgs(self):     
-    self.assertEquals("woof woof!", Dog.barkHardly(1, 2))
+    self.assertEquals("woof woof", Dog.barkHardly(1, 2))
     
-    when(Dog).barkHardly(1, 2).thenReturn("miau!")
+    when(Dog).barkHardly(1, 2).thenReturn("miau")
     
-    self.assertEquals("miau!", Dog.barkHardly(1, 2))
+    self.assertEquals("miau", Dog.barkHardly(1, 2))
 
   def testStubsButDoesNotMachArguments(self): 
-    self.assertEquals("woof woof!", Dog.barkHardly(1, "anything"))
+    self.assertEquals("woof woof", Dog.barkHardly(1, "anything"))
     
-    when(Dog).barkHardly(1, 2).thenReturn("miau!")
+    when(Dog).barkHardly(1, 2).thenReturn("miau")
     
     self.assertEquals(None, Dog.barkHardly(1))
     
@@ -65,8 +65,8 @@ class MockitoStaticMethodsTest(TestBase):
 
     unstub()
 
-    self.assertEquals("woof!", Dog.bark())
-    self.assertEquals("miau!", Cat.meow())
+    self.assertEquals("woof", Dog.bark())
+    self.assertEquals("miau", Cat.meow())
 
   def testVerifiesSuccesfully(self):     
     when(Dog).bark().thenReturn("boo")
@@ -109,6 +109,16 @@ class MockitoStaticMethodsTest(TestBase):
     self.assertEquals("boo", Dog.bark())
     
     verify(Dog).bark()
+
+  def testStubsTwiceAndUnstubs(self):
+    when(Dog).bark().thenReturn(1)
+    when(Dog).bark().thenReturn(2)
+    
+    self.assertEquals(2, Dog.bark())
+    
+    unstub()
+    
+    self.assertEquals("woof", Dog.bark())
 
 if __name__ == '__main__':
   unittest.main()
