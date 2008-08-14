@@ -33,7 +33,7 @@ class Mock:
     self.stubbed_invocations.append(invocation)
     
     if (self.mocking_mode == _STUBBING_STATICS_):
-      _STATIC_MOCKER_.stub(self, invocation)
+      _STATIC_MOCKER_.stub(invocation)
       
     self.mocking_mode = None
     
