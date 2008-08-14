@@ -18,7 +18,7 @@ class Mock:
     self.mocked_obj = None
   
   def __getattr__(self, method_name):
-    if self.mocking_mode == _STUBBING_ or self.isStubbingStatic():
+    if self.isStubbing() or self.isStubbingStatic():
       return InvocationStubber(self, method_name)
     
     if self.mocking_mode >= 0:
@@ -27,7 +27,10 @@ class Mock:
     return InvocationMemorizer(self, method_name)
   
   def isStubbingStatic(self):
-    return self.mocking_mode == _STUBBING_ and isinstance(self.mocked_obj, types.ClassType)
+    return self.isStubbing() and isinstance(self.mocked_obj, types.ClassType)
+  
+  def isStubbing(self):
+    return self.mocking_mode == _STUBBING_
   
   def finishStubbing(self, invocation):
     if (self.stubbed_invocations.count(invocation)):
