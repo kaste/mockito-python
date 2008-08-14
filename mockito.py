@@ -169,9 +169,8 @@ def when(obj):
 
 def unstub():
   """Unstubs all stubbed static methods / class methods"""
-  while _STATIC_MOCKER_.stubbed_statics:
-    cls, original_method = _STATIC_MOCKER_.stubbed_statics.pop();
-    setattr(cls, original_method.__name__, staticmethod(original_method))    
+  
+  _STATIC_MOCKER_.unstub()
 
 def verifyNoMoreInteractions(*mocks):
   for mock in mocks:
