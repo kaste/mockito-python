@@ -52,17 +52,17 @@ class Invocation:
     
   def matches(self, invocation):
     if self.method_name == invocation.method_name and self.params == invocation.params:
-        return True
+      return True
     if len(self.params) != len(invocation.params):
-        return False
+      return False
     return self.__compareUsingMatchers(invocation)
 
   def __compareUsingMatchers(self, invocation):  
     for x, p1 in enumerate(self.params):
-        p2 = invocation.params[x]
-        if isinstance(p1, Matcher):
-            if not p1.satisfies(p2): return False
-        elif p1 != p2: return False
+      p2 = invocation.params[x]
+      if isinstance(p1, Matcher):
+        if not p1.satisfies(p2): return False
+      elif p1 != p2: return False
     return True
   
   def stubWith(self, answer, chained_mode):
@@ -181,18 +181,18 @@ def verifyNoMoreInteractions(*mocks):
       
 class Matcher:
   def satisfies(self, arg):
-      pass
+    pass
   
 class any(Matcher):           
   def __init__(self, type=None):
-      self.type = type
+    self.type = type
     
   def satisfies(self, arg):
-      return isinstance(arg, self.type) if self.type else True
+    return isinstance(arg, self.type) if self.type else True
 
 class contains(Matcher):
   def __init__(self, sub):
-      self.sub = sub
+    self.sub = sub
       
   def satisfies(self, arg):
-      return self.sub and len(self.sub) > 0 and arg.find(self.sub) > -1
+    return self.sub and len(self.sub) > 0 and arg.find(self.sub) > -1
