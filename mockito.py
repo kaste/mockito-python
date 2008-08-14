@@ -183,7 +183,11 @@ class Matcher:
     pass
   
 class any(Matcher):     
-  """Matches any() argument OR any(SomeClass) argument"""
+  """Matches any() argument OR any(SomeClass) argument
+     Examples:
+       when(mock).foo(any()).thenReturn(1)
+       verify(mock).foo(any(int))
+  """
         
   def __init__(self, wanted_type=None):
     self.wanted_type = wanted_type
