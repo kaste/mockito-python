@@ -25,6 +25,11 @@ class MockitoStaticMethodsTest(TestBase):
     unstub()
     self.assertEquals("woof", Dog.bark())
 
+  def testUnstubShouldPreserveMethodType(self):
+    when(Dog).bark().thenReturn("miau!")
+    unstub()
+    self.assertTrue(isinstance(Dog.__dict__.get("bark"), staticmethod))  
+
   def testStubs(self):     
     self.assertEquals("woof", Dog.bark())
     

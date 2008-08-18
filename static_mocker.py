@@ -4,22 +4,31 @@ class StaticMocker():
   def __init__(self):
     self.originals = []
     self.static_mocks = {}
-    
+
   def stub(self, invocation):
     self.static_mocks[invocation.getMockedObj()] = invocation.mock
+    
+    original_method = invocation.getMockedObj().__dict__.get(invocation.method_name)
+    original = (invocation.getMockedObj(), invocation.method_name, original_method)
+
     def new_static_method(*params, **named_params): 
+      if isinstance(original_method, classmethod): params = params[1:]
       i = invocation.mock.__getattr__(invocation.method_name)
       return i.__call__(*params, **named_params)
       
-    original_method = getattr(invocation.getMockedObj(), invocation.method_name)
-    original = (invocation.getMockedObj(), original_method)
     self.originals.append(original)
-    setattr(invocation.getMockedObj(), invocation.method_name, staticmethod(new_static_method))
+    if isinstance(original_method, staticmethod):
+      setattr(invocation.getMockedObj(), invocation.method_name, staticmethod(new_static_method))
+    elif isinstance(original_method, classmethod): 
+      setattr(invocation.getMockedObj(), invocation.method_name, classmethod(new_static_method))
+    else:
+      # TODO create decent error    
+      raise "Only static and class methods can be unstubbed"    
     
   def getMockFor(self, cls):
     return self.static_mocks[cls]
   
   def unstub(self):
     while self.originals:
-      cls, original_method = self.originals.pop();
-      setattr(cls, original_method.__name__, staticmethod(original_method))   
+      cls, original_method_name, original_method = self.originals.pop()
+      setattr(cls, original_method_name, original_method)
