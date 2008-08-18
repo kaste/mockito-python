@@ -169,7 +169,7 @@ def when(obj):
   if (isinstance(obj, types.ClassType)):
     mock = Mock()
     mock.mocked_obj = obj
-  
+
   mock.mocking_mode = _STUBBING_
   return mock
 
