@@ -22,7 +22,7 @@ class StaticMocker():
     elif isinstance(original_method, classmethod): 
       setattr(invocation.getMockedObj(), invocation.method_name, classmethod(new_static_method))
     else:
-      # TODO create decent error    
+      # TODO create decent error. is it necessary? this case is only useful for library debugging        
       raise "Only static and class methods can be unstubbed"    
     
   def getMockFor(self, cls):
