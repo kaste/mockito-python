@@ -151,11 +151,7 @@ def verify(obj, times=1):
   if times < 0:
     raise ArgumentError("'times' argument has invalid value. It should be at least 0. You wanted to set it to: " + str(times))
       
-  if (isinstance(obj, types.ClassType)):
-    mock = _STATIC_MOCKER_.getMockFor(obj)
-  else:
-    mock = obj
-  
+  mock = _STATIC_MOCKER_.getMockFor(obj) if (isinstance(obj, types.ClassType)) else obj
   mock.mocking_mode = times
   return mock
 
@@ -184,7 +180,7 @@ def verifyNoMoreInteractions(*mocks):
       if not i.verified:
         raise VerificationError("Unwanted interaction: " + i.method_name)
       
-def any(wanted_type = None):
+def any(wanted_type=None):
   """Matches any() argument OR any(SomeClass) argument
      Examples:
        when(mock).foo(any()).thenReturn(1)
