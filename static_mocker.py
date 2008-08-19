@@ -1,5 +1,7 @@
+import inspect
+
 class StaticMocker():
-  """Deals with both static AND class methods"""
+  """Deals with static AND class methods AND with modules functions"""
   
   def __init__(self):
     self.originals = []
@@ -7,7 +9,6 @@ class StaticMocker():
 
   def stub(self, invocation):
     self.static_mocks[invocation.getMockedObj()] = invocation.mock
-    
     original_method = invocation.getMockedObj().__dict__.get(invocation.method_name)
     original = (invocation.getMockedObj(), invocation.method_name, original_method)
 
@@ -21,9 +22,11 @@ class StaticMocker():
       setattr(invocation.getMockedObj(), invocation.method_name, staticmethod(new_static_method))
     elif isinstance(original_method, classmethod): 
       setattr(invocation.getMockedObj(), invocation.method_name, classmethod(new_static_method))
+    elif inspect.ismodule(invocation.getMockedObj()):
+      setattr(invocation.getMockedObj(), invocation.method_name, new_static_method)      
     else:
       # TODO create decent error. is it necessary? this case is only useful for library debugging        
-      raise "Only static and class methods can be unstubbed"    
+      raise "Only modules functions, static and class methods can be stubbed"    
     
   def getMockFor(self, cls):
     return self.static_mocks[cls]
