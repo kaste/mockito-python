@@ -1,5 +1,6 @@
 import types
 import matchers
+import inspect
 from static_mocker import *
 
 _STUBBING_ = -2
@@ -27,7 +28,7 @@ class Mock:
     return InvocationMemorizer(self, method_name)
   
   def isStubbingStatic(self):
-    return self.isStubbing() and isinstance(self.mocked_obj, types.ClassType)
+    return self.isStubbing() and (isinstance(self.mocked_obj, types.ClassType) or inspect.ismodule(self.mocked_obj)) 
   
   def isStubbing(self):
     return self.mocking_mode == _STUBBING_
@@ -150,8 +151,8 @@ class ArgumentError(Exception):
 def verify(obj, times=1):
   if times < 0:
     raise ArgumentError("'times' argument has invalid value. It should be at least 0. You wanted to set it to: " + str(times))
-      
-  mock = _STATIC_MOCKER_.getMockFor(obj) if (isinstance(obj, types.ClassType)) else obj
+
+  mock = _STATIC_MOCKER_.getMockFor(obj) if (inspect.ismodule(obj) or isinstance(obj, types.ClassType)) else obj
   mock.mocking_mode = times
   return mock
 
@@ -162,7 +163,7 @@ def when(obj):
   #TODO verify obj is a class or a mock
   
   mock = obj
-  if (isinstance(obj, types.ClassType)):
+  if (inspect.ismodule(obj) or isinstance(obj, types.ClassType)):
     mock = Mock()
     mock.mocked_obj = obj
 
