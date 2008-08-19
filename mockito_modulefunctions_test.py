@@ -2,7 +2,7 @@ from test_base import *
 from mockito import * 
 import os
 
-class MockitoModuleMethodsTest(TestBase):
+class MockitoModuleFunctionsTest(TestBase):
   def tearDown(self):
     unstub() 
 
