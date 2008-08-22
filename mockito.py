@@ -28,7 +28,7 @@ class Mock:
     return InvocationMemorizer(self, method_name)
   
   def isStubbingStatic(self):
-    return self.isStubbing() and (isinstance(self.mocked_obj, types.ClassType) or inspect.ismodule(self.mocked_obj)) 
+    return self.isStubbing() and _STATIC_MOCKER_.accepts(self.mocked_obj) 
   
   def isStubbing(self):
     return self.mocking_mode == _STUBBING_
@@ -163,7 +163,7 @@ def when(obj):
   #TODO verify obj is a class or a mock
   
   mock = obj
-  if (inspect.ismodule(obj) or isinstance(obj, types.ClassType)):
+  if (_STATIC_MOCKER_.accepts(obj)):
     mock = Mock()
     mock.mocked_obj = obj
 
