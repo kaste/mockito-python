@@ -2,8 +2,8 @@ import inspect
 import types
 
 class StaticMocker():
-# TODO SRP?  
-  """Deals with static AND class methods AND with modules functions"""
+  """Deals with static methods AND class methods AND with module methods. 
+  To me they all are just static, procedural-like functions, hence StaticMocker"""
   
   def __init__(self):
     self.originals = []
