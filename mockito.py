@@ -1,6 +1,4 @@
-import types
 import matchers
-import inspect
 from static_mocker import *
 
 _STUBBING_ = -2
