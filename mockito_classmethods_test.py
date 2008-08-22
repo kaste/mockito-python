@@ -23,6 +23,7 @@ class MockitoClassMethodsTest(TestBase):
     unstub()
     self.assertEquals("woof!", Dog.bark())
   
+  #TODO decent test case please :) without testing irrelevant implementation details
   def testUnstubShouldPreserveMethodType(self):
     when(Dog).bark().thenReturn("miau!")
     unstub()
