@@ -1,4 +1,5 @@
 import inspect
+import types
 
 class StaticMocker():
 # TODO SRP?  
@@ -34,6 +35,9 @@ class StaticMocker():
     
   def getMockFor(self, cls):
     return self.static_mocks[cls]
+  
+  def accepts(self, obj):
+     return inspect.ismodule(obj) or isinstance(obj, types.ClassType)
   
   def unstub(self):
     while self.originals:

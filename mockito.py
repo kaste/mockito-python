@@ -152,8 +152,7 @@ def verify(obj, times=1):
   if times < 0:
     raise ArgumentError("'times' argument has invalid value. It should be at least 0. You wanted to set it to: " + str(times))
 
-  #TODO create a method/object that can encapsulate ismodule/isinstance knowledge   
-  mock = _STATIC_MOCKER_.getMockFor(obj) if (inspect.ismodule(obj) or isinstance(obj, types.ClassType)) else obj
+  mock = _STATIC_MOCKER_.getMockFor(obj) if _STATIC_MOCKER_.accepts(obj) else obj
   mock.mocking_mode = times
   return mock
 
