@@ -1,8 +1,6 @@
 from test_base import *
 from mockito import *
 
-# TODO: add more test cases (create a base test class for both static and class methods?)
-
 class Dog():
   @classmethod
   def bark(cls):
