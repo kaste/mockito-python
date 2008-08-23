@@ -23,11 +23,11 @@ class StaticMocker():
     self.originals.append(original)
     # TODO questions should be asked on invocation object?    
     if self._is_staticmethod(original_method):
-      setattr(invocation.getMockedObj(), invocation.method_name, staticmethod(mocked_method))
+      invocation.replaceMethod(staticmethod(mocked_method))
     elif self._is_classmethod(original_method): 
-      setattr(invocation.getMockedObj(), invocation.method_name, classmethod(mocked_method))
+      invocation.replaceMethod(classmethod(mocked_method))
     elif inspect.ismodule(invocation.getMockedObj()):
-      setattr(invocation.getMockedObj(), invocation.method_name, mocked_method)      
+      invocation.replaceMethod(mocked_method)
     else:
       # TODO create decent error. is it necessary? this case is only useful for library debugging        
       raise "Only modules functions, static and class methods can be stubbed"    
