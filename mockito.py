@@ -54,6 +54,9 @@ class Invocation:
   
   def getRealMethod(self):
     return self.getMockedObj().__dict__.get(self.method_name)
+  
+  def replaceMethod(self, new_method):
+    setattr(self.getMockedObj(), self.method_name, new_method)
     
   def __cmp__(self, other):
     return 0 if self.matches(other) else 1
