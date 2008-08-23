@@ -17,21 +17,27 @@ class StaticMocker():
     original = (invocation.getMockedObj(), invocation.method_name, original_method)
 
     def mocked_method(*params, **named_params): 
-      if isinstance(original_method, classmethod): params = params[1:]
+      if self._is_classmethod(original_method): params = params[1:]
       i = invocation.mock.__getattr__(invocation.method_name)
       return i.__call__(*params, **named_params)
       
     self.originals.append(original)
     # TODO questions should be asked on invocation object?    
-    if isinstance(original_method, staticmethod):
+    if self._is_staticmethod(original_method):
       setattr(invocation.getMockedObj(), invocation.method_name, staticmethod(mocked_method))
-    elif isinstance(original_method, classmethod): 
+    elif self._is_classmethod(original_method): 
       setattr(invocation.getMockedObj(), invocation.method_name, classmethod(mocked_method))
     elif inspect.ismodule(invocation.getMockedObj()):
       setattr(invocation.getMockedObj(), invocation.method_name, mocked_method)      
     else:
       # TODO create decent error. is it necessary? this case is only useful for library debugging        
       raise "Only modules functions, static and class methods can be stubbed"    
+    
+  def _is_classmethod(self, method):
+    return isinstance(method, classmethod)
+  
+  def _is_staticmethod(self, method):
+    return isinstance(method, staticmethod)
     
   def getMockFor(self, cls):
     return self.static_mocks[cls]
