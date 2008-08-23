@@ -24,7 +24,6 @@ class StaticMocker():
       i = invocation.mock.__getattr__(invocation.method_name)
       return i.__call__(*params, **named_params)
       
-    # TODO questions should be asked on invocation object?    
     if self._is_staticmethod(original_method):
       invocation.replaceMethod(staticmethod(new_mocked_method))
     elif self._is_classmethod(original_method): 
