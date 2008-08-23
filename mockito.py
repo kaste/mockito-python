@@ -51,6 +51,9 @@ class Invocation:
   
   def getMockedObj(self):
     return self.mock.mocked_obj
+  
+  def getRealMethod(self):
+    return self.getMockedObj().__dict__.get(self.method_name)
     
   def __cmp__(self, other):
     return 0 if self.matches(other) else 1

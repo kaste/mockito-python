@@ -11,8 +11,7 @@ class StaticMocker():
 
   def stub(self, invocation):
     self.static_mocks[invocation.getMockedObj()] = invocation.mock
-    # TODO LoD    
-    original_method = invocation.getMockedObj().__dict__.get(invocation.method_name)
+    original_method = invocation.getRealMethod()
     # TODO original should hold entire invocation?    
     original = (invocation.getMockedObj(), invocation.method_name, original_method)
 
