@@ -1,1 +1,1 @@
-# to be implemented - copy contents of MockitoTest into the README
+# to be implemented - copy contents of MockitoDemoTest into the README

@@ -5,11 +5,11 @@ from mockito_staticmethods_test import *
 from mockito_stubbing_test import * 
 from mockito_verification_test import * 
 from mockito_modulefunctions_test import *
-from mockito_representative_test import *  
+from mockito_demo_test import *  
 
 tests = [MockitoClassMethodsTest, MockitoMatchersTest, MockitoStaticMethodsTest, 
          MockitoStubbingTest, MockitoVerificationTest, MockitoModuleFunctionsTest,
-         MockitoRepresentativeTest]
+         MockitoDemoTest]
 
 all = unittest.TestSuite()
 for test in tests: all.addTest(unittest.makeSuite(test))
