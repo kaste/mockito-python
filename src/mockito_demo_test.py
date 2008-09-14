@@ -1,7 +1,7 @@
 import unittest
 from mockito import *
 
-class MockitoRepresentativeTest(unittest.TestCase):
+class MockitoDemoTest(unittest.TestCase):
 
   def testStubbing(self):
     # create a mock
