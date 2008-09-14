@@ -1,0 +1,42 @@
+Mockito is a spying framework based on Java library with the same name.
+
+To install:
+
+  $ python setup.py install
+
+Basic usage:
+
+  import unittest
+  from mockito import *
+  
+  class MockitoRepresentativeTest(unittest.TestCase):
+  
+    def testStubbing(self):
+      # create a mock
+      mock = Mock()
+  
+      # stub it
+      when(mock).getStuff().thenReturn("stuff")
+      
+      # use the mock
+      self.assertEqual("stuff", mock.getStuff())
+      
+    def testVerification(self):
+      # create a mock
+      mock = Mock()
+  
+      # use the mock
+      mock.getStuff()
+      
+      # verify the interactions
+      verify(mock).doStuff()
+      
+For more info, see:
+
+  http://code.google.com/p/mockito/wiki/MockitoForPython
+
+Our user and developer discussion group is:
+
+  http://groups.google.com/group/mockito-pyton
+
+Mockito is licensed under the MIT license
