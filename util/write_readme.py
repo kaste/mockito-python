@@ -10,11 +10,13 @@ def openFile(f, m='r'):
     return open('../' + f, m)
     
 demo_test = '  '.join(openFile('src/mockito_demo_test.py').readlines())
-demo_test = re.compile('#end.*', re.S).sub('', demo_test)
+demo_test = re.compile('if __name__.*', re.S).sub('', demo_test)
 
-readme = ''.join(openFile('README').readlines())
-readme = re.compile('import unittest.*(?=For more info)', re.S).sub(demo_test, readme)
+readme_before = ''.join(openFile('README').readlines())
+readme_after = re.compile('import unittest.*(?=\nFor more info)', re.S).sub(demo_test, readme_before)
 
+if (readme_before != readme_after):
+  readme_file = openFile('README', 'w')
+  readme_file.write(readme_after)
+  
 #todo check if readme changed - if not then do not write
-readme_file = openFile('README', 'w')
-readme_file.write(readme)

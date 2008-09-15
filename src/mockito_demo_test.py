@@ -23,5 +23,4 @@ class MockitoDemoTest(unittest.TestCase):
     # verify the interactions
     verify(mock).doStuff()
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == '__main__': unittest.main()
