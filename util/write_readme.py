@@ -18,5 +18,3 @@ readme_after = re.compile('import unittest.*(?=\nFor more info)', re.S).sub(demo
 if (readme_before != readme_after):
   readme_file = openFile('README', 'w')
   readme_file.write(readme_after)
-  
-#todo check if readme changed - if not then do not write
