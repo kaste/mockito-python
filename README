@@ -30,7 +30,8 @@ Basic usage:
       
       # verify the interactions
       verify(mock).doStuff()
-      
+  
+  
 For more info, see:
 
   http://code.google.com/p/mockito/wiki/MockitoForPython
