@@ -93,12 +93,5 @@ class MockitoVerificationTest(TestBase):
   def testFailsWhenTimesIsLessThanZero(self):
     self.assertRaises(ArgumentError, verify, None, -1)
     
-  def testVerificationErrorPrintsNicely(self):
-    mock = Mock()
-    try:
-      verify(mock).foo()
-    except VerificationError, e:
-      self.assertEquals("\nWanted but not invoked: foo()", e.message)
-
 if __name__ == '__main__':
   unittest.main()
