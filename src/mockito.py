@@ -83,7 +83,7 @@ class Invocation:
         self.answers.append(answer)
         
     self.mock.finishStubbing(self)
-  
+    
 class InvocationMemorizer(Invocation):
   def __call__(self, *params, **named_params):
     self.params = params
@@ -104,8 +104,17 @@ class InvocationVerifier(Invocation):
         matches += 1
         invocation.verified = True
   
-    if (matches != self.mock.mocking_mode):
+    #TODO LoD    
+    if (self.mock.mocking_mode == 1 and matches != self.mock.mocking_mode):
+      raise VerificationError("\nWanted but not invoked: " + self.printMethod())
+    elif (matches != self.mock.mocking_mode):
       raise VerificationError("Wanted times: " + str(self.mock.mocking_mode) + ", actual times: " + str(matches))
+  
+  def printMethod(self):
+    m = self.method_name + "("
+    for p in self.params: 
+      m += str(p) + ", "
+    return m + ")"
 
 class InvocationStubber(Invocation):
   def __call__(self, *params, **named_params):
