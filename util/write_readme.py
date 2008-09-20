@@ -16,5 +16,8 @@ readme_before = ''.join(openFile('README').readlines())
 readme_after = re.compile('import unittest.*(?=\nFor more info)', re.S).sub(demo_test, readme_before)
 
 if (readme_before != readme_after):
+  print "Writing README..."
   readme_file = openFile('README', 'w')
   readme_file.write(readme_after)
+else:
+  print "Writing README not required" 
