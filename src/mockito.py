@@ -1,5 +1,6 @@
 import matchers
 from static_mocker import *
+from method_printer import *
 
 _STUBBING_ = -2
 
@@ -106,16 +107,11 @@ class InvocationVerifier(Invocation):
   
     #TODO LoD    
     if (self.mock.mocking_mode == 1 and matches != self.mock.mocking_mode):
-      raise VerificationError("\nWanted but not invoked: " + self.printMethod())
+      m = MethodPrinter().str(self.method_name, *self.params)
+      raise VerificationError("\nWanted but not invoked: " + m)
     elif (matches != self.mock.mocking_mode):
       raise VerificationError("Wanted times: " + str(self.mock.mocking_mode) + ", actual times: " + str(matches))
   
-  def printMethod(self):
-    m = self.method_name + "("
-    for p in self.params: 
-      m += str(p) + ", "
-    return m + ")"
-
 class InvocationStubber(Invocation):
   def __call__(self, *params, **named_params):
     self.params = params    
