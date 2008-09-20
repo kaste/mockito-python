@@ -7,11 +7,12 @@ from mockito_verification_test import *
 from mockito_modulefunctions_test import *
 from mockito_demo_test import *  
 from mockito_verification_errors_test import *  
+from method_printer_test import *
 
 #TODO: can this be smarter - i can forget to put a test class here:
 tests = [MockitoClassMethodsTest, MockitoMatchersTest, MockitoStaticMethodsTest, 
          MockitoStubbingTest, MockitoVerificationTest, MockitoModuleFunctionsTest,
-         MockitoDemoTest, MockitoVerificationErrorsTest]
+         MockitoDemoTest, MockitoVerificationErrorsTest, MethodPrinterTest]
 
 all = unittest.TestSuite()
 for test in tests: all.addTest(unittest.makeSuite(test))
