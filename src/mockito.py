@@ -96,6 +96,9 @@ class InvocationMemorizer(Invocation):
     
     return None
   
+  def __str__(self):
+    return self.method_name + str(self.params)
+  
 class InvocationVerifier(Invocation):
   def __call__(self, *params, **named_params):
     self.params = params
@@ -187,7 +190,7 @@ def verifyNoMoreInteractions(*mocks):
   for mock in mocks:
     for i in mock.invocations:
       if not i.verified:
-        raise VerificationError("Unwanted interaction: " + i.method_name)
+        raise VerificationError("\nUnwanted interaction: " + str(i))
       
 def any(wanted_type=None):
   """Matches any() argument OR any(SomeClass) argument
