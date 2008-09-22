@@ -194,6 +194,7 @@ def verifyNoMoreInteractions(*mocks):
 def verifyZeroInteractions(*mocks):
   verifyNoMoreInteractions(*mocks)
       
+#TODO how to generate documentation from python?      
 def any(wanted_type=None):
   """Matches any() argument OR any(SomeClass) argument
      Examples:
