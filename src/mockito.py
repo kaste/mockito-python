@@ -105,7 +105,6 @@ class InvocationVerifier(Invocation):
         matches += 1
         invocation.verified = True
   
-    #TODO LoD    
     if (self.mock.mocking_mode == 1 and matches != self.mock.mocking_mode):
       m = MethodPrinter().printIt(self.method_name, *self.params)
       raise VerificationError("\nWanted but not invoked: " + m)
