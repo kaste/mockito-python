@@ -1,6 +1,5 @@
 import matchers
 from static_mocker import *
-from method_printer import *
 
 _STUBBING_ = -2
 
@@ -49,6 +48,7 @@ class Invocation:
     self.mock = mock
     self.answers = []
     self.verified = False
+    self.params = ()
   
   def getMockedObj(self):
     return self.mock.mocked_obj
@@ -85,6 +85,9 @@ class Invocation:
         
     self.mock.finishStubbing(self)
     
+  def __str__(self):
+    return self.method_name + str(self.params)    
+    
 class InvocationMemorizer(Invocation):
   def __call__(self, *params, **named_params):
     self.params = params
@@ -96,9 +99,6 @@ class InvocationMemorizer(Invocation):
     
     return None
   
-  def __str__(self):
-    return self.method_name + str(self.params)
-  
 class InvocationVerifier(Invocation):
   def __call__(self, *params, **named_params):
     self.params = params
@@ -109,8 +109,7 @@ class InvocationVerifier(Invocation):
         invocation.verified = True
   
     if (self.mock.mocking_mode == 1 and matches != self.mock.mocking_mode):
-      m = MethodPrinter().printIt(self.method_name, *self.params)
-      raise VerificationError("\nWanted but not invoked: " + m)
+      raise VerificationError("\nWanted but not invoked: " + str(self))
     elif (matches != self.mock.mocking_mode):
       raise VerificationError("Wanted times: " + str(self.mock.mocking_mode) + ", actual times: " + str(matches))
   
