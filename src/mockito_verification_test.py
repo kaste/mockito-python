@@ -62,6 +62,13 @@ class MockitoVerificationTest(TestBase):
     mock.foo()
     
     self.assertRaises(VerificationError, verifyNoMoreInteractions, mock)
+    
+  def testVerifiesZeroInteractions(self):
+    mock = Mock()
+    verifyZeroInteractions(mock)
+    mock.foo()
+    
+    self.assertRaises(VerificationError, verifyNoMoreInteractions, mock)    
 
   def testVerifiesUsingAnyMatcher(self):
     mock = Mock()

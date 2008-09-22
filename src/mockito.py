@@ -191,6 +191,9 @@ def verifyNoMoreInteractions(*mocks):
       if not i.verified:
         raise VerificationError("\nUnwanted interaction: " + str(i))
       
+def verifyZeroInteractions(*mocks):
+  verifyNoMoreInteractions(*mocks)
+      
 def any(wanted_type=None):
   """Matches any() argument OR any(SomeClass) argument
      Examples:
