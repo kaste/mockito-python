@@ -3,28 +3,34 @@ from mockito import *
 
 class MockitoVerificationErrorsTest(TestBase):
     
-  def testVerificationErrorPrintsNicely(self):
+  def testPrintsNicely(self):
     mock = Mock()
     try:
       verify(mock).foo()
     except VerificationError, e:
       self.assertEquals("\nWanted but not invoked: foo()", e.message)
       
-  def testVerificationErrorPrintsNicelyArguments(self):
+  def testPrintsNicelyArguments(self):
     mock = Mock()
     try:
       verify(mock).foo(1, 2)
     except VerificationError, e:
-      pass
-    self.assertEquals("\nWanted but not invoked: foo(1, 2)", e.message)
+      self.assertEquals("\nWanted but not invoked: foo(1, 2)", e.message)
     
-  def testVerificationErrorPrintsNicelyStringArguments(self):
+  def testPrintsNicelyStringArguments(self):
     mock = Mock()
     try:
       verify(mock).foo(1, 'foo')
     except VerificationError, e:
-      pass
-    self.assertEquals("\nWanted but not invoked: foo(1, 'foo')", e.message)         
+      self.assertEquals("\nWanted but not invoked: foo(1, 'foo')", e.message)
+    
+  def testPrintsUnwantedInteraction(self):
+    mock = Mock()
+    mock.foo(1, 'foo')
+    try:
+      verifyNoMoreInteractions(mock)
+    except VerificationError, e:
+      self.assertEquals("\nUnwanted interaction: foo(1, 'foo')", e.message)
 
 if __name__ == '__main__':
   unittest.main()
