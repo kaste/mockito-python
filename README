@@ -3,8 +3,6 @@ Mockito is a spying framework based on Java library with the same name.
 To install:
 
   $ python setup.py install
-  
-  //test
 
 Basic usage:
 
