@@ -16,8 +16,7 @@ class MockitoVerificationErrorsTest(TestBase):
       verify(mock).foo(1, 2)
     except VerificationError, e:
       pass
-      #TODO      
-#      self.assertEquals("\nWanted but not invoked: foo(1, 2)", e.message)      
+    self.assertEquals("\nWanted but not invoked: foo(1, 2)", e.message)      
 
 if __name__ == '__main__':
   unittest.main()

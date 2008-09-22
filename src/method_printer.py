@@ -1,6 +1,7 @@
 class MethodPrinter:
-  def str(self, method_name, *params):
+  def printIt(self, method_name, *params):
     m = method_name + "("
-    for p in params: 
+    for p in params:
       m += str(p) + ", "
-    return m + ")"
+    #TODO be smarter here, a search and replace?      
+    return m.rstrip(", ") + ")"
