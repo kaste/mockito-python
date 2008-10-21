@@ -18,7 +18,7 @@ class MockitoDemoTest(unittest.TestCase):
     mock = Mock()
 
     # use the mock
-    mock.getStuff()
+    mock.doStuff()
     
     # verify the interactions
     verify(mock).doStuff()
