@@ -1,12 +1,12 @@
 from test_base import *
 from mockito import *
 
-class Dog():
+class Dog:
   @classmethod
   def bark(cls):
     return "woof!"
   
-class Cat():
+class Cat:
   @classmethod
   def meow(cls, m):
     return str(cls) + " " + str(m)

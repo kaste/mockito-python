@@ -60,7 +60,8 @@ class Invocation:
     setattr(self.getMockedObj(), self.method_name, new_method)
     
   def __cmp__(self, other):
-    return 0 if self.matches(other) else 1
+    if self.matches(other): return 0
+    else: return 1
     
   def matches(self, invocation):
     if self.method_name == invocation.method_name and self.params == invocation.params:
@@ -118,7 +119,7 @@ class InvocationStubber(Invocation):
     self.params = params    
     return AnswerSelector(self)
   
-class AnswerSelector():
+class AnswerSelector:
   def __init__(self, invocation):
     self.invocation = invocation
     self.chained_mode = False
@@ -134,7 +135,7 @@ class AnswerSelector():
     self.chained_mode = True
     return self      
 
-class Answer():
+class Answer:
   def __init__(self, value, type):
     self.answers = [[value, type]]
     self.index = 0
@@ -161,8 +162,10 @@ class ArgumentError(Exception):
 def verify(obj, times=1):
   if times < 0:
     raise ArgumentError("'times' argument has invalid value. It should be at least 0. You wanted to set it to: " + str(times))
-
-  mock = _STATIC_MOCKER_.getMockFor(obj) if _STATIC_MOCKER_.accepts(obj) else obj
+   
+  if _STATIC_MOCKER_.accepts(obj): mock = _STATIC_MOCKER_.getMockFor(obj)  
+  else: mock = obj
+  
   mock.mocking_mode = times
   return mock
 
