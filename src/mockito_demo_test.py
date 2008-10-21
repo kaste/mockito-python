@@ -1,6 +1,7 @@
 import unittest
 from mockito import *
 
+#Add all stuff that is implemented but not documented
 class MockitoDemoTest(unittest.TestCase):
 
   def testStubbing(self):
