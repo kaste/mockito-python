@@ -53,8 +53,10 @@ class MockitoVerificationTest(TestBase):
   def testVerifiesNoMoreInteractions(self):
     mock, mockTwo = Mock(), Mock()
     mock.foo()
+    mockTwo.bar()
     
     verify(mock).foo()
+    verify(mockTwo).bar()
     verifyNoMoreInteractions(mock, mockTwo)    
     
   def testFailsNoMoreInteractions(self):
