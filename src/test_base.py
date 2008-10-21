@@ -11,4 +11,4 @@ class TestBase(unittest.TestCase):
         
       self.fail()
     except Exception, e:
-      self.assertEquals(message, e.message)
+      self.assertEquals(message, str(e))
