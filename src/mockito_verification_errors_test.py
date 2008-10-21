@@ -23,6 +23,18 @@ class MockitoVerificationErrorsTest(TestBase):
       verify(mock).foo(1, 'foo')
     except VerificationError, e:
       self.assertEquals("\nWanted but not invoked: foo(1, 'foo')", str(e))
+
+  #TODO implement
+  def stestPrintsNicelyWhenArgumentsDifferent(self):
+    mock = Mock()
+    mock.foo('foo', 1)
+    try:
+      verify(mock).foo(1, 'foo')
+    except VerificationError, e:
+      self.assertEquals(
+"""Arguments are different.
+Wanted: foo(1, 'foo')
+Actual: foo('foo', 1)""", str(e))
     
   def testPrintsUnwantedInteraction(self):
     mock = Mock()
