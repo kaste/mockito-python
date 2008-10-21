@@ -1,7 +1,7 @@
 from test_base import *
 from mockito import *
 
-class Dog():
+class Dog:
   @staticmethod
   def bark():
     return "woof"
@@ -10,7 +10,7 @@ class Dog():
   def barkHardly(*args):
     return "woof woof"
 
-class Cat():
+class Cat:
   @staticmethod
   def meow():
     return "miau"
