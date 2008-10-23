@@ -172,11 +172,7 @@ def verify(obj, times=1, atLeast=None, atMost=None, between=None):
 # TODO: refactor this mess below...  
   if times < 0:
     raise ArgumentError("'times' argument has invalid value. It should be at least 0. You wanted to set it to: " + str(times))
-  count = 0
-  for arg in [atLeast, atMost, between]:
-      if arg:
-          count += 1
-  if count > 1:
+  if len(filter(lambda x: x, [atLeast, atMost, between])) > 1:
     raise ArgumentError("Sure you know what you are doing? You can set only one of the arguments: 'atLeast', 'atMost' or 'between'.")
   if (atLeast and atLeast < 1) or atLeast == 0:
     raise ArgumentError("'atLeast' argument has invalid value. It should be at least 1.  You wanted to set it to: " + str(atLeast))
