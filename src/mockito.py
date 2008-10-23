@@ -23,7 +23,7 @@ class Mock:
     if self.isStubbing() or self.isStubbingStatic():
       return InvocationStubber(self, method_name)
     
-    if self.mocking_mode >= 0 or self.mocking_mode == _AT_LEAST_ or self.mocking_mode == _AT_MOST_ or self.mocking_mode == _BETWEEN_:
+    if self.mocking_mode >= 0 or self.mocking_mode in [_AT_LEAST_, _AT_MOST_, _BETWEEN_]:
       return InvocationVerifier(self, method_name)
       
     return InvocationMemorizer(self, method_name)
@@ -102,7 +102,7 @@ class InvocationMemorizer(Invocation):
         return invocation.answers[0].answer()
     
     return None
-  
+
 class InvocationVerifier(Invocation):
   def __call__(self, *params, **named_params):
     self.params = params
@@ -112,7 +112,7 @@ class InvocationVerifier(Invocation):
         matches += 1
         invocation.verified = True
 
-    # TODO: to be refactored soon. maybe separate class for each verification modes?   
+    # TODO: to be refactored soon. maybe separate class for each verification mode?   
     if self.mock.mocking_mode == 1 and matches != self.mock.mocking_mode:
       raise VerificationError("\nWanted but not invoked: " + str(self))
     elif self.mock.mocking_mode > 1 and matches != self.mock.mocking_mode:
