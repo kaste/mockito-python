@@ -123,6 +123,61 @@ class MockitoVerificationTest(TestBase):
     mock.foo()
 
     self.assertRaises(VerificationError, verify(mock, atLeast=2).foo)
+
+  def testVerifiesAtMostTwoWhenMethodInvokedTwice(self):
+    mock = Mock()
+    mock.foo()
+    mock.foo()
+
+    verify(mock, atMost=2).foo()
+
+  def testVerifiesAtMostTwoWhenMethodInvokedOnce(self):
+    mock = Mock()
+    mock.foo()
+
+    verify(mock, atMost=2).foo()
+
+  def testFailsWhenMethodInvokedFourTimesForAtMostTwoVerification(self):
+    mock = Mock()
+    mock.foo()
+    mock.foo()
+    mock.foo()
+    mock.foo()
+
+    self.assertRaises(VerificationError, verify(mock, atMost=2).foo)
+
+  def testVerifiesBetween(self):
+    mock = Mock()
+    mock.foo()
+    mock.foo()
+
+    verify(mock, between=[1, 2]).foo()
+    verify(mock, between=[2, 3]).foo()
+    verify(mock, between=[1, 5]).foo()
+    verify(mock, between=[2, 2]).foo()
+
+  def testFailsVerificationWithBetween(self):
+    mock = Mock()
+    mock.foo()
+    mock.foo()
+    mock.foo()
+
+    self.assertRaises(VerificationError, verify(mock, between=[1, 2]).foo)
+    self.assertRaises(VerificationError, verify(mock, between=[4, 9]).foo)
+
+  def testFailsAtMostAtLeastAndBetweenVerificationWithWrongArguments(self):
+    mock = Mock()
+    
+    self.assertRaises(ArgumentError, verify, mock, atLeast=0)
+    self.assertRaises(ArgumentError, verify, mock, atLeast=-5)
+    self.assertRaises(ArgumentError, verify, mock, atMost=0)
+    self.assertRaises(ArgumentError, verify, mock, atMost=-5)
+    self.assertRaises(ArgumentError, verify, mock, between=[5, 1])
+    self.assertRaises(ArgumentError, verify, mock, between=[-1, 1])
+    self.assertRaises(ArgumentError, verify, mock, atLeast=5, atMost=5)
+    self.assertRaises(ArgumentError, verify, mock, atLeast=5, between=[1, 2])
+    self.assertRaises(ArgumentError, verify, mock, atMost=5, between=[1, 2])    
+    self.assertRaises(ArgumentError, verify, mock, atLeast=5, atMost=5, between=[1, 2])
     
 if __name__ == '__main__':
   unittest.main()
