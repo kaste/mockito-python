@@ -101,6 +101,28 @@ class MockitoVerificationTest(TestBase):
 
   def testFailsWhenTimesIsLessThanZero(self):
     self.assertRaises(ArgumentError, verify, None, -1)
+
+  def testVerifiesAtLeastTwoWhenMethodInvokedTwice(self):
+    mock = Mock()
+    mock.foo()
+    mock.foo()
+
+    verify(mock, atLeast=2).foo()
+
+  def testVerifiesAtLeastTwoWhenMethodInvokedFourTimes(self):
+    mock = Mock()
+    mock.foo()
+    mock.foo()
+    mock.foo()
+    mock.foo()
+
+    verify(mock, atLeast=2).foo()
+
+  def testFailsWhenMethodInvokedOnceForAtLeastTwoVerification(self):
+    mock = Mock()
+    mock.foo()
+
+    self.assertRaises(VerificationError, verify(mock, atLeast=2).foo)
     
 if __name__ == '__main__':
   unittest.main()

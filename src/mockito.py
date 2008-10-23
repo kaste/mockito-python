@@ -2,6 +2,7 @@ import matchers
 from static_mocker import *
 
 _STUBBING_ = -2
+_AT_LEAST_ = -3
 
 _STATIC_MOCKER_ = StaticMocker()
 
@@ -20,7 +21,7 @@ class Mock:
     if self.isStubbing() or self.isStubbingStatic():
       return InvocationStubber(self, method_name)
     
-    if self.mocking_mode >= 0:
+    if self.mocking_mode >= 0 or self.mocking_mode == _AT_LEAST_:
       return InvocationVerifier(self, method_name)
       
     return InvocationMemorizer(self, method_name)
@@ -109,10 +110,12 @@ class InvocationVerifier(Invocation):
         matches += 1
         invocation.verified = True
   
-    if (self.mock.mocking_mode == 1 and matches != self.mock.mocking_mode):
+    if self.mock.mocking_mode == 1 and matches != self.mock.mocking_mode:
       raise VerificationError("\nWanted but not invoked: " + str(self))
-    elif (matches != self.mock.mocking_mode):
+    elif self.mock.mocking_mode > 1 and matches != self.mock.mocking_mode:
       raise VerificationError("Wanted times: " + str(self.mock.mocking_mode) + ", actual times: " + str(matches))
+    elif self.mock.mocking_mode == _AT_LEAST_ and matches < self.mock.mocking_mode_value: 
+      raise VerificationError("Wanted at least: " + str(self.mock.mocking_mode_value) + ", actual times: " + str(matches))
   
 class InvocationStubber(Invocation):
   def __call__(self, *params, **named_params):
@@ -147,8 +150,7 @@ class Answer:
     self.answers.append(answer)
 
   def answer(self):
-    answer = self.current()[0] 
-    type = self.current()[1]
+    answer, type = self.current() 
     if self.index < len(self.answers) - 1: self.index += 1
     if type == _THROWS_: raise answer
     return answer
@@ -159,7 +161,7 @@ class VerificationError(AssertionError):
 class ArgumentError(Exception):
   pass
   
-def verify(obj, times=1):
+def verify(obj, times=1, atLeast=None):
   if times < 0:
     raise ArgumentError("'times' argument has invalid value. It should be at least 0. You wanted to set it to: " + str(times))
    
@@ -167,6 +169,9 @@ def verify(obj, times=1):
   else: mock = obj
   
   mock.mocking_mode = times
+  if atLeast:
+      mock.mocking_mode = _AT_LEAST_
+      mock.mocking_mode_value = atLeast
   return mock
 
 def times(count):
@@ -197,7 +202,6 @@ def verifyNoMoreInteractions(*mocks):
 def verifyZeroInteractions(*mocks):
   verifyNoMoreInteractions(*mocks)
       
-#TODO how to generate documentation from python?      
 def any(wanted_type=None):
   """Matches any() argument OR any(SomeClass) argument
      Examples:

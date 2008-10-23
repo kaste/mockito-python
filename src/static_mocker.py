@@ -2,8 +2,8 @@ import inspect
 import types
 
 class StaticMocker:
-  """Deals with static methods AND class methods AND with module methods. 
-  To me they all are just static, procedural-like functions, hence StaticMocker"""
+  """Deals with static methods AND class methods AND with module functions. 
+  As they all are just static, procedural-like functions, hence StaticMocker"""
   
   def __init__(self):
     self.originals = []
@@ -44,7 +44,7 @@ class StaticMocker:
     return self.static_mocks[cls]
   
   def accepts(self, obj):
-     return inspect.ismodule(obj) or isinstance(obj, types.ClassType)
+    return inspect.ismodule(obj) or isinstance(obj, types.ClassType)
   
   def unstub(self):
     while self.originals:
