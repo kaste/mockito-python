@@ -2,6 +2,9 @@ import matchers
 from static_mocker import *
 
 _STUBBING_ = -2
+_AT_LEAST_ = -3
+_AT_MOST_ = -4
+_BETWEEN_ = -5
 
 _STATIC_MOCKER_ = StaticMocker()
 
@@ -20,7 +23,7 @@ class Mock:
     if self.isStubbing() or self.isStubbingStatic():
       return InvocationStubber(self, method_name)
     
-    if self.mocking_mode >= 0:
+    if self.mocking_mode >= 0 or self.mocking_mode in [_AT_LEAST_, _AT_MOST_, _BETWEEN_]:
       return InvocationVerifier(self, method_name)
       
     return InvocationMemorizer(self, method_name)
@@ -99,7 +102,7 @@ class InvocationMemorizer(Invocation):
         return invocation.answers[0].answer()
     
     return None
-  
+
 class InvocationVerifier(Invocation):
   def __call__(self, *params, **named_params):
     self.params = params
@@ -108,11 +111,18 @@ class InvocationVerifier(Invocation):
       if self.matches(invocation):
         matches += 1
         invocation.verified = True
-  
-    if (self.mock.mocking_mode == 1 and matches != self.mock.mocking_mode):
+
+    # TODO: to be refactored soon. maybe separate class for each verification mode?   
+    if self.mock.mocking_mode == 1 and matches != self.mock.mocking_mode:
       raise VerificationError("\nWanted but not invoked: " + str(self))
-    elif (matches != self.mock.mocking_mode):
+    elif self.mock.mocking_mode > 1 and matches != self.mock.mocking_mode:
       raise VerificationError("Wanted times: " + str(self.mock.mocking_mode) + ", actual times: " + str(matches))
+    elif self.mock.mocking_mode == _AT_LEAST_ and matches < self.mock.mocking_mode_value: 
+      raise VerificationError("Wanted at least: " + str(self.mock.mocking_mode_value) + ", actual times: " + str(matches))
+    elif self.mock.mocking_mode == _AT_MOST_ and matches > self.mock.mocking_mode_value: 
+      raise VerificationError("Wanted at most: " + str(self.mock.mocking_mode_value) + ", actual times: " + str(matches))
+    elif self.mock.mocking_mode == _BETWEEN_ and (matches < self.mock.mocking_mode_value[0] or matches > self.mock.mocking_mode_value[1]): 
+      raise VerificationError("Wanted between: " + str(self.mock.mocking_mode_value) + ", actual times: " + str(matches))
   
 class InvocationStubber(Invocation):
   def __call__(self, *params, **named_params):
@@ -147,8 +157,7 @@ class Answer:
     self.answers.append(answer)
 
   def answer(self):
-    answer = self.current()[0] 
-    type = self.current()[1]
+    answer, type = self.current() 
     if self.index < len(self.answers) - 1: self.index += 1
     if type == _THROWS_: raise answer
     return answer
@@ -158,15 +167,35 @@ class VerificationError(AssertionError):
 
 class ArgumentError(Exception):
   pass
-  
-def verify(obj, times=1):
+
+def verify(obj, times=1, atLeast=None, atMost=None, between=None):
+# TODO: refactor this mess below...  
   if times < 0:
     raise ArgumentError("'times' argument has invalid value. It should be at least 0. You wanted to set it to: " + str(times))
+  if len(filter(lambda x: x, [atLeast, atMost, between])) > 1:
+    raise ArgumentError("Sure you know what you are doing? You can set only one of the arguments: 'atLeast', 'atMost' or 'between'.")
+  if (atLeast and atLeast < 1) or atLeast == 0:
+    raise ArgumentError("'atLeast' argument has invalid value. It should be at least 1.  You wanted to set it to: " + str(atLeast))
+  if (atMost and atMost < 1) or atMost == 0:
+    raise ArgumentError("'atMost' argument has invalid value. It should be at least 1.  You wanted to set it to: " + str(atMost))
+  if between:
+    start, end = between
+    if start > end or start < 0:
+      raise ArgumentError("'between' argument has invalid value. It should be both positive values with second number not greater than first e.g. [1, 4] or [0, 3] or [2, 2].  You wanted to set it to: " + str(between))
    
   if _STATIC_MOCKER_.accepts(obj): mock = _STATIC_MOCKER_.getMockFor(obj)  
   else: mock = obj
   
   mock.mocking_mode = times
+  if atLeast:
+      mock.mocking_mode = _AT_LEAST_
+      mock.mocking_mode_value = atLeast
+  elif atMost:
+      mock.mocking_mode = _AT_MOST_
+      mock.mocking_mode_value = atMost      
+  elif between:
+      mock.mocking_mode = _BETWEEN_
+      mock.mocking_mode_value = between      
   return mock
 
 def times(count):
@@ -197,7 +226,6 @@ def verifyNoMoreInteractions(*mocks):
 def verifyZeroInteractions(*mocks):
   verifyNoMoreInteractions(*mocks)
       
-#TODO how to generate documentation from python?      
 def any(wanted_type=None):
   """Matches any() argument OR any(SomeClass) argument
      Examples:
