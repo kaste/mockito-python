@@ -19,6 +19,8 @@ class MockitoVerificationTest(TestBase):
 
     verify(mock).foo()
     verify(mock).someOtherMethod(1, bararg="bar", fooarg="foo")
+    
+#TODO verify named params
 
   def testFailsVerification(self):
     mock = Mock()
