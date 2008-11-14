@@ -26,8 +26,10 @@ class MockitoStubbingTest(TestBase):
       when(mock).getWidget().thenReturn("baz").thenReturn("baz2")
   
       self.assertEquals("foo", mock.getStuff())
-      self.assertEquals("bar", mock.getStuff())     
+      self.assertEquals("bar", mock.getStuff())
+      self.assertEquals("bar", mock.getStuff())        
       self.assertEquals("baz", mock.getWidget())
+      self.assertEquals("baz2", mock.getWidget())
       self.assertEquals("baz2", mock.getWidget())
     
   def testStubsWithException(self):
