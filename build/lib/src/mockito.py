@@ -1,6 +1,5 @@
 import matchers
 from static_mocker import *
-from method_printer import *
 
 _STUBBING_ = -2
 
@@ -49,6 +48,7 @@ class Invocation:
     self.mock = mock
     self.answers = []
     self.verified = False
+    self.params = ()
   
   def getMockedObj(self):
     return self.mock.mocked_obj
@@ -60,7 +60,8 @@ class Invocation:
     setattr(self.getMockedObj(), self.method_name, new_method)
     
   def __cmp__(self, other):
-    return 0 if self.matches(other) else 1
+    if self.matches(other): return 0
+    else: return 1
     
   def matches(self, invocation):
     if self.method_name == invocation.method_name and self.params == invocation.params:
@@ -85,6 +86,9 @@ class Invocation:
         
     self.mock.finishStubbing(self)
     
+  def __str__(self):
+    return self.method_name + str(self.params)    
+    
 class InvocationMemorizer(Invocation):
   def __call__(self, *params, **named_params):
     self.params = params
@@ -105,10 +109,8 @@ class InvocationVerifier(Invocation):
         matches += 1
         invocation.verified = True
   
-    #TODO LoD    
     if (self.mock.mocking_mode == 1 and matches != self.mock.mocking_mode):
-      m = MethodPrinter().str(self.method_name, *self.params)
-      raise VerificationError("\nWanted but not invoked: " + m)
+      raise VerificationError("\nWanted but not invoked: " + str(self))
     elif (matches != self.mock.mocking_mode):
       raise VerificationError("Wanted times: " + str(self.mock.mocking_mode) + ", actual times: " + str(matches))
   
@@ -117,7 +119,7 @@ class InvocationStubber(Invocation):
     self.params = params    
     return AnswerSelector(self)
   
-class AnswerSelector():
+class AnswerSelector:
   def __init__(self, invocation):
     self.invocation = invocation
     self.chained_mode = False
@@ -133,7 +135,7 @@ class AnswerSelector():
     self.chained_mode = True
     return self      
 
-class Answer():
+class Answer:
   def __init__(self, value, type):
     self.answers = [[value, type]]
     self.index = 0
@@ -160,8 +162,10 @@ class ArgumentError(Exception):
 def verify(obj, times=1):
   if times < 0:
     raise ArgumentError("'times' argument has invalid value. It should be at least 0. You wanted to set it to: " + str(times))
-
-  mock = _STATIC_MOCKER_.getMockFor(obj) if _STATIC_MOCKER_.accepts(obj) else obj
+   
+  if _STATIC_MOCKER_.accepts(obj): mock = _STATIC_MOCKER_.getMockFor(obj)  
+  else: mock = obj
+  
   mock.mocking_mode = times
   return mock
 
@@ -188,8 +192,12 @@ def verifyNoMoreInteractions(*mocks):
   for mock in mocks:
     for i in mock.invocations:
       if not i.verified:
-        raise VerificationError("Unwanted interaction: " + i.method_name)
+        raise VerificationError("\nUnwanted interaction: " + str(i))
       
+def verifyZeroInteractions(*mocks):
+  verifyNoMoreInteractions(*mocks)
+      
+#TODO how to generate documentation from python?      
 def any(wanted_type=None):
   """Matches any() argument OR any(SomeClass) argument
      Examples:
