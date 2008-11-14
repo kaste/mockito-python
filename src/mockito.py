@@ -63,11 +63,12 @@ class Invocation:
     setattr(self.getMockedObj(), self.method_name, new_method)
     
   def matches(self, invocation):
-    if self.method_name == invocation.method_name and self.params == invocation.params:
-      return True
+    if self.method_name != invocation.method_name:
+      return False
     if len(self.params) != len(invocation.params):
       return False
-    return self.method_name == invocation.method_name and self.__compareUsingMatchers(invocation)
+    
+    return self.__compareUsingMatchers(invocation)
 
   def __compareUsingMatchers(self, invocation):  
     for x, p1 in enumerate(self.params):
