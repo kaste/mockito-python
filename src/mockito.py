@@ -57,6 +57,7 @@ class Invocation:
     return self.mock.mocked_obj
   
   def getRealMethod(self):
+#TODO    LoD
     return self.getMockedObj().__dict__.get(self.method_name)
   
   def replaceMethod(self, new_method):
