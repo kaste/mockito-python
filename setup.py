@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(name='mockito',
       version='0.1.0',
-      py_modules=['src/mockito', 'src/matchers', 'src/static_mocker', 'src/method_printer'],
+      py_modules=['src/mockito', 'src/matchers', 'src/static_mocker'],
       url='http://code.google.com/p/mockito/wiki/MockitoForPython',
       maintainer='mockito maintainers',
       maintainer_email='mockito-python@googlegroups.com',
