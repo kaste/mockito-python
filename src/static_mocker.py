@@ -21,8 +21,8 @@ class StaticMocker:
     
     def new_mocked_method(*params, **named_params): 
       if self._is_classmethod(original_method): params = params[1:]
-      i = invocation.mock.__getattr__(invocation.method_name)
-      return i.__call__(*params, **named_params)
+      call = invocation.mock.__getattr__(invocation.method_name)
+      return call(*params, **named_params)
       
     if self._is_staticmethod(original_method):
       invocation.replaceMethod(staticmethod(new_mocked_method))
