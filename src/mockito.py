@@ -35,15 +35,15 @@ class Mock:
     return self.mocking_mode == _STUBBING_
   
   def finishStubbing(self, invocation):
-    if (self.stubbed_invocations.count(invocation)):
-      self.stubbed_invocations.remove(invocation)
-      
-    self.stubbed_invocations.append(invocation)
+    self.stubbed_invocations.insert(0, invocation)
     
     if (self.isStubbingStatic()):
       _STATIC_MOCKER_.stub(invocation)
       
     self.mocking_mode = None
+    
+  def remember(self, invocation):
+    self.invocations.insert(0, invocation)
     
 class Invocation:
   def __init__(self, mock, method_name):
@@ -61,10 +61,6 @@ class Invocation:
   
   def replaceMethod(self, new_method):
     setattr(self.getMockedObj(), self.method_name, new_method)
-    
-  def __cmp__(self, other):
-    if self.matches(other): return 0
-    else: return 1
     
   def matches(self, invocation):
     if self.method_name == invocation.method_name and self.params == invocation.params:
@@ -89,13 +85,13 @@ class Invocation:
         
     self.mock.finishStubbing(self)
     
-  def __str__(self):
+  def __repr__(self):
     return self.method_name + str(self.params)    
     
 class InvocationMemorizer(Invocation):
   def __call__(self, *params, **named_params):
     self.params = params
-    self.mock.invocations.append(self)#LoD
+    self.mock.remember(self)
     
     for invocation in self.mock.stubbed_invocations:
       if self.matches(invocation):
