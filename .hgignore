@@ -1,4 +1,6 @@
-# use glob syntax.
 syntax: glob
 
 *.pyc
+
+syntax: regexp
+^build.*
