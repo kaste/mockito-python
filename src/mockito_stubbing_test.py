@@ -119,6 +119,13 @@ class MockitoStubbingTest(TestBase):
     
     self.assertEquals(exception, mock.getStuff())
     
+  def testLastStubbingWins(self):
+    mock = Mock()
+    when(mock).foo().thenReturn(1)
+    when(mock).foo().thenReturn(2)
+    
+    self.assertEquals(2, mock.foo())
+    
 #TODO verify after stubbing and vice versa
 
 if __name__ == '__main__':
