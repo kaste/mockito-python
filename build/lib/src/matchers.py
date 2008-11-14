@@ -6,8 +6,9 @@ class Any(Matcher):
   def __init__(self, wanted_type=None):
     self.wanted_type = wanted_type
     
-  def matches(self, arg):
-    return isinstance(arg, self.wanted_type) if self.wanted_type else True
+  def matches(self, arg):     
+    if self.wanted_type: return isinstance(arg, self.wanted_type)
+    else: return True
 
 class Contains(Matcher):
   def __init__(self, sub):
