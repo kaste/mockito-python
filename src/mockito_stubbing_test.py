@@ -12,6 +12,24 @@ class MockitoStubbingTest(TestBase):
     self.assertEquals(10, mock.getMoreStuff(1, 2))
     self.assertEquals(None, mock.getMoreStuff(1, 3))
     
+  def testStubsWhenNoArgsGiven(self):
+      mock = Mock()
+      when(mock).getStuff().thenReturn("foo")
+      when(mock).getWidget().thenReturn("bar")
+  
+      self.assertEquals("foo", mock.getStuff())
+      self.assertEquals("bar", mock.getWidget())     
+    
+  def testStubsConsecutivelyWhenNoArgsGiven(self):
+      mock = Mock()
+      when(mock).getStuff().thenReturn("foo").thenReturn("bar")
+      when(mock).getWidget().thenReturn("baz").thenReturn("baz2")
+  
+      self.assertEquals("foo", mock.getStuff())
+      self.assertEquals("bar", mock.getStuff())     
+      self.assertEquals("baz", mock.getWidget())
+      self.assertEquals("baz2", mock.getWidget())
+    
   def testStubsWithException(self):
     mock = Mock()
     when(mock).someMethod().thenRaise(Exception("foo"))
@@ -98,7 +116,7 @@ class MockitoStubbingTest(TestBase):
     when(mock).getStuff().thenReturn(exception)
     
     self.assertEquals(exception, mock.getStuff())
-
+    
 #TODO verify after stubbing and vice versa
 
 if __name__ == '__main__':

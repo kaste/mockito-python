@@ -68,7 +68,7 @@ class Invocation:
       return True
     if len(self.params) != len(invocation.params):
       return False
-    return self.__compareUsingMatchers(invocation)
+    return self.method_name == invocation.method_name and self.__compareUsingMatchers(invocation)
 
   def __compareUsingMatchers(self, invocation):  
     for x, p1 in enumerate(self.params):
@@ -92,7 +92,7 @@ class Invocation:
 class InvocationMemorizer(Invocation):
   def __call__(self, *params, **named_params):
     self.params = params
-    self.mock.invocations.append(self)
+    self.mock.invocations.append(self)#LoD
     
     for invocation in self.mock.stubbed_invocations:
       if self.matches(invocation):
