@@ -125,6 +125,11 @@ class MockitoStaticMethodsTest(TestBase):
     unstub()
     
     self.assertEquals("woof", Dog.bark())
+    
+  def testDoesNotVerifyStubbedCalls(self):
+    when(Dog).bark().thenReturn(1)
+
+    verify(Dog, times=0).bark()    
 
 if __name__ == '__main__':
   unittest.main()

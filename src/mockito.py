@@ -63,22 +63,6 @@ class Invocation:
   def replaceMethod(self, new_method):
     setattr(self.getMockedObj(), self.method_name, new_method)
     
-  def matches(self, invocation):
-    if self.method_name != invocation.method_name:
-      return False
-    if len(self.params) != len(invocation.params):
-      return False
-    
-    return self.__compareUsingMatchers(invocation)
-
-  def __compareUsingMatchers(self, invocation):  
-    for x, p1 in enumerate(self.params):
-      p2 = invocation.params[x]
-      if isinstance(p1, matchers.Matcher):
-        if not p1.matches(p2): return False
-      elif p1 != p2: return False
-    return True
-  
   def stubWith(self, answer, chained_mode):
     if chained_mode:
         self.answers[-1].append(answer.current())
@@ -88,20 +72,40 @@ class Invocation:
     self.mock.finishStubbing(self)
     
   def __repr__(self):
-    return self.method_name + str(self.params)    
+    return self.method_name + str(self.params)   
+  
+class InvocationMatcher(Invocation):
+   
+  def matches(self, invocation):
+    if self.method_name != invocation.method_name:
+      return False
+    if len(self.params) != len(invocation.params):
+      return False
+    
+    for x, p1 in enumerate(self.params):
+      p2 = invocation.params[x]
+      if isinstance(p1, matchers.Matcher):
+        if not p1.matches(p2): return False
+      elif p1 != p2: return False
+    
+    return True
+  
+  def answer(self):
+    #TODO LoD    
+    return self.answers[0].answer()
     
 class InvocationMemorizer(Invocation):
   def __call__(self, *params, **named_params):
     self.params = params
     self.mock.remember(self)
     
-    for invocation in self.mock.stubbed_invocations:
-      if self.matches(invocation):
-        return invocation.answers[0].answer()
+    for invocation_matcher in self.mock.stubbed_invocations:
+      if invocation_matcher.matches(self):
+        return invocation_matcher.answer()
     
     return None
 
-class InvocationVerifier(Invocation):
+class InvocationVerifier(InvocationMatcher):
   def __call__(self, *params, **named_params):
     self.params = params
     matches = 0
@@ -122,7 +126,7 @@ class InvocationVerifier(Invocation):
     elif self.mock.mocking_mode == _BETWEEN_ and (matches < self.mock.mocking_mode_value[0] or matches > self.mock.mocking_mode_value[1]): 
       raise VerificationError("Wanted between: " + str(self.mock.mocking_mode_value) + ", actual times: " + str(matches))
   
-class InvocationStubber(Invocation):
+class InvocationStubber(InvocationMatcher):
   def __call__(self, *params, **named_params):
     self.params = params    
     return AnswerSelector(self)
