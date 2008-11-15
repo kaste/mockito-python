@@ -24,10 +24,10 @@ class MockitoModuleFunctionsTest(TestBase):
 
   def testStubsMultipleClasses(self):
     when(os.path).exists("test").thenReturn(True)
-    when(os.path).dirname("/usr/local/this").thenReturn("mocked")
+    when(os.path).dirname(any(str)).thenReturn("mocked")
 
     self.assertEquals(True, os.path.exists("test"))
-    self.assertEquals("mocked", os.path.dirname(any(str)))     
+    self.assertEquals("mocked", os.path.dirname("whoah!"))     
 
   def testVerifiesSuccesfully(self):     
     when(os.path).exists("test").thenReturn(True)
