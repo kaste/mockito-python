@@ -126,6 +126,36 @@ class MockitoStubbingTest(TestBase):
     
     self.assertEquals(2, mock.foo())
     
+  def testStubbingOverrides(self):
+    mock = Mock()
+    when(mock).foo().thenReturn(1)
+    when(mock).foo().thenReturn(2).thenReturn(3)
+    
+    self.assertEquals(2, mock.foo())    
+    self.assertEquals(3, mock.foo())    
+    self.assertEquals(3, mock.foo())   
+    
+  def testStubsWithMatchers(self):
+    mock = Mock()
+    when(mock).foo(any()).thenReturn(1)
+    
+    self.assertEquals(1, mock.foo(1))    
+    self.assertEquals(1, mock.foo(100))   
+    
+  def testStubbingOverrides(self):
+    mock = Mock()
+    when(mock).foo(any()).thenReturn(1)
+    when(mock).foo("oh").thenReturn(2)
+    
+    self.assertEquals(2, mock.foo("oh"))    
+    self.assertEquals(1, mock.foo("xxx"))   
+    
+  def testDoesNotVerifyStubbedCalls(self):
+    mock = Mock()
+    when(mock).foo().thenReturn(1)
+
+    verify(mock, times=0).foo()
+
 #TODO verify after stubbing and vice versa
 
 if __name__ == '__main__':
