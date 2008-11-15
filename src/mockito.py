@@ -11,7 +11,7 @@ _STATIC_MOCKER_ = StaticMocker()
 _RETURNS_ = 1
 _THROWS_ = 2
 
-class Mock:
+class Mock(object):
   
   def __init__(self):
     self.invocations = []
@@ -45,11 +45,10 @@ class Mock:
   def remember(self, invocation):
     self.invocations.insert(0, invocation)
     
-class Invocation:
+class Invocation(object):
   def __init__(self, mock, method_name):
     self.method_name = method_name
     self.mock = mock
-    self.answers = []
     self.verified = False
     self.params = ()
   
@@ -62,14 +61,6 @@ class Invocation:
   
   def replaceMethod(self, new_method):
     setattr(self.getMockedObj(), self.method_name, new_method)
-    
-  def stubWith(self, answer, chained_mode):
-    if chained_mode:
-        self.answers[-1].append(answer.current())
-    else:
-        self.answers.append(answer)
-        
-    self.mock.finishStubbing(self)
     
   def __repr__(self):
     return self.method_name + str(self.params)   
@@ -127,9 +118,21 @@ class InvocationVerifier(InvocationMatcher):
       raise VerificationError("Wanted between: " + str(self.mock.mocking_mode_value) + ", actual times: " + str(matches))
   
 class InvocationStubber(InvocationMatcher):
+  def __init__(self, mock, method_name):
+    super(InvocationStubber, self).__init__(mock, method_name)
+    self.answers = []
+  
   def __call__(self, *params, **named_params):
     self.params = params    
     return AnswerSelector(self)
+  
+  def stubWith(self, answer, chained_mode):
+    if chained_mode:
+        self.answers[-1].append(answer.current())
+    else:
+        self.answers.append(answer)
+        
+    self.mock.finishStubbing(self)  
   
 class AnswerSelector:
   def __init__(self, invocation):
