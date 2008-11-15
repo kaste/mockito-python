@@ -20,7 +20,7 @@ class Mock(object):
     self.mocked_obj = None
   
   def __getattr__(self, method_name):
-    if self.isStubbing() or self.isStubbingStatic():
+    if self.isStubbing():
       return StubbedInvocation(self, method_name)
     
     if self.mocking_mode >= 0 or self.mocking_mode in [_AT_LEAST_, _AT_MOST_, _BETWEEN_]:
@@ -28,19 +28,15 @@ class Mock(object):
       
     return RememberedInvocation(self, method_name)
   
-  def isStubbingStatic(self):
-    return self.isStubbing() and _STATIC_MOCKER_.accepts(self.mocked_obj) 
-  
   def isStubbing(self):
     return self.mocking_mode == _STUBBING_
   
-  def finishStubbing(self, invocation):
-    self.stubbed_invocations.insert(0, invocation)
-    
-    if (self.isStubbingStatic()):
-      _STATIC_MOCKER_.stub(invocation)
-      
+  def finishStubbing(self, stubbed_invocation):
+    self.stubbed_invocations.insert(0, stubbed_invocation)
     self.mocking_mode = None
+    
+    if (_STATIC_MOCKER_.accepts(self.mocked_obj)):    
+      _STATIC_MOCKER_.stub(stubbed_invocation)
     
   def remember(self, invocation):
     self.invocations.insert(0, invocation)
@@ -52,7 +48,7 @@ class Invocation(object):
     self.verified = False
     self.params = ()
     self.answers = []
-  
+    
   def __repr__(self):
     return self.method_name + str(self.params)   
   
@@ -118,16 +114,12 @@ class StubbedInvocation(MatchingInvocation):
         
     self.mock.finishStubbing(self)
     
-  def getMockedObj(self):
-    return self.mock.mocked_obj
-  
-  def getRealMethod(self):
-    #TODO    LoD
-    return self.getMockedObj().__dict__.get(self.method_name)
+  def getOriginalMethod(self):
+    return self.mock.mocked_obj.__dict__.get(self.method_name)
   
   def replaceMethod(self, new_method):
-    setattr(self.getMockedObj(), self.method_name, new_method)    
-  
+    setattr(self.mock.mocked_obj, self.method_name, new_method)    
+    
 class AnswerSelector:
   def __init__(self, invocation):
     self.invocation = invocation
