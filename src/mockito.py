@@ -21,12 +21,12 @@ class Mock(object):
   
   def __getattr__(self, method_name):
     if self.isStubbing() or self.isStubbingStatic():
-      return InvocationStubber(self, method_name)
+      return StubbedInvocation(self, method_name)
     
     if self.mocking_mode >= 0 or self.mocking_mode in [_AT_LEAST_, _AT_MOST_, _BETWEEN_]:
-      return InvocationVerifier(self, method_name)
+      return VerifiableInvocation(self, method_name)
       
-    return InvocationMemorizer(self, method_name)
+    return RememberedInvocation(self, method_name)
   
   def isStubbingStatic(self):
     return self.isStubbing() and _STATIC_MOCKER_.accepts(self.mocked_obj) 
@@ -51,21 +51,12 @@ class Invocation(object):
     self.mock = mock
     self.verified = False
     self.params = ()
+    self.answers = []
   
-  def getMockedObj(self):
-    return self.mock.mocked_obj
-  
-  def getRealMethod(self):
-#TODO    LoD
-    return self.getMockedObj().__dict__.get(self.method_name)
-  
-  def replaceMethod(self, new_method):
-    setattr(self.getMockedObj(), self.method_name, new_method)
-    
   def __repr__(self):
     return self.method_name + str(self.params)   
   
-class InvocationMatcher(Invocation):
+class MatchingInvocation(Invocation):
    
   def matches(self, invocation):
     if self.method_name != invocation.method_name:
@@ -81,22 +72,19 @@ class InvocationMatcher(Invocation):
     
     return True
   
-  def answer(self):
-    #TODO LoD    
-    return self.answers[0].answer()
-    
-class InvocationMemorizer(Invocation):
+class RememberedInvocation(Invocation):
   def __call__(self, *params, **named_params):
     self.params = params
     self.mock.remember(self)
     
-    for invocation_matcher in self.mock.stubbed_invocations:
-      if invocation_matcher.matches(self):
-        return invocation_matcher.answer()
+    for matching_invocation in self.mock.stubbed_invocations:
+      if matching_invocation.matches(self):
+        #TODO LoD    
+        return matching_invocation.answers[0].answer()
     
     return None
 
-class InvocationVerifier(InvocationMatcher):
+class VerifiableInvocation(MatchingInvocation):
   def __call__(self, *params, **named_params):
     self.params = params
     matches = 0
@@ -117,11 +105,7 @@ class InvocationVerifier(InvocationMatcher):
     elif self.mock.mocking_mode == _BETWEEN_ and (matches < self.mock.mocking_mode_value[0] or matches > self.mock.mocking_mode_value[1]): 
       raise VerificationError("Wanted between: " + str(self.mock.mocking_mode_value) + ", actual times: " + str(matches))
   
-class InvocationStubber(InvocationMatcher):
-  def __init__(self, mock, method_name):
-    super(InvocationStubber, self).__init__(mock, method_name)
-    self.answers = []
-  
+class StubbedInvocation(MatchingInvocation):
   def __call__(self, *params, **named_params):
     self.params = params    
     return AnswerSelector(self)
@@ -132,7 +116,17 @@ class InvocationStubber(InvocationMatcher):
     else:
         self.answers.append(answer)
         
-    self.mock.finishStubbing(self)  
+    self.mock.finishStubbing(self)
+    
+  def getMockedObj(self):
+    return self.mock.mocked_obj
+  
+  def getRealMethod(self):
+    #TODO    LoD
+    return self.getMockedObj().__dict__.get(self.method_name)
+  
+  def replaceMethod(self, new_method):
+    setattr(self.getMockedObj(), self.method_name, new_method)    
   
 class AnswerSelector:
   def __init__(self, invocation):
