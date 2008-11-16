@@ -1,46 +1,12 @@
 import matchers
 from static_mocker import *
-
-_STUBBING_ = -2
-_AT_LEAST_ = -3
-_AT_MOST_ = -4
-_BETWEEN_ = -5
+from mock import *
 
 _STATIC_MOCKER_ = StaticMocker()
 
 _RETURNS_ = 1
 _THROWS_ = 2
 
-class Mock(object):
-  
-  def __init__(self):
-    self.invocations = []
-    self.stubbed_invocations = []
-    self.mocking_mode = None
-    self.mocked_obj = None
-  
-  def __getattr__(self, method_name):
-    if self.isStubbing():
-      return StubbedInvocation(self, method_name)
-    
-    if self.mocking_mode >= 0 or self.mocking_mode in [_AT_LEAST_, _AT_MOST_, _BETWEEN_]:
-      return VerifiableInvocation(self, method_name)
-      
-    return RememberedInvocation(self, method_name)
-  
-  def isStubbing(self):
-    return self.mocking_mode == _STUBBING_
-  
-  def finishStubbing(self, stubbed_invocation):
-    self.stubbed_invocations.insert(0, stubbed_invocation)
-    self.mocking_mode = None
-    
-    if (_STATIC_MOCKER_.accepts(self.mocked_obj)):    
-      _STATIC_MOCKER_.stub(stubbed_invocation)
-    
-  def remember(self, invocation):
-    self.invocations.insert(0, invocation)
-    
 class Invocation(object):
   def __init__(self, mock, method_name):
     self.method_name = method_name
@@ -89,17 +55,9 @@ class VerifiableInvocation(MatchingInvocation):
         matches += 1
         invocation.verified = True
 
-    # TODO: to be refactored soon. maybe separate class for each verification mode?   
-    if self.mock.mocking_mode == 1 and matches != self.mock.mocking_mode:
-      raise VerificationError("\nWanted but not invoked: " + str(self))
-    elif self.mock.mocking_mode > 1 and matches != self.mock.mocking_mode:
-      raise VerificationError("Wanted times: " + str(self.mock.mocking_mode) + ", actual times: " + str(matches))
-    elif self.mock.mocking_mode == _AT_LEAST_ and matches < self.mock.mocking_mode_value: 
-      raise VerificationError("Wanted at least: " + str(self.mock.mocking_mode_value) + ", actual times: " + str(matches))
-    elif self.mock.mocking_mode == _AT_MOST_ and matches > self.mock.mocking_mode_value: 
-      raise VerificationError("Wanted at most: " + str(self.mock.mocking_mode_value) + ", actual times: " + str(matches))
-    elif self.mock.mocking_mode == _BETWEEN_ and (matches < self.mock.mocking_mode_value[0] or matches > self.mock.mocking_mode_value[1]): 
-      raise VerificationError("Wanted between: " + str(self.mock.mocking_mode_value) + ", actual times: " + str(matches))
+    verification = self.mock.verification
+    self.mock.verification = None
+    verification.verify(self, matches)
   
 class StubbedInvocation(MatchingInvocation):
   def __call__(self, *params, **named_params):
@@ -113,6 +71,7 @@ class StubbedInvocation(MatchingInvocation):
         self.answers.append(answer)
         
     self.mock.finishStubbing(self)
+    _STATIC_MOCKER_.stub(self)
     
   def getOriginalMethod(self):
     return self.mock.mocked_obj.__dict__.get(self.method_name)
@@ -177,17 +136,50 @@ def verify(obj, times=1, atLeast=None, atMost=None, between=None):
   if _STATIC_MOCKER_.accepts(obj): mock = _STATIC_MOCKER_.getMockFor(obj)  
   else: mock = obj
   
-  mock.mocking_mode = times
   if atLeast:
-      mock.mocking_mode = _AT_LEAST_
-      mock.mocking_mode_value = atLeast
+    mock.verification = AtLeast(atLeast)
   elif atMost:
-      mock.mocking_mode = _AT_MOST_
-      mock.mocking_mode_value = atMost      
+    mock.verification = AtMost(atMost)
   elif between:
-      mock.mocking_mode = _BETWEEN_
-      mock.mocking_mode_value = between      
+    mock.verification = Between(*between)
+  else:
+    mock.verification = Times(times)
   return mock
+
+class AtLeast(object):
+  def __init__(self, wanted_count):
+    self.wanted_count = wanted_count
+    
+  def verify(self, invocation, actual_count):
+    if actual_count < self.wanted_count: 
+      raise VerificationError("Wanted at least: " + str(self.wanted_count) + ", actual times: " + str(actual_count))
+    
+class AtMost(object):
+  def __init__(self, wanted_count):
+    self.wanted_count = wanted_count
+    
+  def verify(self, invocation, actual_count):
+    if actual_count > self.wanted_count: 
+      raise VerificationError("Wanted at most: " + str(self.wanted_count) + ", actual times: " + str(actual_count))
+
+class Between(object):
+  def __init__(self, wanted_from, wanted_to):
+    self.wanted_from = wanted_from
+    self.wanted_to = wanted_to
+    
+  def verify(self, invocation, actual_count):
+    if actual_count < self.wanted_from or actual_count > self.wanted_to: 
+      raise VerificationError("Wanted between: " + str((self.wanted_from, self.wanted_to)) + ", actual times: " + str(actual_count))
+    
+class Times(object):
+  def __init__(self, wanted_count):
+    self.wanted_count = wanted_count
+    
+  def verify(self, invocation, actual_count):
+    if actual_count != self.wanted_count:
+      raise VerificationError("\nWanted but not invoked: " + str(invocation))
+    elif actual_count != self.wanted_count:
+      raise VerificationError("Wanted times: " + str(self.wanted_count) + ", actual times: " + str(actual_count))
 
 def times(count):
   return count
@@ -200,7 +192,7 @@ def when(obj):
     mock = Mock()
     mock.mocked_obj = obj
 
-  mock.mocking_mode = _STUBBING_
+  mock.expectStubbing()
   return mock
 
 def unstub():
