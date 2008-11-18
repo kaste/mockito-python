@@ -61,10 +61,8 @@ class StubbedInvocation(MatchingInvocation):
     return AnswerSelector(self)
   
   def stubWith(self, answer, chained_mode):
-    if chained_mode:
-        self.answers[-1].append(answer.current())
-    else:
-        self.answers.append(answer)
+#    if (not self.answers.count(answer)):
+    self.answers.append(answer)
         
     static_mocker.INSTANCE.stub(self)
     self.mock.finishStubbing(self)
@@ -75,35 +73,53 @@ class StubbedInvocation(MatchingInvocation):
   def replaceMethod(self, new_method):
     setattr(self.mock.mocked_obj, self.method_name, new_method)  
     
-class AnswerSelector:
+class AnswerSelector(object):
   def __init__(self, invocation):
     self.invocation = invocation
-    self.chained_mode = False
+    self.answer = None
     
   def thenReturn(self, return_value):
-    return self.__then(Answer(return_value, _RETURNS_))
+    return self.__then(Return(return_value))
     
   def thenRaise(self, exception):
-    return self.__then(Answer(exception, _THROWS_))
+    return self.__then(Raise(exception))
 
   def __then(self, answer):
-    self.invocation.stubWith(answer, self.chained_mode)     
-    self.chained_mode = True
+    if (not self.answer):
+      self.answer = CompositeAnswer(answer)
+      self.invocation.stubWith(self.answer, False)
+    else:
+      self.answer.add(answer)
+      
+#    if (not self.chained_mode):
+           
     return self      
 
-class Answer:
-  def __init__(self, value, type):
-    self.answers = [[value, type]]
-    self.index = 0
-
-  def current(self):
-    return self.answers[self.index]
-
-  def append(self, answer):
-    self.answers.append(answer)
-
+class CompositeAnswer(object):
+  def __init__(self, answer):
+    self.answers = [answer]
+    
+  def add(self, answer):
+    self.answers.insert(0, answer)
+    
   def answer(self):
-    answer, type = self.current() 
-    if self.index < len(self.answers) - 1: self.index += 1
-    if type == _THROWS_: raise answer
-    return answer
+    if len(self.answers) > 1:
+      a = self.answers.pop().answer()
+    else:
+      a = self.answers[0].answer()
+      
+    return a
+
+class Raise(object):
+  def __init__(self, exception):
+    self.exception = exception
+    
+  def answer(self):
+    raise self.exception
+  
+class Return(object):
+  def __init__(self, return_value):
+    self.return_value = return_value
+    
+  def answer(self):
+    return self.return_value
