@@ -1,8 +1,8 @@
-from test_base import *
 from mockito import *
+import test_base
 
 #TODO remove Mockito prefix from all classes
-class MockitoVerificationTest(TestBase):
+class MockitoVerificationTest(test_base.TestBase):
   
   def testVerifies(self):
     mock = Mock()
@@ -123,7 +123,6 @@ class MockitoVerificationTest(TestBase):
   def testFailsWhenMethodInvokedOnceForAtLeastTwoVerification(self):
     mock = Mock()
     mock.foo()
-
     self.assertRaises(VerificationError, verify(mock, atLeast=2).foo)
 
   def testVerifiesAtMostTwoWhenMethodInvokedTwice(self):
@@ -182,4 +181,4 @@ class MockitoVerificationTest(TestBase):
     self.assertRaises(ArgumentError, verify, mock, atLeast=5, atMost=5, between=[1, 2])
     
 if __name__ == '__main__':
-  unittest.main()
+  test_base.unittest.main()
