@@ -53,3 +53,5 @@ class StaticMocker:
     while self.originals:
       original_method, stubbed_invocation = self.originals.pop()
       stubbed_invocation.replaceMethod(original_method)
+
+INSTANCE = StaticMocker()
