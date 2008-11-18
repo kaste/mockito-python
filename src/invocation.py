@@ -60,10 +60,8 @@ class StubbedInvocation(MatchingInvocation):
     self.params = params    
     return AnswerSelector(self)
   
-  def stubWith(self, answer, chained_mode):
-#    if (not self.answers.count(answer)):
+  def stubWith(self, answer):
     self.answers.append(answer)
-        
     static_mocker.INSTANCE.stub(self)
     self.mock.finishStubbing(self)
     
@@ -87,12 +85,10 @@ class AnswerSelector(object):
   def __then(self, answer):
     if (not self.answer):
       self.answer = CompositeAnswer(answer)
-      self.invocation.stubWith(self.answer, False)
+      self.invocation.stubWith(self.answer)
     else:
       self.answer.add(answer)
       
-#    if (not self.chained_mode):
-           
     return self      
 
 class CompositeAnswer(object):
@@ -104,11 +100,11 @@ class CompositeAnswer(object):
     
   def answer(self):
     if len(self.answers) > 1:
-      a = self.answers.pop().answer()
+      a = self.answers.pop()
     else:
-      a = self.answers[0].answer()
+      a = self.answers[0]
       
-    return a
+    return a.answer()
 
 class Raise(object):
   def __init__(self, exception):
