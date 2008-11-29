@@ -9,7 +9,7 @@ def openFile(f, m='r'):
   else:
     return open('../' + f, m)
     
-demo_test = '  '.join(openFile('src/mockito_demo_test.py').readlines())
+demo_test = '  '.join(openFile('mockito/mockito_demo_test.py').readlines())
 demo_test = re.compile('if __name__.*', re.S).sub('', demo_test)
 
 readme_before = ''.join(openFile('README').readlines())
