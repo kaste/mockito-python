@@ -7,6 +7,13 @@ if (len(sys.argv) > 1 and sys.argv[1] == 'uninstall'):
   
   exit(0)
 
+if (len(sys.argv) > 1 and sys.argv[1] == 'verify'):
+  print 'Verifying installation of mockito...'
+  
+  exit(0)
+  
+#TODO Write a task that tests installation  
+
 from distutils.core import setup
 
 setup(name='mockito',
@@ -19,4 +26,3 @@ setup(name='mockito',
       description='Spying framework',
       long_description='Mockito is a spying framework based on Java library with the same name.'
 )
-
