@@ -4,3 +4,5 @@ syntax: glob
 
 syntax: regexp
 ^build.*
+syntax: regexp
+^src/build$

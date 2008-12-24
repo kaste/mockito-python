@@ -68,4 +68,4 @@ class MockitoClassMethodsTest(TestBase):
     self.assertTrue(Cat.meow("foo").endswith("Cat foo"))
     
 if __name__ == '__main__':
-  unittest.main()    
+  unittest.main()
