@@ -1,4 +1,7 @@
 import unittest
+import mockito_importer
+
+mockito_importer.imp()
 
 class TestBase(unittest.TestCase):
   
