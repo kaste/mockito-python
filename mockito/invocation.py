@@ -76,11 +76,15 @@ class AnswerSelector(object):
     self.invocation = invocation
     self.answer = None
     
-  def thenReturn(self, return_value):
-    return self.__then(Return(return_value))
+  def thenReturn(self, *return_values):
+    for return_value in return_values:
+      self.__then(Return(return_value))
+    return self
     
-  def thenRaise(self, exception):
-    return self.__then(Raise(exception))
+  def thenRaise(self, *exceptions):
+    for exception in exceptions:
+      self.__then(Raise(exception))
+    return self
 
   def __then(self, answer):
     if (not self.answer):

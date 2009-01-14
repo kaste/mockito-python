@@ -156,6 +156,37 @@ class MockitoStubbingTest(TestBase):
 
     verify(mock, times=0).foo()
 
+  def testStubsWithMultipleReturnValues(self):
+    mock = Mock()
+    when(mock).getStuff().thenReturn("foo", "bar", "foobar")
+    
+    self.assertEquals("foo", mock.getStuff())
+    self.assertEquals("bar", mock.getStuff())
+    self.assertEquals("foobar", mock.getStuff())
+
+  def testStubsWithChainedMultipleReturnValues(self):
+    mock = Mock()
+    when(mock).getStuff().thenReturn("foo", "bar").thenReturn("foobar")
+    
+    self.assertEquals("foo", mock.getStuff())
+    self.assertEquals("bar", mock.getStuff())
+    self.assertEquals("foobar", mock.getStuff())
+
+  def testStubsWithMultipleExceptions(self):
+    mock = Mock()
+    when(mock).getStuff().thenRaise(Exception("foo"), Exception("bar"))
+    
+    self.assertRaisesMessage("foo", mock.getStuff)
+    self.assertRaisesMessage("bar", mock.getStuff)
+
+  def testStubsWithMultipleChainedExceptions(self):
+    mock = Mock()
+    when(mock).getStuff().thenRaise(Exception("foo"), Exception("bar")).thenRaise(Exception("foobar"))
+    
+    self.assertRaisesMessage("foo", mock.getStuff)
+    self.assertRaisesMessage("bar", mock.getStuff)
+    self.assertRaisesMessage("foobar", mock.getStuff)
+
 #TODO verify after stubbing and vice versa
 
 if __name__ == '__main__':
