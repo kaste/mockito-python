@@ -1,4 +1,6 @@
 cd mockito_test
 call c:/Python24/python.exe all_tests.py
-cd ..
 pause
+call c:/Python25/python.exe all_tests.py
+pause
+cd ..

@@ -10,17 +10,17 @@ class StaticMocker:
     self.static_mocks = {}
     
   def stub(self, stubbed_invocation):
-    if (not self.accepts(stubbed_invocation.mock.mocked_obj)):
+    if not self.accepts(stubbed_invocation.mock.mocked_obj):
       return    
       
     self.static_mocks[stubbed_invocation.mock.mocked_obj] = stubbed_invocation.mock
-    original_method = stubbed_invocation.getOriginalMethod()
+    original_method = stubbed_invocation.get_original_method()
     original = (original_method, stubbed_invocation)
     self.originals.append(original)
 
-    self._replaceMethod(stubbed_invocation, original_method)
+    self._replace_method(stubbed_invocation, original_method)
     
-  def _replaceMethod(self, stubbed_invocation, original_method):
+  def _replace_method(self, stubbed_invocation, original_method):
     
     def new_mocked_method(*params, **named_params): 
       if self._is_classmethod(original_method): params = params[1:]
@@ -28,11 +28,11 @@ class StaticMocker:
       return call(*params, **named_params)
       
     if self._is_staticmethod(original_method):
-      stubbed_invocation.replaceMethod(staticmethod(new_mocked_method))
+      stubbed_invocation.replace_method(staticmethod(new_mocked_method))
     elif self._is_classmethod(original_method): 
-      stubbed_invocation.replaceMethod(classmethod(new_mocked_method))
+      stubbed_invocation.replace_method(classmethod(new_mocked_method))
     elif inspect.ismodule(stubbed_invocation.mock.mocked_obj):
-      stubbed_invocation.replaceMethod(new_mocked_method)
+      stubbed_invocation.replace_method(new_mocked_method)
     else:
       # TODO create decent error. is it necessary? this case is only useful for library debugging        
       raise "Only module functions, static and class methods can be stubbed"  
@@ -52,6 +52,6 @@ class StaticMocker:
   def unstub(self):
     while self.originals:
       original_method, stubbed_invocation = self.originals.pop()
-      stubbed_invocation.replaceMethod(original_method)
+      stubbed_invocation.replace_method(original_method)
 
 INSTANCE = StaticMocker()
