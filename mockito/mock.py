@@ -10,10 +10,10 @@ class Mock(object):
     self.mocked_obj = None
   
   def __getattr__(self, method_name):
-    if self.stubbing != None:
+    if self.stubbing is not None:
       return invocation.StubbedInvocation(self, method_name)
     
-    if self.verification != None:
+    if self.verification is not None:
       return invocation.VerifiableInvocation(self, method_name)
       
     return invocation.RememberedInvocation(self, method_name)
@@ -21,14 +21,14 @@ class Mock(object):
   def remember(self, invocation):
     self.invocations.insert(0, invocation)
   
-  def finishStubbing(self, stubbed_invocation):
+  def finish_stubbing(self, stubbed_invocation):
     self.stubbed_invocations.insert(0, stubbed_invocation)
     self.stubbing = None
     
-  def expectStubbing(self):
+  def expect_stubbing(self):
     self.stubbing = True
     
-  def pullVerification(self):
+  def pull_verification(self):
     v = self.verification
     self.verification = None
     return v
