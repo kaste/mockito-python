@@ -52,7 +52,7 @@ class VerifiableInvocation(MatchingInvocation):
         matches += 1
         invocation.verified = True
 
-    verification = self.mock.pullVerification()
+    verification = self.mock.pull_verification()
     verification.verify(self, matches)
   
 class StubbedInvocation(MatchingInvocation):
@@ -60,22 +60,22 @@ class StubbedInvocation(MatchingInvocation):
     self.params = params    
     return AnswerSelector(self)
   
-  def stubWith(self, answer):
+  def stub_with(self, answer):
     self.answers.append(answer)
     static_mocker.INSTANCE.stub(self)
-    self.mock.finishStubbing(self)
+    self.mock.finish_stubbing(self)
     
-  def getOriginalMethod(self):
+  def get_original_method(self):
     return self.mock.mocked_obj.__dict__.get(self.method_name)
   
-  def replaceMethod(self, new_method):
+  def replace_method(self, new_method):
     setattr(self.mock.mocked_obj, self.method_name, new_method)  
     
 class AnswerSelector(object):
   def __init__(self, invocation):
     self.invocation = invocation
     self.answer = None
-    
+  
   def thenReturn(self, *return_values):
     for return_value in return_values:
       self.__then(Return(return_value))
@@ -89,7 +89,7 @@ class AnswerSelector(object):
   def __then(self, answer):
     if (not self.answer):
       self.answer = CompositeAnswer(answer)
-      self.invocation.stubWith(self.answer)
+      self.invocation.stub_with(self.answer)
     else:
       self.answer.add(answer)
       

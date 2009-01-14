@@ -46,7 +46,7 @@ def when(obj):
     mock = Mock()
     mock.mocked_obj = obj
 
-  mock.expectStubbing()
+  mock.expect_stubbing()
   return mock
 
 def unstub():
