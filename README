@@ -4,6 +4,11 @@ To install:
 
   $ python setup.py install
 
+To run all internal tests:
+
+  $ cd mockito_test
+  $ python all_tests.py
+
 Basic usage:
 
   import unittest
