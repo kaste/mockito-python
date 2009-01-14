@@ -1,9 +1,6 @@
 import matchers
 import static_mocker
 
-_RETURNS_ = 1
-_THROWS_ = 2
-
 class Invocation(object):
   def __init__(self, mock, method_name):
     self.method_name = method_name
