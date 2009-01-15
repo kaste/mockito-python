@@ -1,5 +1,5 @@
 import matchers
-import static_mocker
+from static_mocker import static_mocker
 
 class Invocation(object):
   def __init__(self, mock, method_name):
@@ -61,7 +61,7 @@ class StubbedInvocation(MatchingInvocation):
   
   def stub_with(self, answer):
     self.answers.append(answer)
-    static_mocker.INSTANCE.stub(self)
+    static_mocker.stub(self)
     self.mock.finish_stubbing(self)
     
   def get_original_method(self):
