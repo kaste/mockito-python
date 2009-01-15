@@ -10,7 +10,10 @@ class Invocation(object):
     self.answers = []
     
   def __repr__(self):
-    return self.method_name + str(self.params)   
+    return self.method_name + str(self.params)
+
+  def answer_first(self):
+    return self.answers[0].answer()
   
 class MatchingInvocation(Invocation):
    
@@ -35,8 +38,7 @@ class RememberedInvocation(Invocation):
     
     for matching_invocation in self.mock.stubbed_invocations:
       if matching_invocation.matches(self):
-        #TODO LoD    
-        return matching_invocation.answers[0].answer()
+        return matching_invocation.answer_first()
     
     return None
 
@@ -84,7 +86,7 @@ class AnswerSelector(object):
     return self
 
   def __then(self, answer):
-    if (not self.answer):
+    if not self.answer:
       self.answer = CompositeAnswer(answer)
       self.invocation.stub_with(self.answer)
     else:
