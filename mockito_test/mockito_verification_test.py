@@ -109,7 +109,7 @@ class MockitoVerificationTest(test_base.TestBase):
     mock.foo()
     mock.foo()
 
-    verify(mock, atLeast=2).foo()
+    verify(mock, atleast=2).foo()
 
   def testVerifiesAtLeastTwoWhenMethodInvokedFourTimes(self):
     mock = Mock()
@@ -118,25 +118,25 @@ class MockitoVerificationTest(test_base.TestBase):
     mock.foo()
     mock.foo()
 
-    verify(mock, atLeast=2).foo()
+    verify(mock, atleast=2).foo()
 
   def testFailsWhenMethodInvokedOnceForAtLeastTwoVerification(self):
     mock = Mock()
     mock.foo()
-    self.assertRaises(VerificationError, verify(mock, atLeast=2).foo)
+    self.assertRaises(VerificationError, verify(mock, atleast=2).foo)
 
   def testVerifiesAtMostTwoWhenMethodInvokedTwice(self):
     mock = Mock()
     mock.foo()
     mock.foo()
 
-    verify(mock, atMost=2).foo()
+    verify(mock, atmost=2).foo()
 
   def testVerifiesAtMostTwoWhenMethodInvokedOnce(self):
     mock = Mock()
     mock.foo()
 
-    verify(mock, atMost=2).foo()
+    verify(mock, atmost=2).foo()
 
   def testFailsWhenMethodInvokedFourTimesForAtMostTwoVerification(self):
     mock = Mock()
@@ -145,7 +145,7 @@ class MockitoVerificationTest(test_base.TestBase):
     mock.foo()
     mock.foo()
 
-    self.assertRaises(VerificationError, verify(mock, atMost=2).foo)
+    self.assertRaises(VerificationError, verify(mock, atmost=2).foo)
 
   def testVerifiesBetween(self):
     mock = Mock()
@@ -169,16 +169,16 @@ class MockitoVerificationTest(test_base.TestBase):
   def testFailsAtMostAtLeastAndBetweenVerificationWithWrongArguments(self):
     mock = Mock()
     
-    self.assertRaises(ArgumentError, verify, mock, atLeast=0)
-    self.assertRaises(ArgumentError, verify, mock, atLeast=-5)
-    self.assertRaises(ArgumentError, verify, mock, atMost=0)
-    self.assertRaises(ArgumentError, verify, mock, atMost=-5)
+    self.assertRaises(ArgumentError, verify, mock, atleast=0)
+    self.assertRaises(ArgumentError, verify, mock, atleast=-5)
+    self.assertRaises(ArgumentError, verify, mock, atmost=0)
+    self.assertRaises(ArgumentError, verify, mock, atmost=-5)
     self.assertRaises(ArgumentError, verify, mock, between=[5, 1])
     self.assertRaises(ArgumentError, verify, mock, between=[-1, 1])
-    self.assertRaises(ArgumentError, verify, mock, atLeast=5, atMost=5)
-    self.assertRaises(ArgumentError, verify, mock, atLeast=5, between=[1, 2])
-    self.assertRaises(ArgumentError, verify, mock, atMost=5, between=[1, 2])    
-    self.assertRaises(ArgumentError, verify, mock, atLeast=5, atMost=5, between=[1, 2])
+    self.assertRaises(ArgumentError, verify, mock, atleast=5, atmost=5)
+    self.assertRaises(ArgumentError, verify, mock, atleast=5, between=[1, 2])
+    self.assertRaises(ArgumentError, verify, mock, atmost=5, between=[1, 2])    
+    self.assertRaises(ArgumentError, verify, mock, atleast=5, atmost=5, between=[1, 2])
     
 if __name__ == '__main__':
   test_base.unittest.main()
