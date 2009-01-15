@@ -43,7 +43,7 @@ class StaticMocker:
   def _is_staticmethod(self, method):
     return isinstance(method, staticmethod)
     
-  def getMockFor(self, cls):
+  def mockfor(self, cls):
     return self.static_mocks[cls]
   
   def accepts(self, obj):
@@ -54,4 +54,4 @@ class StaticMocker:
       original_method, stubbed_invocation = self.originals.pop()
       stubbed_invocation.replace_method(original_method)
 
-INSTANCE = StaticMocker()
+static_mocker = StaticMocker()
