@@ -23,6 +23,19 @@ class MockitoVerificationErrorsTest(TestBase):
       verify(mock).foo(1, 'foo')
     except VerificationError, e:
       self.assertEquals("\nWanted but not invoked: foo(1, 'foo')", str(e))
+      
+  def testPrintsOutThatTheActualAndExpectedInvocationCountDiffers(self):
+      mock = Mock()
+      when(mock).foo().thenReturn(0)
+      
+      mock.foo()
+      mock.foo()
+      
+      try:
+          verify(mock).foo()
+      except VerificationError, e:
+          self.assertEquals("\nWanted times: 1, actual times: 2", str(e))
+          
 
   #TODO implement
   def stestPrintsNicelyWhenArgumentsDifferent(self):
