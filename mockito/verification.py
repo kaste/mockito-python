@@ -31,8 +31,10 @@ class Times(object):
     self.wanted_count = wanted_count
     
   def verify(self, invocation, actual_count):
+    if actual_count == self.wanted_count:
+        return  
     if actual_count == 0:
       raise VerificationError("\nWanted but not invoked: %s" % (invocation))
-    elif actual_count != self.wanted_count:
+    else:
       raise VerificationError("\nWanted times: %i, actual times: %i" % (self.wanted_count, actual_count))
       
