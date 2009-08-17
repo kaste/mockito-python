@@ -57,6 +57,14 @@ class MockitoModuleFunctionsTest(TestBase):
     unstub()
     
     self.assertEquals(False, os.path.exists("test"))
+    
+  def testStubsTwiceWithDifferentArguments(self):
+    when(os.path).exists("Foo").thenReturn(False)
+    when(os.path).exists("Bar").thenReturn(True)
+    
+    self.assertEquals(False, os.path.exists("Foo"))
+    self.assertEquals(True, os.path.exists("Bar"))
+      
 
 if __name__ == '__main__':
   unittest.main()
