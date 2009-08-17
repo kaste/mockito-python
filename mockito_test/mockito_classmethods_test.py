@@ -11,6 +11,11 @@ class Cat:
   def meow(cls, m):
     return str(cls) + " " + str(m)
 
+class Lion(object):
+  @classmethod
+  def roar(cls):
+    return "Rrrrr!"
+
 class MockitoClassMethodsTest(TestBase):   
 
   def tearDown(self):
@@ -33,6 +38,13 @@ class MockitoClassMethodsTest(TestBase):
     when(Dog).bark().thenReturn("miau!")
     
     self.assertEquals("miau!", Dog.bark())
+    
+  def testStubsClassesDerivedFromTheObjectClass(self):
+    self.assertEquals("Rrrrr!", Lion.roar())
+    
+    when(Lion).roar().thenReturn("miau!")    
+    
+    self.assertEquals("miau!", Lion.roar())
     
   def testVerifiesMultipleCallsOnClassmethod(self):     
     when(Dog).bark().thenReturn("miau!")
