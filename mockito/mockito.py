@@ -62,8 +62,10 @@ def when(obj):
   
   mock = obj
   if (static_mocker.accepts(obj)):
-    mock = Mock()
-    mock.mocked_obj = obj
+    mock = static_mocker.static_mocks.get(obj, None)
+    if mock is None:
+      mock = Mock()
+      mock.mocked_obj = obj
 
   mock.expect_stubbing()
   return mock
