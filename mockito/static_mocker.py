@@ -1,4 +1,5 @@
 import inspect
+import mock
 
 class StaticMocker:
   """Deals with static methods AND class methods AND with module functions. 
@@ -46,7 +47,7 @@ class StaticMocker:
     return self.static_mocks[cls]
   
   def accepts(self, obj):
-    return inspect.ismodule(obj) or inspect.isclass(obj)
+    return inspect.ismodule(obj) or inspect.isclass(obj) and not isinstance(obj, mock.Mock)
   
   def unstub(self):
     while self.originals:
