@@ -53,7 +53,16 @@ class MockitoMockedObjectsTest(TestBase):
             self.fail('Stubbing an unknown method should have thrown a exception')
         except InvocationError:
             pass
-            
+        
+    def testCallingAStubbedMethodWithUnexpectedArgumentsShouldThrow(self):
+        when(Dog).bark('Miau').thenReturn('Wuff')
+        
+        rex = Dog()
+        try:
+            rex.bark('Shhhh')
+            self.fail('Calling a stubbed method with unexpected arguments should have thrown')
+        except InvocationError:
+            pass
         
 
 if __name__ == '__main__':

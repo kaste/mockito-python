@@ -2,12 +2,13 @@ import invocation
 
 class Mock(object):
   
-  def __init__(self):
+  def __init__(self, mocked_obj=None, strict=True):
     self.invocations = []
     self.stubbed_invocations = []
     self.stubbing = None
     self.verification = None
-    self.mocked_obj = None
+    self.mocked_obj = mocked_obj
+    self.strict = strict
   
   def __getattr__(self, method_name):
     if self.stubbing is not None:
