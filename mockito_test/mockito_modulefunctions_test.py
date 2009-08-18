@@ -1,5 +1,6 @@
 from test_base import *
 from mockito import * 
+from mockito.invocation import InvocationError
 import os
 
 class MockitoModuleFunctionsTest(TestBase):
@@ -64,6 +65,9 @@ class MockitoModuleFunctionsTest(TestBase):
     
     self.assertEquals(False, os.path.exists("Foo"))
     self.assertEquals(True, os.path.exists("Bar"))
+    
+  def testShouldThrowIfWeStubAFunctionNotDefinedInTheModule(self):  
+    self.assertRaises(InvocationError, lambda:when(os).walk_the_line().thenReturn(None))  
       
 
 if __name__ == '__main__':
