@@ -1,10 +1,12 @@
 from test_base import *
 from mockito import *
+from mockito.invocation import InvocationError
 import inspect
 
 class Dog(object):
     def waggle(self):
         return "Wuff!"
+    
     def bark(self, sound):
         return "%s!" % sound
     
@@ -44,6 +46,14 @@ class MockitoMockedObjectsTest(TestBase):
         rex = Dog()
         self.assertEquals('Wuff', rex.do_default_bark())
         verify(Dog).bark('Wau')
+        
+    def testYouCantStubAnUnknownMethodInStrictMode(self):
+        try:
+            when(Dog).barks('Wau').thenReturn('Wuff')
+            self.fail('Stubbing an unknown method should have thrown a exception')
+        except InvocationError:
+            pass
+            
         
 
 if __name__ == '__main__':

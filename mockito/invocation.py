@@ -1,5 +1,8 @@
-import matchers
+import matchers, inspect
 from static_mocker import static_mocker
+
+class InvocationError(AssertionError):
+    pass
 
 class Invocation(object):
   def __init__(self, mock, method_name):
@@ -55,6 +58,18 @@ class VerifiableInvocation(MatchingInvocation):
     verification.verify(self, matches)
   
 class StubbedInvocation(MatchingInvocation):
+  def __init__(self, *params):
+    super(StubbedInvocation, self).__init__(*params)  
+    if self.mock.strict:
+      self.ensure_mocked_object_has_method_name()
+        
+  def ensure_mocked_object_has_method_name(self):  
+    mocked_obj = self.mock.mocked_obj  
+    if mocked_obj is not None and not hasattr(mocked_obj, self.method_name):
+      raise InvocationError("You tried to stub a method '%s' the class (%s) doesn't have." 
+                            % (self.method_name, mocked_obj))
+    
+        
   def __call__(self, *params, **named_params):
     self.params = params    
     return AnswerSelector(self)
