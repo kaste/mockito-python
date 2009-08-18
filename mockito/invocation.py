@@ -11,6 +11,7 @@ class Invocation(object):
     self.verified = False
     self.params = ()
     self.answers = []
+    self.strict = mock.strict
     
   def __repr__(self):
     return self.method_name + str(self.params)
@@ -43,6 +44,8 @@ class RememberedInvocation(Invocation):
       if matching_invocation.matches(self):
         return matching_invocation.answer_first()
     
+    if self.strict and self.mock.mocked_obj:
+        raise InvocationError("You called %s with %s as arguments but we did not expect that." % (self.method_name, params))
     return None
 
 class VerifiableInvocation(MatchingInvocation):
