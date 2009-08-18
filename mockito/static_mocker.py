@@ -1,4 +1,4 @@
-import inspect
+import inspect, new
 import mock
 
 class StaticMocker:
@@ -23,7 +23,9 @@ class StaticMocker:
   def _replace_method(self, stubbed_invocation, original_method):
     
     def new_mocked_method(*params, **named_params): 
-      if self._is_classmethod(original_method): params = params[1:]
+      if self._is_classmethod(original_method) \
+        or (inspect.isclass(stubbed_invocation.mock.mocked_obj) and not self._is_staticmethod(original_method)): 
+          params = params[1:]
       call = stubbed_invocation.mock.__getattr__(stubbed_invocation.method_name)
       return call(*params, **named_params)
       
@@ -33,6 +35,8 @@ class StaticMocker:
       stubbed_invocation.replace_method(classmethod(new_mocked_method))
     elif inspect.ismodule(stubbed_invocation.mock.mocked_obj):
       stubbed_invocation.replace_method(new_mocked_method)
+    elif inspect.isclass(stubbed_invocation.mock.mocked_obj):
+        stubbed_invocation.replace_method(new_mocked_method)  
     else:
       # TODO create decent error. is it necessary? this case is only useful for library debugging        
       raise "Only module functions, static and class methods can be stubbed"  
