@@ -55,7 +55,7 @@ class MockitoStaticMethodsTest(TestBase):
   def testStubsButDoesNotMachArguments(self): 
     self.assertEquals("woof woof", Dog.barkHardly(1, "anything"))
     
-    when(Dog).barkHardly(1, 2).thenReturn("miau")
+    when(Dog, strict=False).barkHardly(1, 2).thenReturn("miau")
     
     self.assertEquals(None, Dog.barkHardly(1))
     
@@ -64,7 +64,6 @@ class MockitoStaticMethodsTest(TestBase):
     when(Dog).bark().thenReturn(2)
     when(Cat).meow().thenReturn(3)
     
-    self.assertEquals(None, Dog.barkHardly(10, 10))
     self.assertEquals(1, Dog.barkHardly(1, 2))
     self.assertEquals(2, Dog.bark())
     self.assertEquals(3, Cat.meow())

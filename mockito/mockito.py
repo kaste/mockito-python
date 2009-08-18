@@ -57,7 +57,7 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None):
 def times(count):
   return count
 
-def when(obj):
+def when(obj, strict=True):
   #TODO verify obj is a class or a mock
   
   mock = obj
@@ -68,6 +68,7 @@ def when(obj):
       mock.mocked_obj = obj
 
   mock.expect_stubbing()
+  mock.strict = strict
   return mock
 
 def unstub():
