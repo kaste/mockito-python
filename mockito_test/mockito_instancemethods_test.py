@@ -1,7 +1,6 @@
 from test_base import *
 from mockito import *
 from mockito.invocation import InvocationError
-import inspect
 
 class Dog(object):
     def waggle(self):
@@ -13,7 +12,7 @@ class Dog(object):
     def do_default_bark(self):
         return self.bark('Wau')
     
-class MockitoMockedObjectsTest(TestBase):
+class MockitoInstanceMethodsTest(TestBase):
     def tearDown(self):
         unstub()
 
@@ -64,6 +63,5 @@ class MockitoMockedObjectsTest(TestBase):
         except InvocationError:
             pass
         
-
 if __name__ == '__main__':
     unittest.main()
