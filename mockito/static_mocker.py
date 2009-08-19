@@ -1,4 +1,4 @@
-import inspect, new
+import inspect
 import mock
 
 class StaticMocker:

@@ -1,4 +1,4 @@
-import matchers, inspect
+import matchers
 from static_mocker import static_mocker
 
 class InvocationError(AssertionError):
