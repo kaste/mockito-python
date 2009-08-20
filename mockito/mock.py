@@ -1,5 +1,7 @@
 import invocation
 
+class Dummy(object): pass
+
 class Mock(object):
   
   def __init__(self, mocked_obj=None, strict=True):
@@ -7,6 +9,9 @@ class Mock(object):
     self.stubbed_invocations = []
     self.stubbing = None
     self.verification = None
+    if mocked_obj is None:
+        mocked_obj = Dummy()
+        strict = False
     self.mocked_obj = mocked_obj
     self.strict = strict
   
