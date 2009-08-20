@@ -38,12 +38,12 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None):
                            It should consist of positive values with second number not greater than first
                            e.g. [1, 4] or [0, 3] or [2, 2]
                            You wanted to set it to: %s""" % between)
-   
-  if static_mocker.accepts(obj):
-    mock = static_mocker.mockfor(obj)
-  else:
+
+  if isinstance(obj, Mock):
     mock = obj
-  
+  else:
+    mock = static_mocker.mockfor(obj)
+               
   if atleast:
     mock.verification = verification.AtLeast(atleast)
   elif atmost:
@@ -58,10 +58,9 @@ def times(count):
   return count
 
 def when(obj, strict=True):
-  #TODO verify obj is a class or a mock
-  
-  mock = obj
-  if (static_mocker.accepts(obj)):
+  if isinstance(obj, Mock):
+    mock = obj
+  else:    
     mock = static_mocker.static_mocks.get(obj, None)
     if mock is None:
       mock = Mock(obj, strict=strict)
