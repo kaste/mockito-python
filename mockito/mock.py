@@ -38,3 +38,13 @@ class Mock(object):
     v = self.verification
     self.verification = None
     return v
+
+  def has_method(self, method_name):
+    return hasattr(self.mocked_obj, method_name)
+    
+  def get_method(self, method_name):
+    return self.mocked_obj.__dict__.get(method_name)
+
+  def replace_method(self, method_name, new_method):
+    setattr(self.mocked_obj, method_name, new_method)  
+
