@@ -40,8 +40,8 @@ class StaticMocker:
   def _is_staticmethod(self, method):
     return isinstance(method, staticmethod)
     
-  def mockfor(self, cls):
-    return self.static_mocks[cls]
+  def mock_for(self, cls):
+    return self.static_mocks.get(cls, None)
   
   def unstub(self):
     while self.originals:
