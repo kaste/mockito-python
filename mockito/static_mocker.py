@@ -43,9 +43,6 @@ class StaticMocker:
   def mockfor(self, cls):
     return self.static_mocks[cls]
   
-  def accepts(self, obj):
-    return not isinstance(obj, mock.Mock)
-  
   def unstub(self):
     while self.originals:
       original_method, stubbed_invocation = self.originals.pop()
