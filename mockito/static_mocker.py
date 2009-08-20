@@ -10,9 +10,6 @@ class StaticMocker:
     self.static_mocks = {}
     
   def stub(self, stubbed_invocation):
-    if not self.accepts(stubbed_invocation.mock.mocked_obj):
-      return    
-      
     self.static_mocks[stubbed_invocation.mock.mocked_obj] = stubbed_invocation.mock
     original_method = stubbed_invocation.get_original_method()
     original = (original_method, stubbed_invocation)
