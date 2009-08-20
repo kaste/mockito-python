@@ -42,7 +42,7 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None):
   if isinstance(obj, Mock):
     mock = obj
   else:
-    mock = static_mocker.mockfor(obj)
+    mock = static_mocker.mock_for(obj)
                
   if atleast:
     mock.verification = verification.AtLeast(atleast)
@@ -61,7 +61,7 @@ def when(obj, strict=True):
   if isinstance(obj, Mock):
     mock = obj
   else:    
-    mock = static_mocker.static_mocks.get(obj, None)
+    mock = static_mocker.mock_for(obj)
     if mock is None:
       mock = Mock(obj, strict=strict)
 
