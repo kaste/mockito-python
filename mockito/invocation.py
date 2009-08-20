@@ -64,13 +64,12 @@ class StubbedInvocation(MatchingInvocation):
   def __init__(self, *params):
     super(StubbedInvocation, self).__init__(*params)  
     if self.mock.strict:
-      self.ensure_mocked_object_has_method_name()
+      self.ensure_mocked_object_has_method(self.method_name)
         
-  def ensure_mocked_object_has_method_name(self):  
-    mocked_obj = self.mock.mocked_obj  
-    if mocked_obj is not None and not hasattr(mocked_obj, self.method_name):
+  def ensure_mocked_object_has_method(self, method_name):  
+    if not self.mock.has_method(method_name):
       raise InvocationError("You tried to stub a method '%s' the class (%s) doesn't have." 
-                            % (self.method_name, mocked_obj))
+                            % (method_name, self.mock))
     
         
   def __call__(self, *params, **named_params):
@@ -83,10 +82,10 @@ class StubbedInvocation(MatchingInvocation):
     self.mock.finish_stubbing(self)
     
   def get_original_method(self):
-    return self.mock.mocked_obj.__dict__.get(self.method_name)
+    return self.mock.get_method(self.method_name)  
   
   def replace_method(self, new_method):
-    setattr(self.mock.mocked_obj, self.method_name, new_method)  
+    self.mock.replace_method(self.method_name, new_method)  
     
 class AnswerSelector(object):
   def __init__(self, invocation):
