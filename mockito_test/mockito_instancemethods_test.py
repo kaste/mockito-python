@@ -63,5 +63,16 @@ class MockitoInstanceMethodsTest(TestBase):
         except InvocationError:
             pass
         
+    def testStubInstancesInsteadOfClasses(self):
+        rex = Dog()
+        when(rex).bark('Miau').thenReturn('Wuff')
+        
+        self.assertEquals('Wuff', rex.bark('Miau'))
+        verify(rex, times=1).bark(any())
+
+        max = Dog()
+        self.assertEquals('Miau!', max.bark('Miau'))
+        
+        
 if __name__ == '__main__':
     unittest.main()

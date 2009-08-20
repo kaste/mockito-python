@@ -38,8 +38,9 @@ class StaticMocker:
     elif inspect.isclass(stubbed_invocation.mock.mocked_obj):
         stubbed_invocation.replace_method(new_mocked_method)  
     else:
+        stubbed_invocation.replace_method(new_mocked_method)  
       # TODO create decent error. is it necessary? this case is only useful for library debugging        
-      raise "Only module functions, static and class methods can be stubbed"  
+      #raise "Only module functions, static and class methods can be stubbed"  
     
   def _is_classmethod(self, method):
     return isinstance(method, classmethod)
@@ -51,7 +52,7 @@ class StaticMocker:
     return self.static_mocks[cls]
   
   def accepts(self, obj):
-    return inspect.ismodule(obj) or inspect.isclass(obj) and not isinstance(obj, mock.Mock)
+    return not isinstance(obj, mock.Mock)
   
   def unstub(self):
     while self.originals:
