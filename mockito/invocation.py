@@ -68,8 +68,8 @@ class StubbedInvocation(MatchingInvocation):
         
   def ensure_mocked_object_has_method(self, method_name):  
     if not self.mock.has_method(method_name):
-      raise InvocationError("You tried to stub a method '%s' the class (%s) doesn't have." 
-                            % (method_name, self.mock))
+      raise InvocationError("You tried to stub a method '%s' the object (%s) doesn't have." 
+                            % (method_name, self.mock.mocked_obj))
     
         
   def __call__(self, *params, **named_params):
