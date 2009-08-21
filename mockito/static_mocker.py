@@ -21,24 +21,18 @@ class StaticMocker:
     
     def new_mocked_method(*args, **kwargs): 
       # we throw away the first argument, if it's either self or cls  
-      if inspect.isclass(mock.mocked_obj) and not self._is_staticmethod(original_method): 
+      if inspect.isclass(mock.mocked_obj) and not isinstance(original_method, staticmethod): 
           args = args[1:]
       call = mock.__getattr__(method_name)
       return call(*args, **kwargs)
       
 
-    if self._is_staticmethod(original_method):
+    if isinstance(original_method, staticmethod):
       new_mocked_method = staticmethod(new_mocked_method)  
-    elif self._is_classmethod(original_method): 
+    elif isinstance(original_method, classmethod): 
       new_mocked_method = classmethod(new_mocked_method)  
 
     mock.replace_method(method_name, new_mocked_method)
-    
-  def _is_classmethod(self, method):
-    return isinstance(method, classmethod)
-  
-  def _is_staticmethod(self, method):
-    return isinstance(method, staticmethod)
     
   def mock_for(self, cls):
     return self.static_mocks.get(cls, None)
