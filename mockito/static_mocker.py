@@ -1,5 +1,4 @@
 import inspect
-import mock
 
 class StaticMocker:
   """Deals with static methods AND class methods AND with module functions. 
