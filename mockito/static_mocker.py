@@ -30,7 +30,7 @@ class StaticMocker:
     elif isinstance(original_method, classmethod): 
       new_mocked_method = classmethod(new_mocked_method)  
 
-    mock.replace_method(method_name, new_mocked_method)
+    mock.set_method(method_name, new_mocked_method)
     
   def register(self, mock):
     self.static_mocks[mock.mocked_obj] = mock
@@ -41,7 +41,7 @@ class StaticMocker:
   def unstub(self):
     while self.originals:
       mock, method_name, original_method = self.originals.pop()
-      mock.replace_method(method_name, original_method)
+      mock.set_method(method_name, original_method)
     self.static_mocks.clear()
 
 static_mocker = StaticMocker()

@@ -48,6 +48,6 @@ class Mock(object):
   def get_method(self, method_name):
     return self.mocked_obj.__dict__.get(method_name)
 
-  def replace_method(self, method_name, new_method):
+  def set_method(self, method_name, new_method):
     setattr(self.mocked_obj, method_name, new_method)  
 
