@@ -9,21 +9,22 @@ class StaticMocker:
     self.originals = []
     self.static_mocks = {}
     
-  def stub(self, stubbed_invocation):
-    self.static_mocks[stubbed_invocation.mock.mocked_obj] = stubbed_invocation.mock
-    original_method = stubbed_invocation.get_original_method()
-    original = (original_method, stubbed_invocation)
+  def stub(self, mock, method_name):
+    self.static_mocks[mock.mocked_obj] = mock
+    
+    original_method = mock.get_method(method_name)
+    original = (mock, method_name, original_method)
     self.originals.append(original)
 
-    self._replace_method(stubbed_invocation, original_method)
+    self._replace_method(mock, method_name, original_method)
     
-  def _replace_method(self, stubbed_invocation, original_method):
+  def _replace_method(self, mock, method_name, original_method):
     
     def new_mocked_method(*args, **kwargs): 
-      # we throw away the first argument, because it's either self or cls  
-      if inspect.isclass(stubbed_invocation.mock.mocked_obj) and not self._is_staticmethod(original_method): 
+      # we throw away the first argument, if it's either self or cls  
+      if inspect.isclass(mock.mocked_obj) and not self._is_staticmethod(original_method): 
           args = args[1:]
-      call = stubbed_invocation.mock.__getattr__(stubbed_invocation.method_name)
+      call = mock.__getattr__(method_name)
       return call(*args, **kwargs)
       
 
@@ -32,7 +33,7 @@ class StaticMocker:
     elif self._is_classmethod(original_method): 
       new_mocked_method = classmethod(new_mocked_method)  
 
-    stubbed_invocation.replace_method(new_mocked_method)
+    mock.replace_method(method_name, new_mocked_method)
     
   def _is_classmethod(self, method):
     return isinstance(method, classmethod)
@@ -45,8 +46,8 @@ class StaticMocker:
   
   def unstub(self):
     while self.originals:
-      original_method, stubbed_invocation = self.originals.pop()
-      stubbed_invocation.replace_method(original_method)
+      mock, method_name, original_method = self.originals.pop()
+      mock.replace_method(method_name, original_method)
     self.static_mocks.clear()
 
 static_mocker = StaticMocker()

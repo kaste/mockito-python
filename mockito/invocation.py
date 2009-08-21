@@ -78,14 +78,8 @@ class StubbedInvocation(MatchingInvocation):
   
   def stub_with(self, answer):
     self.answers.append(answer)
-    static_mocker.stub(self)
+    static_mocker.stub(self.mock, self.method_name)
     self.mock.finish_stubbing(self)
-    
-  def get_original_method(self):
-    return self.mock.get_method(self.method_name)  
-  
-  def replace_method(self, new_method):
-    self.mock.replace_method(self.method_name, new_method)  
     
 class AnswerSelector(object):
   def __init__(self, invocation):
