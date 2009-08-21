@@ -78,7 +78,7 @@ class StubbedInvocation(MatchingInvocation):
   
   def stub_with(self, answer):
     self.answers.append(answer)
-    mock_registry.stub(self.mock, self.method_name)
+    self.mock.stub(self.method_name)
     self.mock.finish_stubbing(self)
     
 class AnswerSelector(object):

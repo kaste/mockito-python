@@ -69,9 +69,9 @@ def when(obj, strict=True):
   return mock
 
 def unstub():
-  """Unstubs all stubbed static methods and class methods"""
+  """Unstubs all stubbed methods and functions"""
   
-  mock_registry.unstub()
+  mock_registry.unstub_all()
 
 def verifyNoMoreInteractions(*mocks):
   for mock in mocks:
