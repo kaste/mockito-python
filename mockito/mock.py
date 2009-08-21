@@ -1,4 +1,5 @@
 import invocation
+from static_mocker import static_mocker
 
 class Dummy(object): pass
 
@@ -14,6 +15,8 @@ class Mock(object):
         strict = False
     self.mocked_obj = mocked_obj
     self.strict = strict
+    
+    static_mocker.register(self)
   
   def __getattr__(self, method_name):
     if self.stubbing is not None:
