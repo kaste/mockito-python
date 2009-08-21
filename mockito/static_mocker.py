@@ -9,8 +9,6 @@ class StaticMocker:
     self.static_mocks = {}
     
   def stub(self, mock, method_name):
-    self.static_mocks[mock.mocked_obj] = mock
-    
     original_method = mock.get_method(method_name)
     original = (mock, method_name, original_method)
     self.originals.append(original)
@@ -34,6 +32,9 @@ class StaticMocker:
 
     mock.replace_method(method_name, new_mocked_method)
     
+  def register(self, mock):
+    self.static_mocks[mock.mocked_obj] = mock
+        
   def mock_for(self, cls):
     return self.static_mocks.get(cls, None)
   
