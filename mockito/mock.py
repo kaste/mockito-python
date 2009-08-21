@@ -1,6 +1,6 @@
 import inspect
 import invocation
-from static_mocker import static_mocker
+from mock_registry import mock_registry
 
 class Dummy(object): pass
 
@@ -17,7 +17,7 @@ class Mock(object):
     self.mocked_obj = mocked_obj
     self.strict = strict
     
-    static_mocker.register(self)
+    mock_registry.register(self)
   
   def __getattr__(self, method_name):
     if self.stubbing is not None:
@@ -59,6 +59,7 @@ class Mock(object):
       if inspect.isclass(self.mocked_obj) and not isinstance(original_method, staticmethod): 
           args = args[1:]
       call = self.__getattr__(method_name)
+      call = invocation.RememberedInvocation(self, method_name)
       return call(*args, **kwargs)
       
 

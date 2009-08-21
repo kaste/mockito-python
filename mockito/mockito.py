@@ -1,7 +1,7 @@
 import matchers
 import verification
 from mock import Mock
-from static_mocker import static_mocker
+from mock_registry import mock_registry
 from verification import VerificationError
 
 class ArgumentError(Exception):
@@ -42,7 +42,7 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None):
   if isinstance(obj, Mock):
     mock = obj
   else:
-    mock = static_mocker.mock_for(obj)
+    mock = mock_registry.mock_for(obj)
                
   if atleast:
     mock.verification = verification.AtLeast(atleast)
@@ -61,7 +61,7 @@ def when(obj, strict=True):
   if isinstance(obj, Mock):
     mock = obj
   else:    
-    mock = static_mocker.mock_for(obj)
+    mock = mock_registry.mock_for(obj)
     if mock is None:
       mock = Mock(obj, strict=strict)
 
@@ -71,7 +71,7 @@ def when(obj, strict=True):
 def unstub():
   """Unstubs all stubbed static methods and class methods"""
   
-  static_mocker.unstub()
+  mock_registry.unstub()
 
 def verifyNoMoreInteractions(*mocks):
   for mock in mocks:

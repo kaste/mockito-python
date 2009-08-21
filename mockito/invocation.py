@@ -1,5 +1,5 @@
 import matchers
-from static_mocker import static_mocker
+from mock_registry import mock_registry
 
 class InvocationError(AssertionError):
     pass
@@ -78,7 +78,7 @@ class StubbedInvocation(MatchingInvocation):
   
   def stub_with(self, answer):
     self.answers.append(answer)
-    static_mocker.stub(self.mock, self.method_name)
+    mock_registry.stub(self.mock, self.method_name)
     self.mock.finish_stubbing(self)
     
 class AnswerSelector(object):
