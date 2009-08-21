@@ -1,3 +1,4 @@
+import inspect
 import invocation
 from static_mocker import static_mocker
 
@@ -49,5 +50,24 @@ class Mock(object):
     return self.mocked_obj.__dict__.get(method_name)
 
   def set_method(self, method_name, new_method):
-    setattr(self.mocked_obj, method_name, new_method)  
+    setattr(self.mocked_obj, method_name, new_method)
+    
+  def replace_method(self, method_name, original_method):
+    
+    def new_mocked_method(*args, **kwargs): 
+      # we throw away the first argument, if it's either self or cls  
+      if inspect.isclass(self.mocked_obj) and not isinstance(original_method, staticmethod): 
+          args = args[1:]
+      call = self.__getattr__(method_name)
+      return call(*args, **kwargs)
+      
+
+    if isinstance(original_method, staticmethod):
+      new_mocked_method = staticmethod(new_mocked_method)  
+    elif isinstance(original_method, classmethod): 
+      new_mocked_method = classmethod(new_mocked_method)  
+
+    self.set_method(method_name, new_mocked_method)
+    
+  
 
