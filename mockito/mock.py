@@ -9,6 +9,7 @@ class Mock(object):
   def __init__(self, mocked_obj=None, strict=True):
     self.invocations = []
     self.stubbed_invocations = []
+    self.original_methods = []
     self.stubbing = None
     self.verification = None
     if mocked_obj is None:
@@ -58,8 +59,7 @@ class Mock(object):
       # we throw away the first argument, if it's either self or cls  
       if inspect.isclass(self.mocked_obj) and not isinstance(original_method, staticmethod): 
           args = args[1:]
-      call = self.__getattr__(method_name)
-      call = invocation.RememberedInvocation(self, method_name)
+      call = self.__getattr__(method_name) # that is: invocation.RememberedInvocation(self, method_name)
       return call(*args, **kwargs)
       
 
@@ -70,5 +70,17 @@ class Mock(object):
 
     self.set_method(method_name, new_mocked_method)
     
+  def stub(self, method_name):
+    original_method = self.get_method(method_name)
+    original = (method_name, original_method)
+    self.original_methods.append(original)
+
+    self.replace_method(method_name, original_method)
+
+  def unstub(self):  
+    while self.original_methods:  
+      method_name, original_method = self.original_methods.pop()      
+      self.set_method(method_name, original_method)
+      
   
 
