@@ -35,12 +35,16 @@ if (len(sys.argv) == 1):
   2. Standard usage:
   """
 
-from distutils.core import setup
+try:
+  from setuptools import setup
+except ImportError:
+  from distutils.core import setup
 
 setup(name='mockito',
-      version='0.1.0',
+      version='0.2.0',
       packages=['mockito'],
       url='http://code.google.com/p/mockito/wiki/MockitoForPython',
+      download_url='http://bitbucket.org/szczepiq/mockito-python/downloads/',
       maintainer='mockito maintainers',
       maintainer_email='mockito-python@googlegroups.com',
       license='MIT',
