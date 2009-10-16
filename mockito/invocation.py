@@ -10,6 +10,7 @@ class Invocation(object):
     self.mock = mock
     self.verified = False
     self.params = ()
+    self.named_params = {}
     self.answers = []
     self.strict = mock.strict
     
@@ -20,37 +21,52 @@ class Invocation(object):
     return self.answers[0].answer()
   
 class MatchingInvocation(Invocation):
-   
+  @staticmethod
+  def compare(p1, p2):
+    if isinstance(p1, matchers.Matcher):
+      if not p1.matches(p2): return False
+    elif p1 != p2: return False
+    return True
+
   def matches(self, invocation):
     if self.method_name != invocation.method_name:
       return False
     if len(self.params) != len(invocation.params):
       return False
-    
+    if len(self.named_params) != len(invocation.named_params):
+      return False
+
     for x, p1 in enumerate(self.params):
-      p2 = invocation.params[x]
-      if isinstance(p1, matchers.Matcher):
-        if not p1.matches(p2): return False
-      elif p1 != p2: return False
-    
+      if not self.compare(p1, invocation.params[x]):
+          return False
+      
+    for x, p1 in self.named_params.iteritems():
+      if not self.compare(p1, invocation.named_params[x]):
+          return False
+      
     return True
   
 class RememberedInvocation(Invocation):
   def __call__(self, *params, **named_params):
     self.params = params
+    self.named_params = named_params
     self.mock.remember(self)
     
     for matching_invocation in self.mock.stubbed_invocations:
       if matching_invocation.matches(self):
         return matching_invocation.answer_first()
-    
+
     if self.strict and self.mock.mocked_obj:
-        raise InvocationError("You called %s with %s as arguments but we did not expect that." % (self.method_name, params))
+        #TODO: this message should be nicer. Only should show args that are passed and ideally should simply write something like someMethod(1,2);
+        #TODO: we have to decide whether it is good to be strict about stubbing 
+        raise InvocationError("You called %s with %s and %s as arguments but we did not expect that." % (self.method_name, params, named_params))
+
     return None
 
 class VerifiableInvocation(MatchingInvocation):
   def __call__(self, *params, **named_params):
     self.params = params
+    self.named_params = named_params
     matches = 0
     for invocation in self.mock.invocations:
       if self.matches(invocation):
@@ -73,7 +89,8 @@ class StubbedInvocation(MatchingInvocation):
     
         
   def __call__(self, *params, **named_params):
-    self.params = params    
+    self.params = params   
+    self.named_params = named_params 
     return AnswerSelector(self)
   
   def stub_with(self, answer):
