@@ -1,5 +1,5 @@
-from mockito import *
 import test_base
+from mockito import *
 
 #TODO remove Mockito prefix from all classes
 class MockitoVerificationTest(test_base.TestBase):
@@ -20,8 +20,17 @@ class MockitoVerificationTest(test_base.TestBase):
     verify(mock).foo()
     verify(mock).someOtherMethod(1, bararg="bar", fooarg="foo")
     
-#TODO verify named params
+  def testVerifiesDetectsNamedArguments(self):
+    mock = Mock()
+    mock.foo(fooarg="foo", bararg="bar")
 
+    verify(mock).foo(bararg="bar", fooarg="foo") 
+    try:    
+      verify(mock).foo(bararg="foo", fooarg="bar")
+      self.fail();
+    except VerificationError:
+      pass                         
+    
   def testFailsVerification(self):
     mock = Mock()
     mock.foo("boo")
