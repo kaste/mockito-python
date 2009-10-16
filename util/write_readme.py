@@ -1,5 +1,3 @@
-# to be implemented - copy contents of MockitoDemoTest into the README
-
 import os
 import re
 
@@ -10,14 +8,15 @@ def openFile(f, m='r'):
     return open('../' + f, m)
     
 demo_test = '  '.join(openFile('mockito_test/mockito_demo_test.py').readlines())
-demo_test = re.compile('if __name__.*', re.S).sub('', demo_test)
+demo_test = demo_test.split('#DELIMINATOR')[1]
 
 readme_before = ''.join(openFile('README').readlines())
-readme_after = re.compile('import unittest.*(?=\nFor more info)', re.S).sub(demo_test, readme_before)
+token = 'Basic usage:'
+readme_after = re.compile(token + '.*', re.S).sub(token + '\n' + demo_test, readme_before)
 
-if (readme_before != readme_after):
-  print "Writing README..."
+if (readme_before != readme_after):  
   readme_file = openFile('README', 'w')
   readme_file.write(readme_after)
+  print "README updated"
 else:
-  print "Writing README not required" 
+  print "README update not required" 
