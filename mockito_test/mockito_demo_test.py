@@ -1,8 +1,11 @@
 import test_base
+import util.write_readme
+
+#all below code will be merged with README
+#DELIMINATOR
 import unittest
 from mockito import *
 
-#TODO Add all stuff that is implemented but not documented
 class MockitoDemoTest(unittest.TestCase):
 
   def testStubbing(self):
@@ -10,19 +13,25 @@ class MockitoDemoTest(unittest.TestCase):
     mock = Mock()
 
     # stub it
-    when(mock).getStuff().thenReturn("stuff")
+    when(mock).getStuff("cool").thenReturn("cool stuff")
     
     # use the mock
-    self.assertEqual("stuff", mock.getStuff())
+    self.assertEqual("cool stuff", mock.getStuff("cool"))
+    
+    # what happens when you pass different argument?
+    self.assertEqual(None, mock.getStuff("different argument"))
     
   def testVerification(self):
     # create a mock
     mock = Mock()
 
     # use the mock
-    mock.doStuff()
+    mock.doStuff("cool")
     
-    # verify the interactions
-    verify(mock).doStuff()
-
-if __name__ == '__main__': unittest.main()
+    # verify the interactions. Method and parameters must match. Otherwise verification error.
+    verify(mock).doStuff("cool")
+  
+#DELIMINATOR
+#all above code will be merged with README
+if __name__ == '__main__':    
+    unittest.main()    

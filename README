@@ -1,15 +1,33 @@
 Mockito is a spying framework based on Java library with the same name.
 
-To install:
+1. To install:
 
   $ python setup.py install
 
-To run all internal tests:
+2. To run all tests:
 
   $ cd mockito_test
   $ python all_tests.py
 
-Basic usage:
+3. For more info, see:
+
+  http://bitbucket.org/szczepiq/mockito-python/wiki/Home
+  
+  Feel free to contribute more documentation or feedback!
+
+4. Our user and developer discussion group is:
+
+  http://groups.google.com/group/mockito-python
+
+5. Mockito is licensed under the MIT license
+
+6. Library was tested with the following Python versions:
+
+  Python 2.4.5
+  Python 2.5.4
+  Python 2.6.1
+  
+7. (Generated from mockito_demo_test.py) Basic usage:
 
   import unittest
   from mockito import *
@@ -21,36 +39,22 @@ Basic usage:
       mock = Mock()
   
       # stub it
-      when(mock).getStuff().thenReturn("stuff")
+      when(mock).getStuff("cool").thenReturn("cool stuff")
       
       # use the mock
-      self.assertEqual("stuff", mock.getStuff())
+      self.assertEqual("cool stuff", mock.getStuff("cool"))
+      
+      # what happens when you pass different argument?
+      self.assertEqual(None, mock.getStuff("different argument"))
       
     def testVerification(self):
       # create a mock
       mock = Mock()
   
       # use the mock
-      mock.doStuff()
+      mock.doStuff("cool")
       
-      # verify the interactions
-      verify(mock).doStuff()
-  
-  
-For more info, see:
-
-  http://code.google.com/p/mockito/wiki/MockitoForPython
-
-Our user and developer discussion group is:
-
-  http://groups.google.com/group/mockito-python
-
-Mockito is licensed under the MIT license
-
-Library was tested with the following Python versions:
-
-  Python 2.4.5
-  Python 2.5.4
-  Python 2.6.1
-  
+      # verify the interactions. Method and parameters must match. Otherwise verification error.
+      verify(mock).doStuff("cool")
+    
   
