@@ -29,7 +29,7 @@ setup(name='mockito',
                    'License :: OSI Approved :: MIT License',
                    'Topic :: Software Development :: Testing'
                   ],
-      test_loader = 'util.test:TestLoader',
+      test_loader = 'mockito_util.test:TestLoader',
       test_suite = 'mockito_test',
       **extra
 )
