@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 import test_base
 import util.write_readme
 
@@ -35,3 +38,4 @@ class DemoTest(unittest.TestCase):
 #all above code will be merged with README
 if __name__ == '__main__':    
     unittest.main()    
+
