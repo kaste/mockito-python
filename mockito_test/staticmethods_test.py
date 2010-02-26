@@ -15,7 +15,7 @@ class Cat:
   def meow():
     return "miau"
 
-class MockitoStaticMethodsTest(TestBase):  
+class StaticMethodsTest(TestBase):  
   
   def tearDown(self):
     unstub() 

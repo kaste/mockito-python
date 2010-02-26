@@ -1,7 +1,7 @@
 from test_base import *
 from mockito import * 
 
-class MockitoStubbingTest(TestBase):
+class StubbingTest(TestBase):
   
   def testStubsWithReturnValue(self):
     mock = Mock()
