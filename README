@@ -6,8 +6,7 @@ Mockito is a spying framework based on Java library with the same name.
 
 2. To run all tests:
 
-  $ cd mockito_test
-  $ python all_tests.py
+  $ python setup.py test
 
 3. For more info, see:
 
