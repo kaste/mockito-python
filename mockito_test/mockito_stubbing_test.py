@@ -142,7 +142,7 @@ class MockitoStubbingTest(TestBase):
     self.assertEquals(1, mock.foo(1))    
     self.assertEquals(1, mock.foo(100))   
     
-  def testStubbingOverrides(self):
+  def testStubbingOverrides2(self):
     mock = Mock()
     when(mock).foo(any()).thenReturn(1)
     when(mock).foo("oh").thenReturn(2)
