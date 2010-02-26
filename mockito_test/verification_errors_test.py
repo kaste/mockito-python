@@ -1,7 +1,7 @@
 from test_base import *
 from mockito import *
 
-class MockitoVerificationErrorsTest(TestBase):
+class VerificationErrorsTest(TestBase):
     
   def testPrintsNicely(self):
     mock = Mock()

@@ -1,8 +1,7 @@
 import test_base
 from mockito import *
 
-#TODO remove Mockito prefix from all classes
-class MockitoVerificationTest(test_base.TestBase):
+class VerificationTest(test_base.TestBase):
   
   def testVerifies(self):
     mock = Mock()

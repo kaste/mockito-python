@@ -16,7 +16,7 @@ class Lion(object):
   def roar(cls):
     return "Rrrrr!"
 
-class MockitoClassMethodsTest(TestBase):   
+class ClassMethodsTest(TestBase):   
 
   def tearDown(self):
     unstub() 

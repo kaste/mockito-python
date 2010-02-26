@@ -1,7 +1,7 @@
 from test_base import *
 from mockito import *
 
-class MockitoMatchersTest(TestBase):
+class MatchersTest(TestBase):
   def testVerifiesUsingContainsMatcher(self):
     mock = Mock()
     mock.foo("foobar")

@@ -6,7 +6,7 @@ import util.write_readme
 import unittest
 from mockito import *
 
-class MockitoDemoTest(unittest.TestCase):
+class DemoTest(unittest.TestCase):
 
   def testStubbing(self):
     # create a mock

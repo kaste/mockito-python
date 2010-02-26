@@ -12,7 +12,7 @@ class Dog(object):
     def do_default_bark(self):
         return self.bark('Wau')
     
-class MockitoInstanceMethodsTest(TestBase):
+class InstanceMethodsTest(TestBase):
     def tearDown(self):
         unstub()
 

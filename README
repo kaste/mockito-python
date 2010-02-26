@@ -32,7 +32,7 @@ Mockito is a spying framework based on Java library with the same name.
   import unittest
   from mockito import *
   
-  class MockitoDemoTest(unittest.TestCase):
+  class DemoTest(unittest.TestCase):
   
     def testStubbing(self):
       # create a mock

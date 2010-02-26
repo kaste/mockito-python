@@ -1,5 +1,5 @@
-import mockito_importer
-mockito_importer.imp()
+import importer
+importer.imp()
 
 import smart_test_runner
 
