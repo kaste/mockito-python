@@ -1,12 +1,16 @@
-#!/usr/bin/python2.4
+#!/usr/bin/env python
+# coding: utf-8
+
+from distribute_setup import use_setuptools
+use_setuptools()
 
 import sys
 import os
 
 if (len(sys.argv) > 1 and sys.argv[1] == 'test'):
-  print """
+  print("""
   Running tests against installed mockito...
-  """
+  """)
   
   import shutil
   shutil.rmtree('build_test', True)
@@ -24,7 +28,7 @@ if (len(sys.argv) > 1 and sys.argv[1] == 'test'):
   exit(0)
 
 if (len(sys.argv) == 1):
-  print """
+  print ("""
   1. Non-standard usage (not listed by --help):
     
     'setup.py test' runs tests against installed Mockito.
@@ -33,12 +37,17 @@ if (len(sys.argv) == 1):
     setup.py test
     
   2. Standard usage:
-  """
+  """)
 
 try:
   from setuptools import setup
 except ImportError:
   from distutils.core import setup
+import sys
+
+extra = {}
+if sys.version_info >= (3,):
+  extra['use_2to3'] = True
 
 setup(name='mockito',
       version='0.2.0',
@@ -54,5 +63,7 @@ setup(name='mockito',
                    'Intended Audience :: Developers',
                    'License :: OSI Approved :: MIT License',
                    'Topic :: Software Development :: Testing'
-                  ]
+                  ],
+      **extra
 )
+
