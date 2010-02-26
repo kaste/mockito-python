@@ -9,7 +9,7 @@ class Dog:
 class Cat:
   @classmethod
   def meow(cls, m):
-    return str(cls) + " " + str(m)
+    return cls.__name__ + " " + str(m)
 
 class Lion(object):
   @classmethod
@@ -69,7 +69,7 @@ class ClassMethodsTest(TestBase):
     verify(Dog).bark()
     
   def testPreservesClassArgumentAfterUnstub(self):
-    self.assertTrue(Cat.meow("foo").endswith("Cat foo"))
+    self.assertEquals("Cat foo", Cat.meow("foo"))
 
     when(Cat).meow("foo").thenReturn("bar")
     
@@ -77,7 +77,8 @@ class ClassMethodsTest(TestBase):
     
     unstub()
     
-    self.assertTrue(Cat.meow("foo").endswith("Cat foo"))
+    self.assertEquals("Cat foo", Cat.meow("foo"))
     
 if __name__ == '__main__':
   unittest.main()
+
