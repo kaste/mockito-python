@@ -7,7 +7,7 @@ def openFile(f, m='r'):
   else:
     return open('../' + f, m)
     
-demo_test = '  '.join(openFile('mockito_test/mockito_demo_test.py').readlines())
+demo_test = '  '.join(openFile('mockito_test/demo_test.py').readlines())
 demo_test = demo_test.split('#DELIMINATOR')[1]
 
 readme_before = ''.join(openFile('README').readlines())

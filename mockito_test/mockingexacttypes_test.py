@@ -7,7 +7,7 @@ class Foo(object):
   def bar(self):
     pass
 
-class MockitoMockingExactTypesTest(TestBase):
+class MockingExactTypesTest(TestBase):
   
   def testShouldScreamWhenUnknownMethodStubbed(self):
     mock = Mock(Foo)

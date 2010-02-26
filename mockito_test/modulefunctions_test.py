@@ -3,7 +3,7 @@ from mockito import *
 from mockito.invocation import InvocationError
 import os
 
-class MockitoModuleFunctionsTest(TestBase):
+class ModuleFunctionsTest(TestBase):
   def tearDown(self):
     unstub() 
 
