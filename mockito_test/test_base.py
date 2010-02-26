@@ -1,7 +1,7 @@
-import unittest
-import importer
+#!/usr/bin/env python
+# coding: utf-8
 
-importer.imp()
+import unittest
 
 class TestBase(unittest.TestCase):
   
@@ -15,3 +15,4 @@ class TestBase(unittest.TestCase):
       self.fail()
     except Exception, e:
       self.assertEquals(message, str(e))
+
