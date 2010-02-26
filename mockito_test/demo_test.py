@@ -2,7 +2,7 @@
 # coding: utf-8
 
 import test_base
-import util.write_readme
+import mockito_util.write_readme
 
 #all below code will be merged with README
 #DELIMINATOR

@@ -16,7 +16,7 @@ if sys.version_info >= (3,):
 
 setup(name='mockito',
       version='0.2.0',
-      packages=['mockito'],
+      packages=['mockito', 'mockito_test', 'mockito_util'],
       url='http://code.google.com/p/mockito/wiki/MockitoForPython',
       download_url='http://bitbucket.org/szczepiq/mockito-python/downloads/',
       maintainer='mockito maintainers',
