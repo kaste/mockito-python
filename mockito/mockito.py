@@ -1,6 +1,6 @@
 import matchers
 import verification
-from mock import Mock
+from mocking import Mock, mock
 from mock_registry import mock_registry
 from verification import VerificationError
 

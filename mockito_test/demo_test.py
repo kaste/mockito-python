@@ -10,7 +10,6 @@ import unittest
 from mockito import *
 
 class DemoTest(unittest.TestCase):
-
   def testStubbing(self):
     # create a mock
     mock = Mock()
