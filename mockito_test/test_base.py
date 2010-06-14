@@ -2,9 +2,9 @@
 # coding: utf-8
 
 import unittest
+from mockito import mock, Mock
 
 class TestBase(unittest.TestCase):
-  
   def assertRaisesMessage(self, message, function, *params):
     try:
       if (params):
@@ -15,4 +15,3 @@ class TestBase(unittest.TestCase):
       self.fail()
     except Exception, e:
       self.assertEquals(message, str(e))
-

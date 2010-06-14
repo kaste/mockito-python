@@ -5,7 +5,6 @@ from mock_registry import mock_registry
 class Dummy(object): pass
 
 class Mock(object):
-  
   def __init__(self, mocked_obj=None, strict=True):
     self.invocations = []
     self.stubbed_invocations = []
@@ -82,5 +81,5 @@ class Mock(object):
       method_name, original_method = self.original_methods.pop()      
       self.set_method(method_name, original_method)
       
-  
+mock = Mock
 
