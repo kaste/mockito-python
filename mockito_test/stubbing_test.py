@@ -2,7 +2,6 @@ from test_base import *
 from mockito import * 
 
 class StubbingTest(TestBase):
-  
   def testStubsWithReturnValue(self):
     mock = Mock()
     when(mock).getStuff().thenReturn("foo")
