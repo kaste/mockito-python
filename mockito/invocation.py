@@ -15,7 +15,7 @@ class Invocation(object):
     self.strict = mock.strict
     
   def __repr__(self):
-    return self.method_name + str(self.params)
+    return self.method_name + "(" + ", ".join([repr(p) for p in self.params]) + ")"
 
   def answer_first(self):
     return self.answers[0].answer()

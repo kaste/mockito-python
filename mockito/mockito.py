@@ -70,7 +70,6 @@ def when(obj, strict=True):
 
 def unstub():
   """Unstubs all stubbed methods and functions"""
-  
   mock_registry.unstub_all()
 
 def verifyNoMoreInteractions(*mocks):
@@ -88,7 +87,6 @@ def any(wanted_type=None):
        when(mock).foo(any()).thenReturn(1)
        verify(mock).foo(any(int))
   """
-
   return matchers.Any(wanted_type)     
         
 def contains(sub):
