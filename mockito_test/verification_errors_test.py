@@ -1,5 +1,5 @@
 from test_base import *
-from mockito import *
+from mockito import mock, when, verify, VerificationError, verifyNoMoreInteractions
 
 class VerificationErrorsTest(TestBase):
     
@@ -10,6 +10,13 @@ class VerificationErrorsTest(TestBase):
     except VerificationError, e:
       self.assertEquals("\nWanted but not invoked: foo()", str(e))
       
+  def testPrintsNicelyOneArgument(self):
+    theMock = mock()
+    try:
+      verify(theMock).foo("bar")
+    except VerificationError, e:
+      self.assertEquals("\nWanted but not invoked: foo('bar')", str(e))
+
   def testPrintsNicelyArguments(self):
     theMock = mock()
     try:
