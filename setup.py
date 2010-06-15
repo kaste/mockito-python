@@ -27,7 +27,8 @@ setup(name='mockito',
       classifiers=['Development Status :: 4 - Beta',
                    'Intended Audience :: Developers',
                    'License :: OSI Approved :: MIT License',
-                   'Topic :: Software Development :: Testing'
+                   'Topic :: Software Development :: Testing',
+                   'Programming Language :: Python :: 3'
                   ],
       test_loader = 'mockito_util.test:TestLoader',
       test_suite = 'mockito_test',
