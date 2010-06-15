@@ -25,34 +25,35 @@ Mockito is a spying framework based on Java library with the same name.
   Python 2.4.5
   Python 2.5.4
   Python 2.6.1
+  Python 3.1.1
   
 7. (Generated from mockito_demo_test.py) Basic usage:
 
   import unittest
-  from mockito import *
+  from mockito import mock, when, verify
   
   class DemoTest(unittest.TestCase):
     def testStubbing(self):
       # create a mock
-      mock = Mock()
+      ourMock = mock()
   
       # stub it
-      when(mock).getStuff("cool").thenReturn("cool stuff")
+      when(ourMock).getStuff("cool").thenReturn("cool stuff")
       
       # use the mock
-      self.assertEqual("cool stuff", mock.getStuff("cool"))
+      self.assertEqual("cool stuff", ourMock.getStuff("cool"))
       
       # what happens when you pass different argument?
-      self.assertEqual(None, mock.getStuff("different argument"))
+      self.assertEqual(None, ourMock.getStuff("different argument"))
       
     def testVerification(self):
       # create a mock
-      mock = Mock()
+      theMock = mock()
   
       # use the mock
-      mock.doStuff("cool")
+      theMock.doStuff("cool")
       
       # verify the interactions. Method and parameters must match. Otherwise verification error.
-      verify(mock).doStuff("cool")
+      verify(theMock).doStuff("cool")
     
   

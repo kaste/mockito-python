@@ -1,13 +1,13 @@
 from test_base import *
-from mockito import *
+from mockito import mock, verify, contains
 
 class MatchersTest(TestBase):
   def testVerifiesUsingContainsMatcher(self):
-    mock = Mock()
-    mock.foo("foobar")
+    ourMock = mock()
+    ourMock.foo("foobar")
     
-    verify(mock).foo(contains("foo"))
-    verify(mock).foo(contains("bar"))
+    verify(ourMock).foo(contains("foo"))
+    verify(ourMock).foo(contains("bar"))
 
 class ContainsMatcherTest(TestBase):
   def testShouldSatisfiySubstringOfGivenString(self):

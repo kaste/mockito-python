@@ -80,6 +80,8 @@ class Mock(object):
     while self.original_methods:  
       method_name, original_method = self.original_methods.pop()      
       self.set_method(method_name, original_method)
-      
+ 
+# Alias to make API similar to Java one.
+# Old name stays for compatibility.      
 mock = Mock
 
