@@ -1,6 +1,6 @@
 from test_base import *
 from mockito.invocation import InvocationError
-from mockito import * 
+from mockito import mock, when 
 
 class Foo(object):
 
@@ -10,12 +10,12 @@ class Foo(object):
 class MockingExactTypesTest(TestBase):
   
   def testShouldScreamWhenUnknownMethodStubbed(self):
-    mock = Mock(Foo)
+    ourMock = mock(Foo)
     
-    when(mock).bar().thenReturn("grr");
+    when(ourMock).bar().thenReturn("grr");
     
     try:
-      when(mock).unknownMethod().thenReturn("grr");
+      when(ourMock).unknownMethod().thenReturn("grr");
       self.fail()
     except InvocationError:
       pass  

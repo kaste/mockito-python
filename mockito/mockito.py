@@ -58,15 +58,15 @@ def times(count):
   return count
 
 def when(obj, strict=True):
-  if isinstance(obj, Mock):
-    mock = obj
+  if isinstance(obj, mock):
+    theMock = obj
   else:    
-    mock = mock_registry.mock_for(obj)
-    if mock is None:
-      mock = Mock(obj, strict=strict)
+    theMock = mock_registry.mock_for(obj)
+    if theMock is None:
+      theMock = mock(obj, strict=strict)
 
-  mock.expect_stubbing()
-  return mock
+  theMock.expect_stubbing()
+  return theMock
 
 def unstub():
   """Unstubs all stubbed methods and functions"""
