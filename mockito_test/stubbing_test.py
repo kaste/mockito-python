@@ -1,190 +1,190 @@
 from test_base import *
-from mockito import * 
+from mockito import mock, when, verify, times, any
 
 class StubbingTest(TestBase):
   def testStubsWithReturnValue(self):
-    mock = Mock()
-    when(mock).getStuff().thenReturn("foo")
-    when(mock).getMoreStuff(1, 2).thenReturn(10)
+    theMock = mock()
+    when(theMock).getStuff().thenReturn("foo")
+    when(theMock).getMoreStuff(1, 2).thenReturn(10)
     
-    self.assertEquals("foo", mock.getStuff())
-    self.assertEquals(10, mock.getMoreStuff(1, 2))
-    self.assertEquals(None, mock.getMoreStuff(1, 3))
+    self.assertEquals("foo", theMock.getStuff())
+    self.assertEquals(10, theMock.getMoreStuff(1, 2))
+    self.assertEquals(None, theMock.getMoreStuff(1, 3))
     
   def testStubsWhenNoArgsGiven(self):
-      mock = Mock()
-      when(mock).getStuff().thenReturn("foo")
-      when(mock).getWidget().thenReturn("bar")
+      theMock = mock()
+      when(theMock).getStuff().thenReturn("foo")
+      when(theMock).getWidget().thenReturn("bar")
   
-      self.assertEquals("foo", mock.getStuff())
-      self.assertEquals("bar", mock.getWidget())     
+      self.assertEquals("foo", theMock.getStuff())
+      self.assertEquals("bar", theMock.getWidget())     
     
   def testStubsConsecutivelyWhenNoArgsGiven(self):
-      mock = Mock()
-      when(mock).getStuff().thenReturn("foo").thenReturn("bar")
-      when(mock).getWidget().thenReturn("baz").thenReturn("baz2")
+      theMock = mock()
+      when(theMock).getStuff().thenReturn("foo").thenReturn("bar")
+      when(theMock).getWidget().thenReturn("baz").thenReturn("baz2")
   
-      self.assertEquals("foo", mock.getStuff())
-      self.assertEquals("bar", mock.getStuff())
-      self.assertEquals("bar", mock.getStuff())        
-      self.assertEquals("baz", mock.getWidget())
-      self.assertEquals("baz2", mock.getWidget())
-      self.assertEquals("baz2", mock.getWidget())
+      self.assertEquals("foo", theMock.getStuff())
+      self.assertEquals("bar", theMock.getStuff())
+      self.assertEquals("bar", theMock.getStuff())        
+      self.assertEquals("baz", theMock.getWidget())
+      self.assertEquals("baz2", theMock.getWidget())
+      self.assertEquals("baz2", theMock.getWidget())
     
   def testStubsWithException(self):
-    mock = Mock()
-    when(mock).someMethod().thenRaise(Exception("foo"))
+    theMock = mock()
+    when(theMock).someMethod().thenRaise(Exception("foo"))
     
-    self.assertRaisesMessage("foo", mock.someMethod)
+    self.assertRaisesMessage("foo", theMock.someMethod)
 
   def testStubsAndVerifies(self):
-    mock = Mock()
-    when(mock).foo().thenReturn("foo")
+    theMock = mock()
+    when(theMock).foo().thenReturn("foo")
     
-    self.assertEquals("foo", mock.foo())
-    verify(mock).foo()
+    self.assertEquals("foo", theMock.foo())
+    verify(theMock).foo()
 
   def testStubsVerifiesAndStubsAgain(self):
-    mock = Mock()
+    theMock = mock()
     
-    when(mock).foo().thenReturn("foo")
-    self.assertEquals("foo", mock.foo())
-    verify(mock).foo()
+    when(theMock).foo().thenReturn("foo")
+    self.assertEquals("foo", theMock.foo())
+    verify(theMock).foo()
     
-    when(mock).foo().thenReturn("next foo")    
-    self.assertEquals("next foo", mock.foo())
-    verify(mock, times(2)).foo()
+    when(theMock).foo().thenReturn("next foo")    
+    self.assertEquals("next foo", theMock.foo())
+    verify(theMock, times(2)).foo()
     
   def testOverridesStubbing(self):
-    mock = Mock()
+    theMock = mock()
     
-    when(mock).foo().thenReturn("foo")
-    when(mock).foo().thenReturn("bar")
+    when(theMock).foo().thenReturn("foo")
+    when(theMock).foo().thenReturn("bar")
     
-    self.assertEquals("bar", mock.foo())
+    self.assertEquals("bar", theMock.foo())
 
   def testStubsAndInvokesTwiceAndVerifies(self):
-    mock = Mock()
+    theMock = mock()
     
-    when(mock).foo().thenReturn("foo")
+    when(theMock).foo().thenReturn("foo")
     
-    self.assertEquals("foo", mock.foo())
-    self.assertEquals("foo", mock.foo())
+    self.assertEquals("foo", theMock.foo())
+    self.assertEquals("foo", theMock.foo())
 
-    verify(mock, times(2)).foo()
+    verify(theMock, times(2)).foo()
 
   def testStubsAndReturnValuesForMethodWithSameNameAndDifferentArguments(self):
-    mock = Mock()
-    when(mock).getStuff(1).thenReturn("foo")
-    when(mock).getStuff(1, 2).thenReturn("bar")
+    theMock = mock()
+    when(theMock).getStuff(1).thenReturn("foo")
+    when(theMock).getStuff(1, 2).thenReturn("bar")
     
-    self.assertEquals("foo", mock.getStuff(1))
-    self.assertEquals("bar", mock.getStuff(1, 2))
+    self.assertEquals("foo", theMock.getStuff(1))
+    self.assertEquals("bar", theMock.getStuff(1, 2))
     
   def testStubsWithChainedReturnValues(self):
-    mock = Mock()
-    when(mock).getStuff().thenReturn("foo").thenReturn("bar").thenReturn("foobar")
+    theMock = mock()
+    when(theMock).getStuff().thenReturn("foo").thenReturn("bar").thenReturn("foobar")
     
-    self.assertEquals("foo", mock.getStuff())
-    self.assertEquals("bar", mock.getStuff())
-    self.assertEquals("foobar", mock.getStuff())
+    self.assertEquals("foo", theMock.getStuff())
+    self.assertEquals("bar", theMock.getStuff())
+    self.assertEquals("foobar", theMock.getStuff())
 
   def testStubsWithChainedReturnValuesAndException(self):
-    mock = Mock()
-    when(mock).getStuff().thenReturn("foo").thenReturn("bar").thenRaise(Exception("foobar"))
+    theMock = mock()
+    when(theMock).getStuff().thenReturn("foo").thenReturn("bar").thenRaise(Exception("foobar"))
     
-    self.assertEquals("foo", mock.getStuff())
-    self.assertEquals("bar", mock.getStuff())
-    self.assertRaisesMessage("foobar", mock.getStuff)
+    self.assertEquals("foo", theMock.getStuff())
+    self.assertEquals("bar", theMock.getStuff())
+    self.assertRaisesMessage("foobar", theMock.getStuff)
 
   def testStubsWithChainedExceptionAndReturnValue(self):
-    mock = Mock()
-    when(mock).getStuff().thenRaise(Exception("foo")).thenReturn("bar")
+    theMock = mock()
+    when(theMock).getStuff().thenRaise(Exception("foo")).thenReturn("bar")
     
-    self.assertRaisesMessage("foo", mock.getStuff)
-    self.assertEquals("bar", mock.getStuff())
+    self.assertRaisesMessage("foo", theMock.getStuff)
+    self.assertEquals("bar", theMock.getStuff())
 
   def testStubsWithChainedExceptions(self):
-    mock = Mock()
-    when(mock).getStuff().thenRaise(Exception("foo")).thenRaise(Exception("bar"))
+    theMock = mock()
+    when(theMock).getStuff().thenRaise(Exception("foo")).thenRaise(Exception("bar"))
     
-    self.assertRaisesMessage("foo", mock.getStuff)
-    self.assertRaisesMessage("bar", mock.getStuff)
+    self.assertRaisesMessage("foo", theMock.getStuff)
+    self.assertRaisesMessage("bar", theMock.getStuff)
 
   def testStubsWithReturnValueBeingException(self):
-    mock = Mock()
+    theMock = mock()
     exception = Exception("foo")
-    when(mock).getStuff().thenReturn(exception)
+    when(theMock).getStuff().thenReturn(exception)
     
-    self.assertEquals(exception, mock.getStuff())
+    self.assertEquals(exception, theMock.getStuff())
     
   def testLastStubbingWins(self):
-    mock = Mock()
-    when(mock).foo().thenReturn(1)
-    when(mock).foo().thenReturn(2)
+    theMock = mock()
+    when(theMock).foo().thenReturn(1)
+    when(theMock).foo().thenReturn(2)
     
-    self.assertEquals(2, mock.foo())
+    self.assertEquals(2, theMock.foo())
     
   def testStubbingOverrides(self):
-    mock = Mock()
-    when(mock).foo().thenReturn(1)
-    when(mock).foo().thenReturn(2).thenReturn(3)
+    theMock = mock()
+    when(theMock).foo().thenReturn(1)
+    when(theMock).foo().thenReturn(2).thenReturn(3)
     
-    self.assertEquals(2, mock.foo())    
-    self.assertEquals(3, mock.foo())    
-    self.assertEquals(3, mock.foo())   
+    self.assertEquals(2, theMock.foo())    
+    self.assertEquals(3, theMock.foo())    
+    self.assertEquals(3, theMock.foo())   
     
   def testStubsWithMatchers(self):
-    mock = Mock()
-    when(mock).foo(any()).thenReturn(1)
+    theMock = mock()
+    when(theMock).foo(any()).thenReturn(1)
     
-    self.assertEquals(1, mock.foo(1))    
-    self.assertEquals(1, mock.foo(100))   
+    self.assertEquals(1, theMock.foo(1))    
+    self.assertEquals(1, theMock.foo(100))   
     
   def testStubbingOverrides2(self):
-    mock = Mock()
-    when(mock).foo(any()).thenReturn(1)
-    when(mock).foo("oh").thenReturn(2)
+    theMock = mock()
+    when(theMock).foo(any()).thenReturn(1)
+    when(theMock).foo("oh").thenReturn(2)
     
-    self.assertEquals(2, mock.foo("oh"))    
-    self.assertEquals(1, mock.foo("xxx"))   
+    self.assertEquals(2, theMock.foo("oh"))    
+    self.assertEquals(1, theMock.foo("xxx"))   
     
   def testDoesNotVerifyStubbedCalls(self):
-    mock = Mock()
-    when(mock).foo().thenReturn(1)
+    theMock = mock()
+    when(theMock).foo().thenReturn(1)
 
-    verify(mock, times=0).foo()
+    verify(theMock, times=0).foo()
 
   def testStubsWithMultipleReturnValues(self):
-    mock = Mock()
-    when(mock).getStuff().thenReturn("foo", "bar", "foobar")
+    theMock = mock()
+    when(theMock).getStuff().thenReturn("foo", "bar", "foobar")
     
-    self.assertEquals("foo", mock.getStuff())
-    self.assertEquals("bar", mock.getStuff())
-    self.assertEquals("foobar", mock.getStuff())
+    self.assertEquals("foo", theMock.getStuff())
+    self.assertEquals("bar", theMock.getStuff())
+    self.assertEquals("foobar", theMock.getStuff())
 
   def testStubsWithChainedMultipleReturnValues(self):
-    mock = Mock()
-    when(mock).getStuff().thenReturn("foo", "bar").thenReturn("foobar")
+    theMock = mock()
+    when(theMock).getStuff().thenReturn("foo", "bar").thenReturn("foobar")
     
-    self.assertEquals("foo", mock.getStuff())
-    self.assertEquals("bar", mock.getStuff())
-    self.assertEquals("foobar", mock.getStuff())
+    self.assertEquals("foo", theMock.getStuff())
+    self.assertEquals("bar", theMock.getStuff())
+    self.assertEquals("foobar", theMock.getStuff())
 
   def testStubsWithMultipleExceptions(self):
-    mock = Mock()
-    when(mock).getStuff().thenRaise(Exception("foo"), Exception("bar"))
+    theMock = mock()
+    when(theMock).getStuff().thenRaise(Exception("foo"), Exception("bar"))
     
-    self.assertRaisesMessage("foo", mock.getStuff)
-    self.assertRaisesMessage("bar", mock.getStuff)
+    self.assertRaisesMessage("foo", theMock.getStuff)
+    self.assertRaisesMessage("bar", theMock.getStuff)
 
   def testStubsWithMultipleChainedExceptions(self):
-    mock = Mock()
-    when(mock).getStuff().thenRaise(Exception("foo"), Exception("bar")).thenRaise(Exception("foobar"))
+    theMock = mock()
+    when(theMock).getStuff().thenRaise(Exception("foo"), Exception("bar")).thenRaise(Exception("foobar"))
     
-    self.assertRaisesMessage("foo", mock.getStuff)
-    self.assertRaisesMessage("bar", mock.getStuff)
-    self.assertRaisesMessage("foobar", mock.getStuff)
+    self.assertRaisesMessage("foo", theMock.getStuff)
+    self.assertRaisesMessage("bar", theMock.getStuff)
+    self.assertRaisesMessage("foobar", theMock.getStuff)
 
 #TODO verify after stubbing and vice versa
 

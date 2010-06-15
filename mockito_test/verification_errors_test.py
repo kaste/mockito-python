@@ -4,45 +4,45 @@ from mockito import *
 class VerificationErrorsTest(TestBase):
     
   def testPrintsNicely(self):
-    mock = Mock()
+    theMock = mock()
     try:
-      verify(mock).foo()
+      verify(theMock).foo()
     except VerificationError, e:
       self.assertEquals("\nWanted but not invoked: foo()", str(e))
       
   def testPrintsNicelyArguments(self):
-    mock = Mock()
+    theMock = mock()
     try:
-      verify(mock).foo(1, 2)
+      verify(theMock).foo(1, 2)
     except VerificationError, e:
       self.assertEquals("\nWanted but not invoked: foo(1, 2)", str(e))
     
   def testPrintsNicelyStringArguments(self):
-    mock = Mock()
+    theMock = mock()
     try:
-      verify(mock).foo(1, 'foo')
+      verify(theMock).foo(1, 'foo')
     except VerificationError, e:
       self.assertEquals("\nWanted but not invoked: foo(1, 'foo')", str(e))
       
   def testPrintsOutThatTheActualAndExpectedInvocationCountDiffers(self):
-      mock = Mock()
-      when(mock).foo().thenReturn(0)
+      theMock = mock()
+      when(theMock).foo().thenReturn(0)
       
-      mock.foo()
-      mock.foo()
+      theMock.foo()
+      theMock.foo()
       
       try:
-          verify(mock).foo()
+          verify(theMock).foo()
       except VerificationError, e:
           self.assertEquals("\nWanted times: 1, actual times: 2", str(e))
           
 
   #TODO implement
   def stestPrintsNicelyWhenArgumentsDifferent(self):
-    mock = Mock()
-    mock.foo('foo', 1)
+    theMock = mock()
+    theMock.foo('foo', 1)
     try:
-      verify(mock).foo(1, 'foo')
+      verify(theMock).foo(1, 'foo')
     except VerificationError, e:
       self.assertEquals(
 """Arguments are different.
@@ -50,10 +50,10 @@ Wanted: foo(1, 'foo')
 Actual: foo('foo', 1)""", str(e))
     
   def testPrintsUnwantedInteraction(self):
-    mock = Mock()
-    mock.foo(1, 'foo')
+    theMock = mock()
+    theMock.foo(1, 'foo')
     try:
-      verifyNoMoreInteractions(mock)
+      verifyNoMoreInteractions(theMock)
     except VerificationError, e:
       self.assertEquals("\nUnwanted interaction: foo(1, 'foo')", str(e))
 

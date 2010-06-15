@@ -1,37 +1,36 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import test_base
 import mockito_util.write_readme
 
 #all below code will be merged with README
 #DELIMINATOR
 import unittest
-from mockito import *
+from mockito import mock, when, verify
 
 class DemoTest(unittest.TestCase):
   def testStubbing(self):
     # create a mock
-    mock = Mock()
+    ourMock = mock()
 
     # stub it
-    when(mock).getStuff("cool").thenReturn("cool stuff")
+    when(ourMock).getStuff("cool").thenReturn("cool stuff")
     
     # use the mock
-    self.assertEqual("cool stuff", mock.getStuff("cool"))
+    self.assertEqual("cool stuff", ourMock.getStuff("cool"))
     
     # what happens when you pass different argument?
-    self.assertEqual(None, mock.getStuff("different argument"))
+    self.assertEqual(None, ourMock.getStuff("different argument"))
     
   def testVerification(self):
     # create a mock
-    mock = Mock()
+    theMock = mock()
 
     # use the mock
-    mock.doStuff("cool")
+    theMock.doStuff("cool")
     
     # verify the interactions. Method and parameters must match. Otherwise verification error.
-    verify(mock).doStuff("cool")
+    verify(theMock).doStuff("cool")
   
 #DELIMINATOR
 #all above code will be merged with README

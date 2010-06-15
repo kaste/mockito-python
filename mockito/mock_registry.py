@@ -1,5 +1,5 @@
 class MockRegistry:
-  """Registers Mock()s, ensures that we only have one Mock() per mocked_obj, and
+  """Registers mock()s, ensures that we only have one mock() per mocked_obj, and
   iterates over them to unstub each stubbed method. """
   
   def __init__(self):
