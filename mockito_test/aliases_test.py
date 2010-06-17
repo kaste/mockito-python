@@ -8,5 +8,6 @@ class AliasesTest(TestBase):
   def testMockCreationAlias(self):
     self.assertEquals(mock, Mock)
   
-if __name__ == '__main__':    
+if __name__ == '__main__':
+    import unittest    
     unittest.main()
