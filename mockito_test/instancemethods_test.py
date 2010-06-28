@@ -53,15 +53,11 @@ class InstanceMethodsTest(TestBase):
         except InvocationError:
             pass
         
-    def testCallingAStubbedMethodWithUnexpectedArgumentsShouldThrow(self):
-        when(Dog).bark('Miau').thenReturn('Wuff')
-        
+    def testCallingAStubbedMethodWithUnexpectedArgumentsShouldReturnNone(self):
+        when(Dog).bark('Miau').thenReturn('Wuff')        
         rex = Dog()
-        try:
-            rex.bark('Shhhh')
-            self.fail('Calling a stubbed method with unexpected arguments should have thrown')
-        except InvocationError:
-            pass
+        self.assertEquals(None, rex.bark('Shhh'))
+        
         
     def testStubInstancesInsteadOfClasses(self):
         rex = Dog()
