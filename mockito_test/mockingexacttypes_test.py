@@ -20,5 +20,9 @@ class MockingExactTypesTest(TestBase):
     except InvocationError:
       pass  
     
+  def testShouldReturnNoneWhenCallingExistingButUnstubbedMethod(self):
+    ourMock = mock(Foo)
+    self.assertEquals(None, ourMock.bar())
+    
 if __name__ == '__main__':
   unittest.main()

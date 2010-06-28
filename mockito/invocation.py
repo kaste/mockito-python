@@ -56,11 +56,6 @@ class RememberedInvocation(Invocation):
       if matching_invocation.matches(self):
         return matching_invocation.answer_first()
 
-    if self.strict and self.mock.mocked_obj:
-        #TODO: this message should be nicer. Only should show args that are passed and ideally should simply write something like someMethod(1,2);
-        #TODO: we have to decide whether it is good to be strict about stubbing 
-        raise InvocationError("You called %s with %s and %s as arguments but we did not expect that." % (self.method_name, params, named_params))
-
     return None
 
 class VerifiableInvocation(MatchingInvocation):
