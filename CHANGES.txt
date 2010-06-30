@@ -1,0 +1,15 @@
+MOCKITO CHANGE LOG
+==================
+
+Release 0.3.1
+-------------
+Bug-fix release.
+Bug fixes:
+ - Fixed annoying issue #8 [http://bitbucket.org/szczepiq/mockito-python/issue/8]
+
+Release 0.3.0
+-------------
+API Changes:
+ - Renamed mock creation method from "Mock" (upper "M") to "mock". Old name stays for compatibility until 1.0 release.
+Other Changes:
+ - Official Python3 support via distutils + 2to3.

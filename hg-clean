@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# A script to remove all files not added to mercurial.
+
+hg st | grep "^\? " | sed -e's/^\? //' | xargs rm
+

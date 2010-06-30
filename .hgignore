@@ -1,0 +1,6 @@
+syntax: glob
+*.pyc
+syntax: regexp
+^build.*
+syntax: regexp
+^src/build$
