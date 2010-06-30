@@ -1,6 +1,12 @@
 MOCKITO CHANGE LOG
 ==================
 
+Release 0.3.1
+-------------
+Bug-fix release.
+Bug fixes:
+ - Fixed annoying issue #8 [http://bitbucket.org/szczepiq/mockito-python/issue/8]
+
 Release 0.3.0
 -------------
 API Changes:
