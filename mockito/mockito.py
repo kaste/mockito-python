@@ -1,8 +1,16 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 import matchers
 import verification
 from mocking import Mock, mock
 from mock_registry import mock_registry
 from verification import VerificationError
+
+__copyright__ = "Copyright 2009-2010, Mockito Contributors"
+__license__ = "MIT"
+__maintainer__ = "Mockito Maintainers"
+__email__ = "mockito-python@googlegroups.com"
 
 class ArgumentError(Exception):
   pass
@@ -20,7 +28,7 @@ def _invalid_between(between):
       return True
   return False
 
-def verify(obj, times=1, atleast=None, atmost=None, between=None):
+def verify(obj, times=1, atleast=None, atmost=None, between=None, inorder=False):
   if times < 0:
     raise ArgumentError("""'times' argument has invalid value. 
                            It should be at least 0. You wanted to set it to: %i""" % times)
@@ -52,6 +60,10 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None):
     mock.verification = verification.Between(*between)
   else:
     mock.verification = verification.Times(times)
+    
+  if inorder:
+    mock.verification = verification.InOrder(mock.verification)
+    
   return mock
 
 def times(count):

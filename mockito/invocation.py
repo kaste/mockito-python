@@ -1,5 +1,7 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 import matchers
-from mock_registry import mock_registry
 
 class InvocationError(AssertionError):
     pass
@@ -9,6 +11,7 @@ class Invocation(object):
     self.method_name = method_name
     self.mock = mock
     self.verified = False
+    self.verified_inorder = False
     self.params = ()
     self.named_params = {}
     self.answers = []
@@ -62,14 +65,16 @@ class VerifiableInvocation(MatchingInvocation):
   def __call__(self, *params, **named_params):
     self.params = params
     self.named_params = named_params
-    matches = 0
+    matched_invocations = []
     for invocation in self.mock.invocations:
       if self.matches(invocation):
-        matches += 1
-        invocation.verified = True
+        matched_invocations.append(invocation)
 
     verification = self.mock.pull_verification()
-    verification.verify(self, matches)
+    verification.verify(self, len(matched_invocations))
+    
+    for invocation in matched_invocations:
+      invocation.verified = True
   
 class StubbedInvocation(MatchingInvocation):
   def __init__(self, *params):
