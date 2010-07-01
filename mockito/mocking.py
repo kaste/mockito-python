@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 import inspect
 import invocation
 from mock_registry import mock_registry
