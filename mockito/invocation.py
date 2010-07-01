@@ -11,6 +11,7 @@ class Invocation(object):
     self.method_name = method_name
     self.mock = mock
     self.verified = False
+    self.verified_inorder = False
     self.params = ()
     self.named_params = {}
     self.answers = []

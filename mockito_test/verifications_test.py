@@ -198,7 +198,29 @@ class InorderVerifyTest(VerificationTestBase):
     self.mock.first()
     self.assertRaisesMessage("\nWanted first() to be invoked, got second() instead", inorder.verify(self.mock).first)
     
+
+  def testPassesMixedVerifications(self):
+    self.mock.first()
+    self.mock.second()
+
+    verify(self.mock).first()
+    verify(self.mock).second()
+
+    inorder.verify(self.mock).first()
+    inorder.verify(self.mock).second()
+
+  def testFailsMixedVerifications(self):
+    self.mock.second()
+    self.mock.first()
     
+    # first - normal verifications, they should pass
+    verify(self.mock).first()
+    verify(self.mock).second()
+
+    # but, inorder verification should fail
+    self.assertRaises(VerificationError, inorder.verify(self.mock).first)
+
+
 class VerifyNoMoreInteractionsTest(TestBase):
   def testVerifies(self):
     mockOne, mockTwo = mock(), mock()
