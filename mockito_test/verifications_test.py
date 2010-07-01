@@ -192,6 +192,11 @@ class InorderVerifyTest(VerificationTestBase):
     self.mock.second()
     
     self.assertRaises(VerificationError, inorder.verify(self.mock).second) 
+
+  def testErrorMessage(self):
+    self.mock.second()
+    self.mock.first()
+    self.assertRaisesMessage("\nWanted first() to be invoked, got second() instead", inorder.verify(self.mock).first)
     
     
 class VerifyNoMoreInteractionsTest(TestBase):
@@ -215,8 +220,9 @@ class VerifyZeroInteractionsTest(TestBase):
       theMock = mock()
       verifyZeroInteractions(theMock)
       theMock.foo()      
-      self.assertRaises(VerificationError, verifyNoMoreInteractions, theMock)   
+      self.assertRaises(VerificationError, verifyNoMoreInteractions, theMock)
     
     
 if __name__ == '__main__':
   main()
+
