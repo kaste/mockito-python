@@ -32,6 +32,7 @@ setup(name='mockito',
                   ],
       test_loader = 'mockito_util.test:TestLoader',
       test_suite = 'mockito_test',
+      py_modules = ['distribute_setup'],
       **extra
 )
 

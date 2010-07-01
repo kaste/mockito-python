@@ -4,12 +4,19 @@
 import unittest
 
 class TestBase(unittest.TestCase):
-  def assertRaisesMessage(self, message, function, *params):
+  
+  def __init__(self, *args, **kwargs):
+    unittest.TestCase.__init__(self, *args, **kwargs)
+    
+  def assertRaisesMessage(self, message, callable, *params):
     try:
       if (params):
-        function(params)
+        callable(params)
       else:
-        function()        
-      self.fail()
+        callable()        
+      self.fail('Exception with message "%s" expected, but never raised' % (message))
     except Exception, e:
-      self.assertEquals(message, str(e))
+      # TODO: self.fail() raises AssertionError which is caught here and error message becomes hardly understadable 
+      self.assertEquals(message, str(e))    
+
+main = unittest.main
