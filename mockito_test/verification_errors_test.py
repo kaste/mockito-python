@@ -44,7 +44,7 @@ class VerificationErrorsTest(TestBase):
           self.assertEquals("\nWanted times: 1, actual times: 2", str(e))
           
 
-  #TODO implement
+  # TODO: implement
   def stestPrintsNicelyWhenArgumentsDifferent(self):
     theMock = mock()
     theMock.foo('foo', 1)
