@@ -63,7 +63,7 @@ class InOrder(object):
     for invocation in reversed(wanted_invocation.mock.invocations):
       if not invocation.verified:
         if not wanted_invocation.matches(invocation):
-          raise VerificationError("Wanted %s to be invoked, got %s instead" % (wanted_invocation, invocation))
+          raise VerificationError("\nWanted %s to be invoked, got %s instead" % (wanted_invocation, invocation))
         break
     # proceed with original verification
     self.original_verification.verify(wanted_invocation, count)
