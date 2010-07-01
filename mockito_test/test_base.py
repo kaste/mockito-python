@@ -8,12 +8,12 @@ class TestBase(unittest.TestCase):
   def __init__(self, *args, **kwargs):
     unittest.TestCase.__init__(self, *args, **kwargs)
     
-  def assertRaisesMessage(self, message, function, *params):
+  def assertRaisesMessage(self, message, callable, *params):
     try:
       if (params):
-        function(params)
+        callable(params)
       else:
-        function()        
+        callable()        
       self.fail('Exception with message "%s" expected, but never raised' % (message))
     except Exception, e:
       # TODO: self.fail() raises AssertionError which is caught here and error message becomes hardly understadable 
