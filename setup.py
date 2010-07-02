@@ -15,7 +15,7 @@ if sys.version_info >= (3,):
   extra['use_2to3'] = True
 
 setup(name='mockito',
-      version='0.3.1',
+      version='0.4.0',
       packages=['mockito', 'mockito_test', 'mockito_util'],
       url='http://code.google.com/p/mockito-python',
       download_url='http://code.google.com/p/mockito-python/downloads/list',

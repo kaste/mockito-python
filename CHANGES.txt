@@ -1,10 +1,18 @@
 MOCKITO CHANGE LOG
 ==================
 
+Release 0.4.0 (July 2, 2010)
+----------------------------
+API Changes:
+ - Added possibility to verify invocations in order.
+
+BUG Fixes:
+ - Fixed issue with installing mockito from egg without distribute installed.
+
 Release 0.3.1
 -------------
 Bug-fix release.
-Bug fixes:
+Bug Fixes:
  - Fixed annoying issue #8 [http://bitbucket.org/szczepiq/mockito-python/issue/8]
 
 Release 0.3.0
