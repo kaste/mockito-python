@@ -6,7 +6,15 @@ import invocation
 from mock_registry import mock_registry
 import warnings
 
-class Dummy(object): pass
+__author__ = "Serhiy Oplakanets <serhiy@oplakanets.com>"
+__copyright__ = "Copyright 2008-2010, Mockito Contributors"
+__license__ = "MIT"
+__maintainer__ = "Mockito Maintainers"
+__email__ = "mockito-python@googlegroups.com"
+
+__all__ = ['mock', 'Mock']
+
+class _Dummy(object): pass
 
 class mock(object):
   def __init__(self, mocked_obj=None, strict=True):
@@ -16,7 +24,7 @@ class mock(object):
     self.stubbing = None
     self.verification = None
     if mocked_obj is None:
-        mocked_obj = Dummy()
+        mocked_obj = _Dummy()
         strict = False
     self.mocked_obj = mocked_obj
     self.strict = strict
@@ -84,9 +92,11 @@ class mock(object):
     while self.original_methods:  
       method_name, original_method = self.original_methods.pop()      
       self.set_method(method_name, original_method)
- 
-# Alias to keep comptaibility.
-# To be removed in 1.0 release.      
+       
 def Mock(*args, **kwargs):
+  '''A ``mock``() alias.
+  
+  Alias for compatibility. To be removed in version 1.0.
+  '''
   warnings.warn("\n`Mock()` is deprecated, please use `mock()` (lower 'm') instead.", DeprecationWarning)
   return mock(*args, **kwargs)
