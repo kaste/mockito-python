@@ -4,10 +4,11 @@
 import inspect
 import invocation
 from mock_registry import mock_registry
+import warnings
 
 class Dummy(object): pass
 
-class Mock(object):
+class mock(object):
   def __init__(self, mocked_obj=None, strict=True):
     self.invocations = []
     self.stubbed_invocations = []
@@ -84,7 +85,8 @@ class Mock(object):
       method_name, original_method = self.original_methods.pop()      
       self.set_method(method_name, original_method)
  
-# Alias to make API similar to Java one.
-# Old name stays for compatibility.      
-mock = Mock
-
+# Alias to keep comptaibility.
+# To be removed in 1.0 release.      
+def Mock(*args, **kwargs):
+  warnings.warn("\n`Mock()` is deprecated, please use `mock()` (lower 'm') instead.", DeprecationWarning)
+  return mock(*args, **kwargs)
