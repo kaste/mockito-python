@@ -47,24 +47,24 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None, inorder=False)
                            e.g. [1, 4] or [0, 3] or [2, 2]
                            You wanted to set it to: %s""" % between)
 
-  if isinstance(obj, Mock):
-    mock = obj
+  if isinstance(obj, mock):
+    mocked_object = obj
   else:
-    mock = mock_registry.mock_for(obj)
+    mocked_object = mock_registry.mock_for(obj)
                
   if atleast:
-    mock.verification = verification.AtLeast(atleast)
+    mocked_object.verification = verification.AtLeast(atleast)
   elif atmost:
-    mock.verification = verification.AtMost(atmost)
+    mocked_object.verification = verification.AtMost(atmost)
   elif between:
-    mock.verification = verification.Between(*between)
+    mocked_object.verification = verification.Between(*between)
   else:
-    mock.verification = verification.Times(times)
+    mocked_object.verification = verification.Times(times)
     
   if inorder:
-    mock.verification = verification.InOrder(mock.verification)
+    mocked_object.verification = verification.InOrder(mocked_object.verification)
     
-  return mock
+  return mocked_object
 
 def times(count):
   return count
