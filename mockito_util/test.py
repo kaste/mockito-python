@@ -5,9 +5,6 @@ from unittest import TestLoader as BaseTestLoader, TestSuite
 import sys
 
 class TestLoader(BaseTestLoader):
-  def __init__(self):
-    BaseTestLoader.__init__(self)
-
   def loadTestsFromName(self, name, module=None):
     suite = TestSuite()
     for test in findTests(name):
