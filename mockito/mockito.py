@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-import matchers
 import verification
-from mocking import Mock, mock
+from mocking import mock
 from mock_registry import mock_registry
 from verification import VerificationError
 
@@ -92,14 +90,3 @@ def verifyNoMoreInteractions(*mocks):
       
 def verifyZeroInteractions(*mocks):
   verifyNoMoreInteractions(*mocks)
-      
-def any(wanted_type=None):
-  """Matches any() argument OR any(SomeClass) argument
-     Examples:
-       when(mock).foo(any()).thenReturn(1)
-       verify(mock).foo(any(int))
-  """
-  return matchers.Any(wanted_type)     
-        
-def contains(sub):
-  return matchers.Contains(sub)

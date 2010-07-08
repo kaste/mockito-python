@@ -1,3 +1,19 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+'''Matchers for stubbing and verifications.
+
+Common matchers for use in stubbing and verifications.
+'''
+
+__author__ = "Serhiy Oplakanets <serhiy@oplakanets.com>"
+__copyright__ = "Copyright 2008-2010, Mockito Contributors"
+__license__ = "MIT"
+__maintainer__ = "Mockito Maintainers"
+__email__ = "mockito-python@googlegroups.com"
+
+__all__ = ['any', 'contains']
+
 class Matcher:
   def matches(self, arg):
     pass
@@ -26,3 +42,15 @@ class Contains(Matcher):
 
   def __repr__(self):
     return "<Contains: '%s'>" % self.sub  
+  
+      
+def any(wanted_type=None):
+  """Matches any() argument OR any(SomeClass) argument
+     Examples:
+       when(mock).foo(any()).thenReturn(1)
+       verify(mock).foo(any(int))
+  """
+  return Any(wanted_type)     
+        
+def contains(sub):
+  return Contains(sub)
