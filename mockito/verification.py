@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+__author__ = "Serhiy Oplakanets <serhiy@oplakanets.com>"
+__copyright__ = "Copyright 2008-2010, Mockito Contributors"
+__license__ = "MIT"
+__maintainer__ = "Mockito Maintainers"
+__email__ = "mockito-python@googlegroups.com"
+
+__all__ = ['never']
+
 class VerificationError(AssertionError):
   '''
   Indicates error during verification of invocations.
@@ -44,7 +52,10 @@ class Times(object):
     if actual_count == 0:
       raise VerificationError("\nWanted but not invoked: %s" % (invocation))
     else:
-      raise VerificationError("\nWanted times: %i, actual times: %i" % (self.wanted_count, actual_count))
+      if self.wanted_count == 0:
+        raise VerificationError("\nUnwanted invocation of %s, times: %i" % (invocation, actual_count))
+      else:
+        raise VerificationError("\nWanted times: %i, actual times: %i" % (self.wanted_count, actual_count))
     
 class InOrder(object):
   ''' 
@@ -68,4 +79,5 @@ class InOrder(object):
         break
     # proceed with original verification
     self.original_verification.verify(wanted_invocation, count)
-      
+    
+never = 0

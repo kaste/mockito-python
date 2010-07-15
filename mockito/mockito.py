@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
+
 import verification
 from mocking import mock
 from mock_registry import mock_registry
