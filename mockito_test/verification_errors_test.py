@@ -1,5 +1,6 @@
 from test_base import *
 from mockito import mock, when, verify, VerificationError, verifyNoMoreInteractions
+from mockito.verification import never
 
 class VerificationErrorsTest(TestBase):
     
@@ -45,7 +46,7 @@ class VerificationErrorsTest(TestBase):
           
 
   # TODO: implement
-  def stestPrintsNicelyWhenArgumentsDifferent(self):
+  def disabled_testPrintsNicelyWhenArgumentsDifferent(self):
     theMock = mock()
     theMock.foo('foo', 1)
     try:
@@ -63,6 +64,11 @@ Actual: foo('foo', 1)""", str(e))
       verifyNoMoreInteractions(theMock)
     except VerificationError, e:
       self.assertEquals("\nUnwanted interaction: foo(1, 'foo')", str(e))
-
+      
+  def testPrintsNeverWantedInteractionsNicely(self):
+      theMock = mock()      
+      theMock.foo()      
+      self.assertRaisesMessage("\nUnwanted invocation of foo(), times: 1", verify(theMock, never).foo)
+      
 if __name__ == '__main__':
   unittest.main()

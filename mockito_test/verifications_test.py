@@ -3,6 +3,7 @@
 
 from test_base import TestBase, main
 from mockito import mock, verify, inorder, VerificationError , ArgumentError, verifyNoMoreInteractions, verifyZeroInteractions, any
+from mockito.verification import never
       
 class VerificationTestBase(TestBase):
   def __init__(self, verification_function, *args, **kwargs):
@@ -163,6 +164,13 @@ class VerificationTestBase(TestBase):
 class VerifyTest(VerificationTestBase):
   def __init__(self, *args, **kwargs):
     VerificationTestBase.__init__(self, verify, *args, **kwargs)
+    
+  def testVerifyNeverCalled(self):
+    verify(self.mock, never).someMethod()
+    
+  def testVerifyNeverCalledRaisesError(self):
+    self.mock.foo()
+    self.assertRaises(VerificationError, verify(self.mock, never).foo)
 
 class InorderVerifyTest(VerificationTestBase):
   def __init__(self, *args, **kwargs):
