@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-__author__ = "Serhiy Oplakanets <serhiy@oplakanets.com>"
 __copyright__ = "Copyright 2008-2010, Mockito Contributors"
 __license__ = "MIT"
 __maintainer__ = "Mockito Maintainers"

@@ -6,7 +6,6 @@ import invocation
 from mock_registry import mock_registry
 import warnings
 
-__author__ = "Serhiy Oplakanets <serhiy@oplakanets.com>"
 __copyright__ = "Copyright 2008-2010, Mockito Contributors"
 __license__ = "MIT"
 __maintainer__ = "Mockito Maintainers"
