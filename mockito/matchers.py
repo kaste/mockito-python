@@ -54,3 +54,6 @@ def any(wanted_type=None):
         
 def contains(sub):
   return Contains(sub)
+
+def times(count):
+  return count

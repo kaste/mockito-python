@@ -2,7 +2,7 @@
 # coding: utf-8
 
 import verification
-from mocking import mock
+from mocking import mock, TestDouble
 from mock_registry import mock_registry
 from verification import VerificationError
 
@@ -46,7 +46,7 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None, inorder=False)
                            e.g. [1, 4] or [0, 3] or [2, 2]
                            You wanted to set it to: %s""" % between)
 
-  if isinstance(obj, mock):
+  if isinstance(obj, TestDouble):
     mocked_object = obj
   else:
     mocked_object = mock_registry.mock_for(obj)
@@ -64,9 +64,6 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None, inorder=False)
     mocked_object.verification = verification.InOrder(mocked_object.verification)
     
   return mocked_object
-
-def times(count):
-  return count
 
 def when(obj, strict=True):
   if isinstance(obj, mock):

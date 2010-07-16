@@ -6,11 +6,10 @@ __license__ = "MIT"
 __maintainer__ = "Mockito Maintainers"
 __email__ = "mockito-python@googlegroups.com"
 
-__all__ = ['never']
+__all__ = ['never', 'VerificationError']
 
 class VerificationError(AssertionError):
-  '''
-  Indicates error during verification of invocations.
+  '''Indicates error during verification of invocations.
   
   Raised if verification fails. Error message contains the cause.
   '''

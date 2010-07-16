@@ -17,6 +17,10 @@ class Invocation(object):
     self.answers = []
     self.strict = mock.strict
     
+  def _remember_params(self, params, named_params):
+    self.params = params
+    self.named_params = named_params
+    
   def __repr__(self):
     return self.method_name + "(" + ", ".join([repr(p) for p in self.params]) + ")"
 
@@ -51,8 +55,7 @@ class MatchingInvocation(Invocation):
   
 class RememberedInvocation(Invocation):
   def __call__(self, *params, **named_params):
-    self.params = params
-    self.named_params = named_params
+    self._remember_params(params, named_params)
     self.mock.remember(self)
     
     for matching_invocation in self.mock.stubbed_invocations:
@@ -60,11 +63,25 @@ class RememberedInvocation(Invocation):
         return matching_invocation.answer_first()
 
     return None
+  
+class RememberedProxyInvocation(Invocation):
+  '''Remeber params and proxy to method of original object.
+  
+  Calls method on original object and returns it's return value.
+  '''
+  def __call__(self, *params, **named_params):
+    self._remember_params(params, named_params)
+    self.mock.remember(self)
+    obj = self.mock.original_object
+    try:
+      method = getattr(obj, self.method_name)
+    except AttributeError:
+      raise AttributeError("You tried to call method '%s' which '%s' instance does not have." % (self.method_name, obj.__class__.__name__))
+    return method(*params, **named_params)
 
 class VerifiableInvocation(MatchingInvocation):
   def __call__(self, *params, **named_params):
-    self.params = params
-    self.named_params = named_params
+    self._remember_params(params, named_params)
     matched_invocations = []
     for invocation in self.mock.invocations:
       if self.matches(invocation):
@@ -89,8 +106,7 @@ class StubbedInvocation(MatchingInvocation):
     
         
   def __call__(self, *params, **named_params):
-    self.params = params   
-    self.named_params = named_params 
+    self._remember_params(params, named_params)
     return AnswerSelector(self)
   
   def stub_with(self, answer):
