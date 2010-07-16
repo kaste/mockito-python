@@ -15,7 +15,9 @@ __all__ = ['mock', 'Mock']
 
 class _Dummy(object): pass
 
-class mock(object):
+class TestDouble(object): pass
+
+class mock(TestDouble):
   def __init__(self, mocked_obj=None, strict=True):
     self.invocations = []
     self.stubbed_invocations = []
