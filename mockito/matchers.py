@@ -6,13 +6,12 @@
 Common matchers for use in stubbing and verifications.
 '''
 
-__author__ = "Serhiy Oplakanets <serhiy@oplakanets.com>"
 __copyright__ = "Copyright 2008-2010, Mockito Contributors"
 __license__ = "MIT"
 __maintainer__ = "Mockito Maintainers"
 __email__ = "mockito-python@googlegroups.com"
 
-__all__ = ['any', 'contains']
+__all__ = ['any', 'contains', 'times']
 
 class Matcher:
   def matches(self, arg):

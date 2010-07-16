@@ -3,6 +3,11 @@
 
 import matchers
 
+__copyright__ = "Copyright 2008-2010, Mockito Contributors"
+__license__ = "MIT"
+__maintainer__ = "Mockito Maintainers"
+__email__ = "mockito-python@googlegroups.com"
+
 class InvocationError(AssertionError):
     pass
 
