@@ -46,7 +46,7 @@ class VerificationErrorsTest(TestBase):
           
 
   # TODO: implement
-  def disabled_testPrintsNicelyWhenArgumentsDifferent(self):
+  def disabled_PrintsNicelyWhenArgumentsDifferent(self):
     theMock = mock()
     theMock.foo('foo', 1)
     try:
