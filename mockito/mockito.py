@@ -6,7 +6,7 @@ from mocking import mock, TestDouble
 from mock_registry import mock_registry
 from verification import VerificationError
 
-__copyright__ = "Copyright 2009-2010, Mockito Contributors"
+__copyright__ = "Copyright 2008-2010, Mockito Contributors"
 __license__ = "MIT"
 __maintainer__ = "Mockito Maintainers"
 __email__ = "mockito-python@googlegroups.com"
