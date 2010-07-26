@@ -89,6 +89,25 @@ class StubbingTest(TestBase):
     self.assertEquals("John May", repo.findby(id=6))
     self.assertEquals(["John May", "John Smith"], repo.findby(name="John"))
     
+  def testStubsForMethodWithSameNameAndNamedArgumentsInArbitraryOrder(self):
+    theMock = mock()
+    
+    when(theMock).foo(first=1, second=2, third=3).thenReturn(True)
+    
+    self.assertEquals(True, theMock.foo(third=3, first=1, second=2))
+    
+  def testStubsMethodWithSameNameAndMixedArguments(self):
+    repo = mock()
+    when(repo).findby(1).thenReturn("John May")
+    when(repo).findby(1, active_only=True).thenReturn(None)
+    when(repo).findby(name="Sarah").thenReturn(["Sarah Connor"])
+    when(repo).findby(name="Sarah", active_only=True).thenReturn([])
+    
+    self.assertEquals("John May", repo.findby(1))
+    self.assertEquals(None, repo.findby(1, active_only=True))
+    self.assertEquals(["Sarah Connor"], repo.findby(name="Sarah"))
+    self.assertEquals([], repo.findby(name="Sarah", active_only=True))
+    
   def testStubsWithChainedReturnValues(self):
     theMock = mock()
     when(theMock).getStuff().thenReturn("foo").thenReturn("bar").thenReturn("foobar")
