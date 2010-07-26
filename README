@@ -22,10 +22,11 @@ Mockito is a spying framework based on Java library with the same name.
 
 6. Library was tested with the following Python versions:
 
-  Python 2.4.5
+  Python 2.4.6
   Python 2.5.4
   Python 2.6.1
-  Python 3.1.1
+  Python 2.7
+  Python 3.1.2
   
 7. (Generated from mockito_demo_test.py) Basic usage:
 
