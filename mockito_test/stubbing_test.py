@@ -81,6 +81,14 @@ class StubbingTest(TestBase):
     self.assertEquals("foo", theMock.getStuff(1))
     self.assertEquals("bar", theMock.getStuff(1, 2))
     
+  def testStubsAndReturnValuesForMethodWithSameNameAndDifferentNamedArguments(self):
+    repo = mock()
+    when(repo).findby(id=6).thenReturn("John May")
+    when(repo).findby(name="John").thenReturn(["John May", "John Smith"])
+    
+    self.assertEquals("John May", repo.findby(id=6))
+    self.assertEquals(["John May", "John Smith"], repo.findby(name="John"))
+    
   def testStubsWithChainedReturnValues(self):
     theMock = mock()
     when(theMock).getStuff().thenReturn("foo").thenReturn("bar").thenReturn("foobar")
