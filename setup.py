@@ -30,9 +30,9 @@ setup(name='mockito',
                    'Topic :: Software Development :: Testing',
                    'Programming Language :: Python :: 3'
                   ],
-      test_loader = 'mockito_util.test:TestLoader',
-      test_suite = 'mockito_test',
+      test_suite = 'nose.collector',
       py_modules = ['distribute_setup'],
+      setup_requires = ['nose'],
       **extra
 )
 
