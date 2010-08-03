@@ -212,8 +212,25 @@ class StubbingTest(TestBase):
     self.assertRaisesMessage("foo", theMock.getStuff)
     self.assertRaisesMessage("bar", theMock.getStuff)
     self.assertRaisesMessage("foobar", theMock.getStuff)
+    
+  def testLeavesOriginalMethodUntouchedWhenCreatingStubFromRealClass(self):
+    class Person:
+      def get_name(self):
+        return "original name"
 
-#TODO verify after stubbing and vice versa
+    # given
+    person = Person()
+    mockPerson = mock(Person)
+
+    # when
+    when(mockPerson).get_name().thenReturn("stubbed name")
+
+    # then
+    self.assertEquals("stubbed name", mockPerson.get_name())
+    self.assertEquals("original name", person.get_name(), 'Original method should not be replaced.')
+
+    
+# TODO: verify after stubbing and vice versa
 
 if __name__ == '__main__':
   unittest.main()
