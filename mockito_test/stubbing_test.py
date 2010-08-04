@@ -228,7 +228,6 @@ class StubbingTest(TestBase):
     # then
     self.assertEquals("stubbed name", mockPerson.get_name())
     self.assertEquals("original name", person.get_name(), 'Original method should not be replaced.')
-
     
 # TODO: verify after stubbing and vice versa
 
