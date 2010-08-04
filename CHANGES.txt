@@ -1,6 +1,11 @@
 MOCKITO CHANGE LOG
 ==================
 
+Release 0.5.1 (August 4, 2010)
+------------------------------
+BUG Fixes:
+ - Fixed issue #9 [http://bitbucket.org/szczepiq/mockito-python/issue/9] : Generating stubs from classes caused method to be replaced in original classes.
+
 Release 0.5.0 (July 26, 2010)
 -----------------------------
 API Changes:
