@@ -10,13 +10,13 @@ Mockito is a spying framework based on Java library with the same name.
 
 3. For more info, see:
 
-  http://code.google.com/p/mockito-python/
+  __ http://code.google.com/p/mockito-python/
   
   Feel free to contribute more documentation or feedback!
 
 4. Our user and developer discussion group is:
 
-  http://groups.google.com/group/mockito-python
+  __ http://groups.google.com/group/mockito-python
 
 5. Mockito is licensed under the MIT license
 

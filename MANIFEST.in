@@ -1,0 +1,5 @@
+recursive-include mockito_test *.py
+
+include AUTHORS
+include LICENSE
+include README.rst
