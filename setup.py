@@ -5,21 +5,21 @@ from distribute_setup import use_setuptools
 use_setuptools()
 
 try:
-  from setuptools import setup
+    from setuptools import setup
 except ImportError:
-  from distutils.core import setup
+    from distutils.core import setup
 import sys
 
 extra = {}
 if sys.version_info >= (3,):
-  extra['use_2to3'] = True
+    extra['use_2to3'] = True
 
 setup(name='mockito',
-      version='0.5.1',
+      version='0.5.2',
       packages=['mockito', 'mockito_test', 'mockito_util'],
       url='http://code.google.com/p/mockito-python',
       download_url='http://code.google.com/p/mockito-python/downloads/list',
-      maintainer='Mockito Maintainers',
+      maintainer='Justin Hopper',
       maintainer_email='mockito-python@googlegroups.com',
       license='MIT',
       description='Spying framework',
@@ -30,9 +30,8 @@ setup(name='mockito',
                    'Topic :: Software Development :: Testing',
                    'Programming Language :: Python :: 3'
                   ],
-      test_suite = 'nose.collector',
-      py_modules = ['distribute_setup'],
-      setup_requires = ['nose'],
-      **extra
-)
+      test_suite='nose.collector',
+      py_modules=['distribute_setup'],
+      setup_requires=['nose'],
+      **extra)
 
