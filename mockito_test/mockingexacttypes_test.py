@@ -18,9 +18,9 @@
 #   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #   THE SOFTWARE.
 
-from test_base import *
+from mockito_test.test_base import *
 from mockito.invocation import InvocationError
-from mockito import mock, when 
+from mockito import mock, when
 
 class Foo(object):
 
@@ -28,21 +28,21 @@ class Foo(object):
     pass
 
 class MockingExactTypesTest(TestBase):
-  
+
   def testShouldScreamWhenUnknownMethodStubbed(self):
     ourMock = mock(Foo)
-    
+
     when(ourMock).bar().thenReturn("grr");
-    
+
     try:
       when(ourMock).unknownMethod().thenReturn("grr");
       self.fail()
     except InvocationError:
-      pass  
-    
+      pass
+
   def testShouldReturnNoneWhenCallingExistingButUnstubbedMethod(self):
     ourMock = mock(Foo)
     self.assertEquals(None, ourMock.bar())
-    
+
 if __name__ == '__main__':
   unittest.main()
