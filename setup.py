@@ -16,8 +16,7 @@ setup(name='mockito',
       maintainer_email='herr.kaste@gmail.com',
       license='MIT',
       description='Spying framework',
-      long_description='Mockito is a spying framework based on the Java '
-                       'library with the same name.',
+      long_description=open('README.rst').read(),
       classifiers=[
           'Development Status :: 4 - Beta',
           'Intended Audience :: Developers',
