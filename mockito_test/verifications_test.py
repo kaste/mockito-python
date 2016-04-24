@@ -54,6 +54,10 @@ class VerificationTestBase(TestBase):
     except VerificationError:
       pass
 
+  def testKeywordArgumentsOrderIsUnimportant(self):
+    self.mock.blub(line="blabla", runs="55", failures="1", errors="2")
+    self.verification_function(self.mock).blub(runs="55", failures="1", errors="2", line="blabla")
+
   def testFailsVerification(self):
     self.mock.foo("boo")
 

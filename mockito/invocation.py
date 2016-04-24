@@ -61,7 +61,7 @@ class MatchingInvocation(Invocation):
       return False
     if len(self.named_params) != len(invocation.named_params):
       return False
-    if self.named_params.keys() != invocation.named_params.keys():
+    if set(self.named_params.keys()) != set(invocation.named_params.keys()):
       return False
 
     for x, p1 in enumerate(self.params):
