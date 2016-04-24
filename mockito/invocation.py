@@ -82,6 +82,23 @@ class RememberedInvocation(Invocation):
       if matching_invocation.matches(self):
         return matching_invocation.answer_first()
 
+    if self.strict:
+      stubbed_invocations = self.mock.stubbed_invocations or [None]
+      raise InvocationError(
+        """"
+You called
+
+    %s,
+
+which is not expected. Stubbed invocations are:
+
+    %s
+
+(Set strict to False to bypass this check.)""" % (
+      self,
+      "\n    ".join(str(invocation) for invocation in stubbed_invocations))
+    )
+
     return None
   
 class RememberedProxyInvocation(Invocation):

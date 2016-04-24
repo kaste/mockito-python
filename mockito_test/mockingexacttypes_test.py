@@ -36,12 +36,20 @@ class MockingExactTypesTest(TestBase):
 
     try:
       when(ourMock).unknownMethod().thenReturn("grr");
-      self.fail()
+      self.fail('Calling unknown method should have thrown.')
+    except InvocationError:
+      pass
+
+  def testShouldScreamWhenCallingUnexpectedMethod(self):
+    ourMock = mock(Foo)
+    try:
+      ourMock.bar()
+      self.fail('Calling unexpected method should have thrown.')
     except InvocationError:
       pass
 
   def testShouldReturnNoneWhenCallingExistingButUnstubbedMethod(self):
-    ourMock = mock(Foo)
+    ourMock = mock(Foo, strict=False)
     self.assertEquals(None, ourMock.bar())
 
 if __name__ == '__main__':
