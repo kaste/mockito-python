@@ -1,6 +1,18 @@
 MOCKITO CHANGE LOG
 ==================
 
+Release 0.6.0 (April 25, 2016)
+------------------------------
+
+- Print keyword arguments nicely.
+- Be very forgiving about return values and assume None as default. T.i. ``when(Dog).bark('Miau').thenReturn()`` is enough to return None.
+- Make keyword argument order unimportant.
+
+Release 0.5.3 (April 23, 2016)
+------------------------------
+
+- Remove hard coded distribute setup files.
+
 Release 0.5.1 (August 4, 2010)
 ------------------------------
 BUG Fixes:
@@ -30,6 +42,7 @@ BUG Fixes:
 Release 0.3.1
 -------------
 Bug-fix release.
+
 Bug Fixes:
  - Fixed annoying issue #8 [http://bitbucket.org/szczepiq/mockito-python/issue/8]
 
