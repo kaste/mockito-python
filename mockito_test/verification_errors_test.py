@@ -52,6 +52,16 @@ class VerificationErrorsTest(TestBase):
     except VerificationError as e:
       self.assertEquals("\nWanted but not invoked: foo(1, 'foo')", str(e))
 
+  def testPrintKeywordArgumentsNicely(self):
+    theMock = mock()
+    try:
+      verify(theMock).foo(foo='foo', one=1)
+    except VerificationError as e:
+      message = str(e)
+      # We do not want to guarantee any order of arguments here
+      self.assertTrue("foo='foo'" in message)
+      self.assertTrue("one=1" in message)
+
   def testPrintsOutThatTheActualAndExpectedInvocationCountDiffers(self):
       theMock = mock()
       when(theMock).foo().thenReturn(0)

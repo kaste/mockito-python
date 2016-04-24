@@ -40,7 +40,9 @@ class Invocation(object):
     self.named_params = named_params
     
   def __repr__(self):
-    return self.method_name + "(" + ", ".join([repr(p) for p in self.params]) + ")"
+    params = ([repr(p) for p in self.params] +
+              [key + "=" + repr(val) for key, val in self.named_params.iteritems()])
+    return self.method_name + "(" + ", ".join(params) + ")"
 
   def answer_first(self):
     return self.answers[0].answer()
