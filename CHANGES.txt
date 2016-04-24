@@ -7,6 +7,7 @@ Release 0.6.0 (April 25, 2016)
 - Print keyword arguments nicely.
 - Be very forgiving about return values and assume None as default. T.i. ``when(Dog).bark('Miau').thenReturn()`` is enough to return None.
 - Make keyword argument order unimportant.
+- BREAKING CHANGE: Throw early when calling not expected methods in strict mode.
 
 Release 0.5.3 (April 23, 2016)
 ------------------------------
