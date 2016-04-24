@@ -98,6 +98,19 @@ class InstanceMethodsTest(TestBase):
         max = Dog()
         self.assertEquals('Miau!', max.bark('Miau'))
 
+    def testNoExplicitReturnValueMeansNone(self):
+        when(Dog).bark('Miau').thenReturn()
+        rex = Dog()
+
+        self.assertEquals(None, rex.bark('Miau'))
+
+    def testForgottenThenReturnMeansReturnNone(self):
+        when(Dog).bark('Miau')
+        when(Dog).waggle()
+        rex = Dog()
+
+        self.assertEquals(None, rex.bark('Miau'))
+        self.assertEquals(None, rex.waggle())
 
 if __name__ == '__main__':
     unittest.main()

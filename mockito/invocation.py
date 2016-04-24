@@ -32,9 +32,8 @@ class Invocation(object):
     self.verified_inorder = False
     self.params = ()
     self.named_params = {}
-    self.answers = []
+    self.answers = None
     self.strict = mock.strict
-    
   def _remember_params(self, params, named_params):
     self.params = params
     self.named_params = named_params
@@ -45,8 +44,8 @@ class Invocation(object):
     return self.method_name + "(" + ", ".join(params) + ")"
 
   def answer_first(self):
-    return self.answers[0].answer()
-  
+    return self.answers[0].answer() if self.answers is not None else None
+
 class MatchingInvocation(Invocation):
   @staticmethod
   def compare(p1, p2):
@@ -146,13 +145,14 @@ class StubbedInvocation(MatchingInvocation):
         
   def __call__(self, *params, **named_params):
     self._remember_params(params, named_params)
-    return AnswerSelector(self)
-  
-  def stub_with(self, answer):
-    self.answers.append(answer)
     self.mock.stub(self.method_name)
     self.mock.finish_stubbing(self)
-    
+    return AnswerSelector(self)
+
+  def stub_with(self, answer):
+    if self.answers is None:
+      self.answers = []
+    self.answers.append(answer)
 class AnswerSelector(object):
   def __init__(self, invocation):
     self.invocation = invocation
@@ -174,8 +174,6 @@ class AnswerSelector(object):
       self.invocation.stub_with(self.answer)
     else:
       self.answer.add(answer)
-      
-    return self      
 
 class CompositeAnswer(object):
   def __init__(self, answer):
