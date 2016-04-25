@@ -21,235 +21,244 @@
 from mockito_test.test_base import *
 from mockito import mock, when, verify, times, any
 
+
 class StubbingTest(TestBase):
-  def testStubsWithReturnValue(self):
-    theMock = mock()
-    when(theMock).getStuff().thenReturn("foo")
-    when(theMock).getMoreStuff(1, 2).thenReturn(10)
+    def testStubsWithReturnValue(self):
+        theMock = mock()
+        when(theMock).getStuff().thenReturn("foo")
+        when(theMock).getMoreStuff(1, 2).thenReturn(10)
 
-    self.assertEquals("foo", theMock.getStuff())
-    self.assertEquals(10, theMock.getMoreStuff(1, 2))
-    self.assertEquals(None, theMock.getMoreStuff(1, 3))
+        self.assertEquals("foo", theMock.getStuff())
+        self.assertEquals(10, theMock.getMoreStuff(1, 2))
+        self.assertEquals(None, theMock.getMoreStuff(1, 3))
 
-  def testStubsWhenNoArgsGiven(self):
-      theMock = mock()
-      when(theMock).getStuff().thenReturn("foo")
-      when(theMock).getWidget().thenReturn("bar")
+    def testStubsWhenNoArgsGiven(self):
+            theMock = mock()
+            when(theMock).getStuff().thenReturn("foo")
+            when(theMock).getWidget().thenReturn("bar")
 
-      self.assertEquals("foo", theMock.getStuff())
-      self.assertEquals("bar", theMock.getWidget())
+            self.assertEquals("foo", theMock.getStuff())
+            self.assertEquals("bar", theMock.getWidget())
 
-  def testStubsConsecutivelyWhenNoArgsGiven(self):
-      theMock = mock()
-      when(theMock).getStuff().thenReturn("foo").thenReturn("bar")
-      when(theMock).getWidget().thenReturn("baz").thenReturn("baz2")
+    def testStubsConsecutivelyWhenNoArgsGiven(self):
+            theMock = mock()
+            when(theMock).getStuff().thenReturn("foo").thenReturn("bar")
+            when(theMock).getWidget().thenReturn("baz").thenReturn("baz2")
 
-      self.assertEquals("foo", theMock.getStuff())
-      self.assertEquals("bar", theMock.getStuff())
-      self.assertEquals("bar", theMock.getStuff())
-      self.assertEquals("baz", theMock.getWidget())
-      self.assertEquals("baz2", theMock.getWidget())
-      self.assertEquals("baz2", theMock.getWidget())
+            self.assertEquals("foo", theMock.getStuff())
+            self.assertEquals("bar", theMock.getStuff())
+            self.assertEquals("bar", theMock.getStuff())
+            self.assertEquals("baz", theMock.getWidget())
+            self.assertEquals("baz2", theMock.getWidget())
+            self.assertEquals("baz2", theMock.getWidget())
 
-  def testStubsWithException(self):
-    theMock = mock()
-    when(theMock).someMethod().thenRaise(Exception("foo"))
+    def testStubsWithException(self):
+        theMock = mock()
+        when(theMock).someMethod().thenRaise(Exception("foo"))
 
-    self.assertRaisesMessage("foo", theMock.someMethod)
+        self.assertRaisesMessage("foo", theMock.someMethod)
 
-  def testStubsAndVerifies(self):
-    theMock = mock()
-    when(theMock).foo().thenReturn("foo")
+    def testStubsAndVerifies(self):
+        theMock = mock()
+        when(theMock).foo().thenReturn("foo")
 
-    self.assertEquals("foo", theMock.foo())
-    verify(theMock).foo()
+        self.assertEquals("foo", theMock.foo())
+        verify(theMock).foo()
 
-  def testStubsVerifiesAndStubsAgain(self):
-    theMock = mock()
+    def testStubsVerifiesAndStubsAgain(self):
+        theMock = mock()
 
-    when(theMock).foo().thenReturn("foo")
-    self.assertEquals("foo", theMock.foo())
-    verify(theMock).foo()
+        when(theMock).foo().thenReturn("foo")
+        self.assertEquals("foo", theMock.foo())
+        verify(theMock).foo()
 
-    when(theMock).foo().thenReturn("next foo")
-    self.assertEquals("next foo", theMock.foo())
-    verify(theMock, times(2)).foo()
+        when(theMock).foo().thenReturn("next foo")
+        self.assertEquals("next foo", theMock.foo())
+        verify(theMock, times(2)).foo()
 
-  def testOverridesStubbing(self):
-    theMock = mock()
+    def testOverridesStubbing(self):
+        theMock = mock()
 
-    when(theMock).foo().thenReturn("foo")
-    when(theMock).foo().thenReturn("bar")
+        when(theMock).foo().thenReturn("foo")
+        when(theMock).foo().thenReturn("bar")
 
-    self.assertEquals("bar", theMock.foo())
+        self.assertEquals("bar", theMock.foo())
 
-  def testStubsAndInvokesTwiceAndVerifies(self):
-    theMock = mock()
+    def testStubsAndInvokesTwiceAndVerifies(self):
+        theMock = mock()
 
-    when(theMock).foo().thenReturn("foo")
+        when(theMock).foo().thenReturn("foo")
 
-    self.assertEquals("foo", theMock.foo())
-    self.assertEquals("foo", theMock.foo())
+        self.assertEquals("foo", theMock.foo())
+        self.assertEquals("foo", theMock.foo())
 
-    verify(theMock, times(2)).foo()
+        verify(theMock, times(2)).foo()
 
-  def testStubsAndReturnValuesForMethodWithSameNameAndDifferentArguments(self):
-    theMock = mock()
-    when(theMock).getStuff(1).thenReturn("foo")
-    when(theMock).getStuff(1, 2).thenReturn("bar")
+    def testStubsAndReturnValuesForSameMethodWithDifferentArguments(self):
+        theMock = mock()
+        when(theMock).getStuff(1).thenReturn("foo")
+        when(theMock).getStuff(1, 2).thenReturn("bar")
 
-    self.assertEquals("foo", theMock.getStuff(1))
-    self.assertEquals("bar", theMock.getStuff(1, 2))
+        self.assertEquals("foo", theMock.getStuff(1))
+        self.assertEquals("bar", theMock.getStuff(1, 2))
 
-  def testStubsAndReturnValuesForMethodWithSameNameAndDifferentNamedArguments(self):
-    repo = mock()
-    when(repo).findby(id=6).thenReturn("John May")
-    when(repo).findby(name="John").thenReturn(["John May", "John Smith"])
+    def testStubsAndReturnValuesForSameMethodWithDifferentNamedArguments(self):
+        repo = mock()
+        when(repo).findby(id=6).thenReturn("John May")
+        when(repo).findby(name="John").thenReturn(["John May", "John Smith"])
 
-    self.assertEquals("John May", repo.findby(id=6))
-    self.assertEquals(["John May", "John Smith"], repo.findby(name="John"))
+        self.assertEquals("John May", repo.findby(id=6))
+        self.assertEquals(["John May", "John Smith"], repo.findby(name="John"))
 
-  def testStubsForMethodWithSameNameAndNamedArgumentsInArbitraryOrder(self):
-    theMock = mock()
+    def testStubsForMethodWithSameNameAndNamedArgumentsInArbitraryOrder(self):
+        theMock = mock()
 
-    when(theMock).foo(first=1, second=2, third=3).thenReturn(True)
+        when(theMock).foo(first=1, second=2, third=3).thenReturn(True)
 
-    self.assertEquals(True, theMock.foo(third=3, first=1, second=2))
+        self.assertEquals(True, theMock.foo(third=3, first=1, second=2))
 
-  def testStubsMethodWithSameNameAndMixedArguments(self):
-    repo = mock()
-    when(repo).findby(1).thenReturn("John May")
-    when(repo).findby(1, active_only=True).thenReturn(None)
-    when(repo).findby(name="Sarah").thenReturn(["Sarah Connor"])
-    when(repo).findby(name="Sarah", active_only=True).thenReturn([])
+    def testStubsMethodWithSameNameAndMixedArguments(self):
+        repo = mock()
+        when(repo).findby(1).thenReturn("John May")
+        when(repo).findby(1, active_only=True).thenReturn(None)
+        when(repo).findby(name="Sarah").thenReturn(["Sarah Connor"])
+        when(repo).findby(name="Sarah", active_only=True).thenReturn([])
 
-    self.assertEquals("John May", repo.findby(1))
-    self.assertEquals(None, repo.findby(1, active_only=True))
-    self.assertEquals(["Sarah Connor"], repo.findby(name="Sarah"))
-    self.assertEquals([], repo.findby(name="Sarah", active_only=True))
+        self.assertEquals("John May", repo.findby(1))
+        self.assertEquals(None, repo.findby(1, active_only=True))
+        self.assertEquals(["Sarah Connor"], repo.findby(name="Sarah"))
+        self.assertEquals([], repo.findby(name="Sarah", active_only=True))
 
-  def testStubsWithChainedReturnValues(self):
-    theMock = mock()
-    when(theMock).getStuff().thenReturn("foo").thenReturn("bar").thenReturn("foobar")
+    def testStubsWithChainedReturnValues(self):
+        theMock = mock()
+        when(theMock).getStuff().thenReturn("foo") \
+                                .thenReturn("bar") \
+                                .thenReturn("foobar")
 
-    self.assertEquals("foo", theMock.getStuff())
-    self.assertEquals("bar", theMock.getStuff())
-    self.assertEquals("foobar", theMock.getStuff())
+        self.assertEquals("foo", theMock.getStuff())
+        self.assertEquals("bar", theMock.getStuff())
+        self.assertEquals("foobar", theMock.getStuff())
 
-  def testStubsWithChainedReturnValuesAndException(self):
-    theMock = mock()
-    when(theMock).getStuff().thenReturn("foo").thenReturn("bar").thenRaise(Exception("foobar"))
+    def testStubsWithChainedReturnValuesAndException(self):
+        theMock = mock()
+        when(theMock).getStuff().thenReturn("foo") \
+                                .thenReturn("bar") \
+                                .thenRaise(Exception("foobar"))
 
-    self.assertEquals("foo", theMock.getStuff())
-    self.assertEquals("bar", theMock.getStuff())
-    self.assertRaisesMessage("foobar", theMock.getStuff)
+        self.assertEquals("foo", theMock.getStuff())
+        self.assertEquals("bar", theMock.getStuff())
+        self.assertRaisesMessage("foobar", theMock.getStuff)
 
-  def testStubsWithChainedExceptionAndReturnValue(self):
-    theMock = mock()
-    when(theMock).getStuff().thenRaise(Exception("foo")).thenReturn("bar")
+    def testStubsWithChainedExceptionAndReturnValue(self):
+        theMock = mock()
+        when(theMock).getStuff().thenRaise(Exception("foo")) \
+                                .thenReturn("bar")
 
-    self.assertRaisesMessage("foo", theMock.getStuff)
-    self.assertEquals("bar", theMock.getStuff())
+        self.assertRaisesMessage("foo", theMock.getStuff)
+        self.assertEquals("bar", theMock.getStuff())
 
-  def testStubsWithChainedExceptions(self):
-    theMock = mock()
-    when(theMock).getStuff().thenRaise(Exception("foo")).thenRaise(Exception("bar"))
+    def testStubsWithChainedExceptions(self):
+        theMock = mock()
+        when(theMock).getStuff().thenRaise(Exception("foo")) \
+                                .thenRaise(Exception("bar"))
 
-    self.assertRaisesMessage("foo", theMock.getStuff)
-    self.assertRaisesMessage("bar", theMock.getStuff)
+        self.assertRaisesMessage("foo", theMock.getStuff)
+        self.assertRaisesMessage("bar", theMock.getStuff)
 
-  def testStubsWithReturnValueBeingException(self):
-    theMock = mock()
-    exception = Exception("foo")
-    when(theMock).getStuff().thenReturn(exception)
+    def testStubsWithReturnValueBeingException(self):
+        theMock = mock()
+        exception = Exception("foo")
+        when(theMock).getStuff().thenReturn(exception)
 
-    self.assertEquals(exception, theMock.getStuff())
+        self.assertEquals(exception, theMock.getStuff())
 
-  def testLastStubbingWins(self):
-    theMock = mock()
-    when(theMock).foo().thenReturn(1)
-    when(theMock).foo().thenReturn(2)
+    def testLastStubbingWins(self):
+        theMock = mock()
+        when(theMock).foo().thenReturn(1)
+        when(theMock).foo().thenReturn(2)
 
-    self.assertEquals(2, theMock.foo())
+        self.assertEquals(2, theMock.foo())
 
-  def testStubbingOverrides(self):
-    theMock = mock()
-    when(theMock).foo().thenReturn(1)
-    when(theMock).foo().thenReturn(2).thenReturn(3)
+    def testStubbingOverrides(self):
+        theMock = mock()
+        when(theMock).foo().thenReturn(1)
+        when(theMock).foo().thenReturn(2).thenReturn(3)
 
-    self.assertEquals(2, theMock.foo())
-    self.assertEquals(3, theMock.foo())
-    self.assertEquals(3, theMock.foo())
+        self.assertEquals(2, theMock.foo())
+        self.assertEquals(3, theMock.foo())
+        self.assertEquals(3, theMock.foo())
 
-  def testStubsWithMatchers(self):
-    theMock = mock()
-    when(theMock).foo(any()).thenReturn(1)
+    def testStubsWithMatchers(self):
+        theMock = mock()
+        when(theMock).foo(any()).thenReturn(1)
 
-    self.assertEquals(1, theMock.foo(1))
-    self.assertEquals(1, theMock.foo(100))
+        self.assertEquals(1, theMock.foo(1))
+        self.assertEquals(1, theMock.foo(100))
 
-  def testStubbingOverrides2(self):
-    theMock = mock()
-    when(theMock).foo(any()).thenReturn(1)
-    when(theMock).foo("oh").thenReturn(2)
+    def testStubbingOverrides2(self):
+        theMock = mock()
+        when(theMock).foo(any()).thenReturn(1)
+        when(theMock).foo("oh").thenReturn(2)
 
-    self.assertEquals(2, theMock.foo("oh"))
-    self.assertEquals(1, theMock.foo("xxx"))
+        self.assertEquals(2, theMock.foo("oh"))
+        self.assertEquals(1, theMock.foo("xxx"))
 
-  def testDoesNotVerifyStubbedCalls(self):
-    theMock = mock()
-    when(theMock).foo().thenReturn(1)
+    def testDoesNotVerifyStubbedCalls(self):
+        theMock = mock()
+        when(theMock).foo().thenReturn(1)
 
-    verify(theMock, times=0).foo()
+        verify(theMock, times=0).foo()
 
-  def testStubsWithMultipleReturnValues(self):
-    theMock = mock()
-    when(theMock).getStuff().thenReturn("foo", "bar", "foobar")
+    def testStubsWithMultipleReturnValues(self):
+        theMock = mock()
+        when(theMock).getStuff().thenReturn("foo", "bar", "foobar")
 
-    self.assertEquals("foo", theMock.getStuff())
-    self.assertEquals("bar", theMock.getStuff())
-    self.assertEquals("foobar", theMock.getStuff())
+        self.assertEquals("foo", theMock.getStuff())
+        self.assertEquals("bar", theMock.getStuff())
+        self.assertEquals("foobar", theMock.getStuff())
 
-  def testStubsWithChainedMultipleReturnValues(self):
-    theMock = mock()
-    when(theMock).getStuff().thenReturn("foo", "bar").thenReturn("foobar")
+    def testStubsWithChainedMultipleReturnValues(self):
+        theMock = mock()
+        when(theMock).getStuff().thenReturn("foo", "bar") \
+                                .thenReturn("foobar")
 
-    self.assertEquals("foo", theMock.getStuff())
-    self.assertEquals("bar", theMock.getStuff())
-    self.assertEquals("foobar", theMock.getStuff())
+        self.assertEquals("foo", theMock.getStuff())
+        self.assertEquals("bar", theMock.getStuff())
+        self.assertEquals("foobar", theMock.getStuff())
 
-  def testStubsWithMultipleExceptions(self):
-    theMock = mock()
-    when(theMock).getStuff().thenRaise(Exception("foo"), Exception("bar"))
+    def testStubsWithMultipleExceptions(self):
+        theMock = mock()
+        when(theMock).getStuff().thenRaise(Exception("foo"), Exception("bar"))
 
-    self.assertRaisesMessage("foo", theMock.getStuff)
-    self.assertRaisesMessage("bar", theMock.getStuff)
+        self.assertRaisesMessage("foo", theMock.getStuff)
+        self.assertRaisesMessage("bar", theMock.getStuff)
 
-  def testStubsWithMultipleChainedExceptions(self):
-    theMock = mock()
-    when(theMock).getStuff().thenRaise(Exception("foo"), Exception("bar")).thenRaise(Exception("foobar"))
+    def testStubsWithMultipleChainedExceptions(self):
+        theMock = mock()
+        when(theMock).getStuff().thenRaise(Exception("foo"), Exception("bar")) \
+                                .thenRaise(Exception("foobar"))
 
-    self.assertRaisesMessage("foo", theMock.getStuff)
-    self.assertRaisesMessage("bar", theMock.getStuff)
-    self.assertRaisesMessage("foobar", theMock.getStuff)
+        self.assertRaisesMessage("foo", theMock.getStuff)
+        self.assertRaisesMessage("bar", theMock.getStuff)
+        self.assertRaisesMessage("foobar", theMock.getStuff)
 
-  def testLeavesOriginalMethodUntouchedWhenCreatingStubFromRealClass(self):
-    class Person:
-      def get_name(self):
-        return "original name"
+    def testLeavesOriginalMethodUntouchedWhenCreatingStubFromRealClass(self):
+        class Person:
+            def get_name(self):
+                return "original name"
 
-    # given
-    person = Person()
-    mockPerson = mock(Person)
+        # given
+        person = Person()
+        mockPerson = mock(Person)
 
-    # when
-    when(mockPerson).get_name().thenReturn("stubbed name")
+        # when
+        when(mockPerson).get_name().thenReturn("stubbed name")
 
-    # then
-    self.assertEquals("stubbed name", mockPerson.get_name())
-    self.assertEquals("original name", person.get_name(), 'Original method should not be replaced.')
+        # then
+        self.assertEquals("stubbed name", mockPerson.get_name())
+        self.assertEquals("original name", person.get_name(),
+                          'Original method should not be replaced.')
 
-# TODO: verify after stubbing and vice versa
 
 if __name__ == '__main__':
-  unittest.main()
+    unittest.main()

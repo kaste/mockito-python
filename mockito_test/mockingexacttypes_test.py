@@ -22,35 +22,36 @@ from mockito_test.test_base import *
 from mockito.invocation import InvocationError
 from mockito import mock, when
 
-class Foo(object):
 
-  def bar(self):
-    pass
+class Foo(object):
+    def bar(self):
+        pass
+
 
 class MockingExactTypesTest(TestBase):
 
-  def testShouldScreamWhenUnknownMethodStubbed(self):
-    ourMock = mock(Foo)
+    def testShouldScreamWhenUnknownMethodStubbed(self):
+        ourMock = mock(Foo)
 
-    when(ourMock).bar().thenReturn("grr");
+        when(ourMock).bar().thenReturn("grr")
 
-    try:
-      when(ourMock).unknownMethod().thenReturn("grr");
-      self.fail('Calling unknown method should have thrown.')
-    except InvocationError:
-      pass
+        try:
+            when(ourMock).unknownMethod().thenReturn("grr")
+            self.fail('Calling unknown method should have thrown.')
+        except InvocationError:
+            pass
 
-  def testShouldScreamWhenCallingUnexpectedMethod(self):
-    ourMock = mock(Foo)
-    try:
-      ourMock.bar()
-      self.fail('Calling unexpected method should have thrown.')
-    except InvocationError:
-      pass
+    def testShouldScreamWhenCallingUnexpectedMethod(self):
+        ourMock = mock(Foo)
+        try:
+            ourMock.bar()
+            self.fail('Calling unexpected method should have thrown.')
+        except InvocationError:
+            pass
 
-  def testShouldReturnNoneWhenCallingExistingButUnstubbedMethod(self):
-    ourMock = mock(Foo, strict=False)
-    self.assertEquals(None, ourMock.bar())
+    def testShouldReturnNoneWhenCallingExistingButUnstubbedMethod(self):
+        ourMock = mock(Foo, strict=False)
+        self.assertEquals(None, ourMock.bar())
 
 if __name__ == '__main__':
-  unittest.main()
+    unittest.main()

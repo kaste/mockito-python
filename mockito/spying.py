@@ -25,28 +25,29 @@ from mocking import TestDouble
 
 __all__ = ['spy']
 
+
 def spy(original_object):
-  return Spy(original_object)
+    return Spy(original_object)
+
 
 class Spy(TestDouble):
-  strict = True # spies always have to check if method exists
-  
-  def __init__(self, original_object):
-    self.original_object = original_object
-    self.invocations = []
-    self.verification = None
-    
-  def __getattr__(self, name):        
-    if self.verification:
-      return VerifiableInvocation(self, name)
-    else:
-      return RememberedProxyInvocation(self, name)
-  
-  def remember(self, invocation):
-    self.invocations.insert(0, invocation)
-    
-  def pull_verification(self):
-    v = self.verification
-    self.verification = None
-    return v
-    
+    strict = True  # spies always have to check if method exists
+
+    def __init__(self, original_object):
+        self.original_object = original_object
+        self.invocations = []
+        self.verification = None
+
+    def __getattr__(self, name):
+        if self.verification:
+            return VerifiableInvocation(self, name)
+        else:
+            return RememberedProxyInvocation(self, name)
+
+    def remember(self, invocation):
+        self.invocations.insert(0, invocation)
+
+    def pull_verification(self):
+        v = self.verification
+        self.verification = None
+        return v

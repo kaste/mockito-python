@@ -22,6 +22,6 @@ from mockito import verify as verify_main
 
 
 def verify(object, *args, **kwargs):
-  kwargs['inorder'] = True
-  return verify_main(object, *args, **kwargs)
+    kwargs['inorder'] = True
+    return verify_main(object, *args, **kwargs)
 
