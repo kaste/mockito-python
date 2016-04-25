@@ -10,7 +10,7 @@ if sys.version_info >= (3,):
 
 setup(name='mockito',
       version='0.6.0',
-      packages=['mockito', 'mockito_test', 'mockito_util'],
+      packages=['mockito', 'mockito_test'],
       url='https://github.com/kaste/mockito-python',
       maintainer='herr.kaste',
       maintainer_email='herr.kaste@gmail.com',
