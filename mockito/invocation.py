@@ -21,7 +21,7 @@
 import matchers
 
 
-class InvocationError(AssertionError):
+class InvocationError(AttributeError):
     pass
 
 
@@ -142,11 +142,6 @@ class VerifiableInvocation(MatchingInvocation):
 
 
 class StubbedInvocation(MatchingInvocation):
-    def __init__(self, *params):
-        super(StubbedInvocation, self).__init__(*params)
-        if self.mock.strict:
-            self.ensure_mocked_object_has_method(self.method_name)
-
     def ensure_mocked_object_has_method(self, method_name):
         if not self.mock.has_method(method_name):
             raise InvocationError(
@@ -154,6 +149,8 @@ class StubbedInvocation(MatchingInvocation):
                 "have." % (method_name, self.mock.mocked_obj))
 
     def __call__(self, *params, **named_params):
+        if self.mock.strict:
+            self.ensure_mocked_object_has_method(self.method_name)
         self._remember_params(params, named_params)
         self.mock.stub(self.method_name)
         self.mock.finish_stubbing(self)
