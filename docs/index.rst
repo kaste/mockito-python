@@ -17,7 +17,7 @@ Install
 
 
 If you want, run the tests
--------------
+--------------------------
 
 ::
 
@@ -63,7 +63,7 @@ You can also start with an empty stub::
 
 There is a another :doc:`TL;DR <nutshell>` and *some* more docs at http://code.google.com/p/mockito-python/
 
-**Report issues, contribute more documentation or give feedback at `Github <https://github.com/kaste/mockito-python>`_!**
+Report issues, contribute more documentation or give feedback at `Github <https://github.com/kaste/mockito-python>`_!
 
 
 .. Contents:
