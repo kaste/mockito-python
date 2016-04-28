@@ -10,18 +10,37 @@ Install
 ``pip install mockito``
 
 
-Walk-through
-============
+Run the tests
+-------------
 
-Say you want to mock the class Dog::
+::
+
+    pip install nose
+    nosetests
+
+
+Quick Start
+===========
+
+Start with an empty stub::
+
+    from mockito import *
+
+    obj = mock()
+
+    # pass it around, eventually it will be used
+    obj.say('Hi')
+
+    # back in the tests, verify interactions
+    verify(obj).say('Hi')
+    verifyNoMoreInteractions(obj)
+
+Or, say you want to mock the class Dog::
 
     class Dog(object):
         def bark(self, sound):
             return "%s!" % sound
 
-To get you started::
-
-    from mockito import *
 
     # mock the class
     when(Dog).bark('Wuff').thenReturn('Miau!')
@@ -32,25 +51,10 @@ To get you started::
 
     unstub()
 
-You can also start with an empty stub::
 
-    obj = mock()
+Read the docs
+=============
 
-    # pass it around, eventually it will be used
-    obj.say('Hi')
-
-    # verify interactions
-    verify(obj).say('Hi')
-    verifyNoMoreInteractions(obj)
-
-
-
-Run the tests
--------------
-
-::
-
-    pip install nose
-    nosetests
+http://pythonhosted.org/mockito/
 
 
