@@ -220,12 +220,13 @@ class Return(object):
     def answer(self):
         return self.return_value
 
+
 class ReturnAnswer(object):
     def __init__(self, mock, answerable):
         self.answerable = answerable
         self.mock = mock
 
     def answer(self):
-        print dir(self.mock.invocations[0])
-        return self.answerable(*self.mock.invocations[0].params, **self.mock.invocations[0].named_params)
+        current_invocation = self.mock.invocations[0]
+        return self.answerable(*current_invocation.params, **current_invocation.named_params)
 
