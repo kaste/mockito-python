@@ -180,7 +180,7 @@ class AnswerSelector(object):
 
     def thenAnswer(self, *callables):
         for callable in callables:
-            self._AnswerSelector__then(ReturnAnswer(self.invocation.mock, callable))
+            self.__then(ReturnAnswer(self.invocation.mock, callable))
         return self
 
     def __then(self, answer):
@@ -227,8 +227,6 @@ class ReturnAnswer(object):
         self.mock = mock
 
     def answer(self):
-        if len(inspect.getargspec(self.answerable).args) == 0:
-            return self.answerable()
-        else:
-            return self.answerable(*self.mock.invocations[0].params)
+        print dir(self.mock.invocations[0])
+        return self.answerable(*self.mock.invocations[0].params, **self.mock.invocations[0].named_params)
 

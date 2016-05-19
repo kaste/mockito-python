@@ -281,6 +281,36 @@ class StubbingTest(TestBase):
         self.assertEquals(m.do_dev_magic(20, 4), 5)
         self.assertEquals(m.do_dev_magic(40, 5), 8)
 
+        def test_key_words(testing="Magic"):
+            return testing + " Stuff"
+
+        when(m).with_key_words().thenAnswer(test_key_words)
+        self.assertEquals(m.with_key_words(), "Magic Stuff")
+
+        when(m).with_key_words(testing=any()).thenAnswer(test_key_words)
+        self.assertEquals(m.with_key_words(testing="Very Funky"), "Very Funky Stuff")
+
+    def testSubsWithThenAnswerAndMixedArgs(self):
+        repo = mock()
+
+        def method_one(value, active_only=False):
+            return None
+
+        def method_two(name=None, active_only=False):
+            return ["%s Connor" % name]
+
+        def method_three(name=None, active_only=False):
+            return [name, active_only, 0]
+
+        when(repo).findby(1).thenAnswer(lambda x: "John May (%d)" % x)
+        when(repo).findby(1, active_only=True).thenAnswer(method_one)
+        when(repo).findby(name="Sarah").thenAnswer(method_two)
+        when(repo).findby(name="Sarah", active_only=True).thenAnswer(method_three)
+
+        self.assertEquals("John May (1)", repo.findby(1))
+        self.assertEquals(None, repo.findby(1, active_only=True))
+        self.assertEquals(["Sarah Connor"], repo.findby(name="Sarah"))
+        self.assertEquals(["Sarah", True, 0], repo.findby(name="Sarah", active_only=True))
 
 if __name__ == '__main__':
     unittest.main()
