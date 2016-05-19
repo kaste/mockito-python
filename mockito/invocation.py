@@ -17,6 +17,7 @@
 #  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
+import inspect
 
 import matchers
 
@@ -177,13 +178,17 @@ class AnswerSelector(object):
             self.__then(Raise(exception))
         return self
 
+    def thenAnswer(self, *callables):
+        for callable in callables:
+            self._AnswerSelector__then(ReturnAnswer(self.invocation.mock, callable))
+        return self
+
     def __then(self, answer):
         if not self.answer:
             self.answer = CompositeAnswer(answer)
             self.invocation.stub_with(self.answer)
         else:
             self.answer.add(answer)
-
 
 class CompositeAnswer(object):
     def __init__(self, answer):
@@ -215,3 +220,15 @@ class Return(object):
 
     def answer(self):
         return self.return_value
+
+class ReturnAnswer(object):
+    def __init__(self, mock, answerable):
+        self.answerable = answerable
+        self.mock = mock
+
+    def answer(self):
+        if len(inspect.getargspec(self.answerable).args) == 0:
+            return self.answerable()
+        else:
+            return self.answerable(*self.mock.invocations[0].params)
+

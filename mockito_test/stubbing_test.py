@@ -259,6 +259,28 @@ class StubbingTest(TestBase):
         self.assertEquals("original name", person.get_name(),
                           'Original method should not be replaced.')
 
+    def testStubsWithThenAnswer(self):
+        m = mock()
+
+        when(m).magic_number().thenAnswer(lambda: 5)
+
+        self.assertEquals(m.magic_number(), 5)
+
+        when(m).add_one(any()).thenAnswer(lambda number: number + 1)
+
+        self.assertEquals(m.add_one(5), 6)
+        self.assertEquals(m.add_one(8), 9)
+
+        when(m).do_times(any(), any()).thenAnswer(lambda one, two: one * two)
+
+        self.assertEquals(m.do_times(5, 4), 20)
+        self.assertEquals(m.do_times(8, 5), 40)
+
+        when(m).do_dev_magic(any(), any()).thenAnswer(lambda a, b: a/b)
+
+        self.assertEquals(m.do_dev_magic(20, 4), 5)
+        self.assertEquals(m.do_dev_magic(40, 5), 8)
+
 
 if __name__ == '__main__':
     unittest.main()
