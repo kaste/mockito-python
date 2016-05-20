@@ -177,13 +177,17 @@ class AnswerSelector(object):
             self.__then(Raise(exception))
         return self
 
+    def thenAnswer(self, *callables):
+        for callable in callables:
+            self.__then(ReturnAnswer(self.invocation.mock, callable))
+        return self
+
     def __then(self, answer):
         if not self.answer:
             self.answer = CompositeAnswer(answer)
             self.invocation.stub_with(self.answer)
         else:
             self.answer.add(answer)
-
 
 class CompositeAnswer(object):
     def __init__(self, answer):
@@ -215,3 +219,14 @@ class Return(object):
 
     def answer(self):
         return self.return_value
+
+
+class ReturnAnswer(object):
+    def __init__(self, mock, answerable):
+        self.answerable = answerable
+        self.mock = mock
+
+    def answer(self):
+        current_invocation = self.mock.invocations[0]
+        return self.answerable(*current_invocation.params, **current_invocation.named_params)
+
