@@ -1,6 +1,16 @@
 MOCKITO CHANGE LOG
 ==================
 
+Release 0.6.1 (May 20, 2016)
+----------------------------
+
+- Added ``thenAnswer(callable)``. The callable will be called to compute the answer the stubbed method will return. For that it will receive the arguments of the caller::
+
+    m = mock()
+    when(m).do_times(any(), any()).thenAnswer(lambda one, two: one * two)
+    self.assertEquals(20, m.do_times(5, 4))
+
+
 Release 0.6.0 (April 25, 2016)
 ------------------------------
 
