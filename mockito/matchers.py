@@ -23,7 +23,21 @@
 Common matchers for use in stubbing and verifications.
 '''
 
-__all__ = ['any', 'contains', 'times']
+import re
+
+
+__all__ = [
+    'and_', 'or_', 'not_',
+    'eq', 'neq',
+    'lt', 'lte',
+    'gt', 'gte',
+    'any', 'any_',
+    'arg_that',
+    'contains',
+    'matches',
+    'captor',
+    'times',
+]
 
 
 class Matcher:
@@ -45,6 +59,92 @@ class Any(Matcher):
         return "<Any: %s>" % self.wanted_type
 
 
+class ValueMatcher(Matcher):
+    def __init__(self, value):
+        self.value = value
+
+    def __repr__(self):
+        return "<%s: %s>" % (self.__class__.__name__, self.value)
+
+
+class Eq(ValueMatcher):
+    def matches(self, arg):
+        return arg == self.value
+
+
+class Neq(ValueMatcher):
+    def matches(self, arg):
+        return arg != self.value
+
+
+class Lt(ValueMatcher):
+    def matches(self, arg):
+        return arg < self.value
+
+
+class Lte(ValueMatcher):
+    def matches(self, arg):
+        return arg <= self.value
+
+
+class Gt(ValueMatcher):
+    def matches(self, arg):
+        return arg > self.value
+
+
+class Gte(ValueMatcher):
+    def matches(self, arg):
+        return arg >= self.value
+
+
+class And(Matcher):
+    def __init__(self, matchers):
+        self.matchers = [matcher if isinstance(matcher, Matcher) else Eq(matcher)
+                         for matcher in matchers]
+
+    def matches(self, arg):
+        return all([matcher.matches(arg) for matcher in self.matchers])
+
+    def __repr__(self):
+        return "<And: %s>" % self.matchers
+
+
+class Or(Matcher):
+    def __init__(self, matchers):
+        self.matchers = [matcher if isinstance(matcher, Matcher) else Eq(matcher)
+                         for matcher in matchers]
+
+    def matches(self, arg):
+        return __builtins__['any'](
+            [matcher.matches(arg) for matcher in self.matchers]
+        )
+
+    def __repr__(self):
+        return "<Or: %s>" % self.matchers
+
+
+class Not(Matcher):
+    def __init__(self, matcher):
+        self.matcher = matcher if isinstance(matcher, Matcher) else Eq(matcher)
+
+    def matches(self, arg):
+        return not self.matcher.matches(arg)
+
+    def __repr__(self):
+        return "<Not: %s>" % self.matcher
+
+
+class ArgThat(Matcher):
+    def __init__(self, predicate):
+        self.predicate = predicate
+
+    def matches(self, arg):
+        return self.predicate(arg)
+
+    def __repr__(self):
+        return "<ArgThat>"
+
+
 class Contains(Matcher):
     def __init__(self, sub):
         self.sub = sub
@@ -58,6 +158,40 @@ class Contains(Matcher):
         return "<Contains: '%s'>" % self.sub
 
 
+class Matches(Matcher):
+    def __init__(self, regex, flags=0):
+        self.regex = re.compile(regex, flags)
+
+    def matches(self, arg):
+        if not isinstance(arg, str):
+            return
+        return self.regex.match(arg) is not None
+
+    def __repr__(self):
+        if self.regex.flags:
+            return "<Matches: %s flags=%d>" % (self.regex.pattern, self.regex.flags)
+        else:
+            return "<Matches: %s>" % self.regex.pattern
+
+
+class ArgumentCaptor(Matcher):
+    def __init__(self, matcher=None):
+        self.matcher = matcher or Any()
+        self.value = None
+
+    def matches(self, arg):
+        result = self.matcher.matches(arg)
+        if not result:
+            return
+        self.value = arg
+        return True
+
+    def __repr__(self):
+        return "<ArgumentCaptor: matcher=%s value=%s>" % (
+            repr(self.matcher), self.value,
+        )
+
+
 def any(wanted_type=None):
     """Matches any() argument OR any(SomeClass) argument
 
@@ -68,8 +202,87 @@ def any(wanted_type=None):
     return Any(wanted_type)
 
 
+any_ = any
+
+
+def eq(value):
+    """Matches particular value"""
+    return Eq(value)
+
+
+def neq(value):
+    """Matches any but given value"""
+    return Neq(value)
+
+
+def lt(value):
+    """Matches any value that is less than given value"""
+    return Lt(value)
+
+
+def lte(value):
+    """Matches any value that is less than or equal to given value"""
+    return Lte(value)
+
+
+def gt(value):
+    """Matches any value that is greater than given value"""
+    return Gt(value)
+
+
+def gte(value):
+    """Matches any value that is greater than or equal to given value"""
+    return Gte(value)
+
+
+def and_(*matchers):
+    """Matches if all given matchers match"""
+    return And(matchers)
+
+
+def or_(*matchers):
+    """Matches if any given matcher match"""
+    return Or(matchers)
+
+
+def not_(matcher):
+    """Matches if given matcher does not match"""
+    return Not(matcher)
+
+
+def arg_that(predicate):
+    """Matches any argument for which predicate returns True
+
+    Example:
+        verify(mock).foo(arg_that(lambda arg: arg > 3 and arg < 7))
+    """
+    return ArgThat(predicate)
+
+
 def contains(sub):
+    """Matches any string containing given substring
+
+    Example:
+        mock.foo([120, 121, 122, 123])
+        verify(mock).foo(contains(123))
+    """
     return Contains(sub)
+
+
+def matches(regex, flags=0):
+    """Matches any string that matches given regex"""
+    return Matches(regex, flags)
+
+
+def captor(matcher=None):
+    """Returns argument captor that captures value for further assertions
+
+    Exmaple:
+        arg_captor = captor(any(int))
+        verify(mock).do_something(arg_captor)
+        assert arg_captor.value == 123
+    """
+    return ArgumentCaptor(matcher)
 
 
 def times(count):
