@@ -35,6 +35,16 @@ class TestDouble(object):
     pass
 
 
+class RememberedInvocationBuilder(object):
+    def __init__(self, mock, method_name):
+        self.mock = mock
+        self.method_name = method_name
+
+    def __call__(self, *params, **named_params):
+        invoc = invocation.RememberedInvocation(self.mock, self.method_name)
+        return invoc(*params, **named_params)
+
+
 class mock(TestDouble):
     def __init__(self, mocked_obj=None, strict=True):
         self.invocations = []
@@ -58,7 +68,7 @@ class mock(TestDouble):
         if self.verification is not None:
             return invocation.VerifiableInvocation(self, method_name)
 
-        return invocation.RememberedInvocation(self, method_name)
+        return RememberedInvocationBuilder(self, method_name)
 
     def remember(self, invocation):
         self.invocations.insert(0, invocation)
