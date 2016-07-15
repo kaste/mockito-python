@@ -86,6 +86,15 @@ class VerificationTestBase(TestBase):
 
         self.verification_function(self.mock, times=3).foo()
 
+    def testVerifiesMultipleCallsWhenMethodUsedAsFunction(self):
+        self.mock = mock()
+        f = self.mock.foo
+        f(1, 2)
+        f('foobar')
+
+        self.verification_function(self.mock).foo(1, 2)
+        self.verification_function(self.mock).foo('foobar')
+
     def testFailsVerificationOfMultipleCalls(self):
         self.mock = mock()
         self.mock.foo()
