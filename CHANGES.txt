@@ -1,6 +1,26 @@
 MOCKITO CHANGE LOG
 ==================
 
+Release 0.7.0 (July 15, 2016)
+-----------------------------
+
+- Added a ton of new argument matchers. Namely::
+
+    'and_', 'or_', 'not_', 'eq', 'neq', 'lt', 'lte', 'gt', 'gte',
+    'arg_that', 'matches', 'captor'
+
+- Aliases 'any' matcher to 'any_' because it's a builtin.
+- Fixes an issue where mockito could not correctly verify your function invocations, if you grabbed a method from its object and used it ('detached') as a plain function::
+
+    m = mock()
+    f = m.foo  # detach
+    f(1, 2)    # pass it around and use it like a function
+    f(2, 3)
+    verify(m).foo(...) # finally verify interactions
+
+Thank you @maximkulkin
+
+
 Release 0.6.1 (May 20, 2016)
 ----------------------------
 
@@ -10,6 +30,7 @@ Release 0.6.1 (May 20, 2016)
     when(m).do_times(any(), any()).thenAnswer(lambda one, two: one * two)
     self.assertEquals(20, m.do_times(5, 4))
 
+Thank you @stubbsd
 
 Release 0.6.0 (April 25, 2016)
 ------------------------------
