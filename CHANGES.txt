@@ -1,6 +1,12 @@
 MOCKITO CHANGE LOG
 ==================
 
+Release 0.7.1 (December 27, 2016)
+---------------------------------
+
+- Fix: Allow verifyNoMoreInteractions call for real (stubbed) objects
+
+
 Release 0.7.0 (July 15, 2016)
 -----------------------------
 

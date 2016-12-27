@@ -9,7 +9,7 @@ if sys.version_info >= (3,):
     extra['use_2to3'] = True
 
 setup(name='mockito',
-      version='0.7.0',
+      version='0.7.1',
       packages=['mockito', 'mockito_test'],
       url='https://github.com/kaste/mockito-python',
       maintainer='herr.kaste',
