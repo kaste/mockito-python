@@ -109,9 +109,14 @@ def unstub():
     mock_registry.unstub_all()
 
 
-def verifyNoMoreInteractions(*mocks):
-    for mock in mocks:
-        for i in mock.invocations:
+def verifyNoMoreInteractions(*objs):
+    for obj in objs:
+        if isinstance(obj, mock):
+            theMock = obj
+        else:
+            theMock = mock_registry.mock_for(obj)
+
+        for i in theMock.invocations:
             if not i.verified:
                 raise VerificationError("\nUnwanted interaction: " + str(i))
 

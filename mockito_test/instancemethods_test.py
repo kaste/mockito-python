@@ -112,5 +112,14 @@ class InstanceMethodsTest(TestBase):
         self.assertEquals(None, rex.bark('Miau'))
         self.assertEquals(None, rex.waggle())
 
+    def testVerifyNoMoreInteractionsWorks(self):
+        when(Dog).bark('Miau')
+        verifyNoMoreInteractions(Dog)
+
+    def testVerifyZeroInteractionsWorks(self):
+        when(Dog).bark('Miau')
+        verifyZeroInteractions(Dog)
+
+
 if __name__ == '__main__':
     unittest.main()
