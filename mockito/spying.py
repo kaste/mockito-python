@@ -37,6 +37,7 @@ class Spy(TestDouble):
         self.original_object = original_object
         self.invocations = []
         self.verification = None
+        self.verifying = False
 
     def __getattr__(self, name):
         if self.verification:
@@ -47,7 +48,12 @@ class Spy(TestDouble):
     def remember(self, invocation):
         self.invocations.insert(0, invocation)
 
+    def expect_verifying(self, verification):
+        self.verifying = True
+        self.verification = verification
+
     def pull_verification(self):
         v = self.verification
         self.verification = None
+        self.verifying = False
         return v

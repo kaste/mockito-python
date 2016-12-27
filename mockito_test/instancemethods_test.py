@@ -18,6 +18,8 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
+import pytest
+
 from mockito_test.test_base import *
 from mockito import *
 from mockito.invocation import InvocationError
@@ -119,6 +121,70 @@ class InstanceMethodsTest(TestBase):
     def testVerifyZeroInteractionsWorks(self):
         when(Dog).bark('Miau')
         verifyZeroInteractions(Dog)
+
+
+class TestImplicitVerificationsUsingExpect:
+
+    @pytest.fixture(params=[
+        {'times': 2},
+        {'atmost': 2},
+        {'between': [1, 2]}
+    ], ids=['times', 'atmost', 'between'])
+    def verification(self, request):
+        return request.param
+
+    def testFailImmediatelyIfWantedCountExceeds(self, verification):
+        rex = Dog()
+        expect(rex, **verification).bark('Miau').thenReturn('Wuff')
+        rex.bark('Miau')
+        rex.bark('Miau')
+
+        with pytest.raises(InvocationError):
+            rex.bark('Miau')
+
+    def testVerifyNoMoreInteractionsWorks(self, verification):
+        rex = Dog()
+        expect(rex, **verification).bark('Miau').thenReturn('Wuff')
+        rex.bark('Miau')
+        rex.bark('Miau')
+
+        verifyNoMoreInteractions(rex)
+
+    @pytest.mark.parametrize('verification', [
+        {'times': 2},
+        {'atleast': 2},
+        {'between': [1, 2]}
+    ], ids=['times', 'atleast', 'between'])
+    def testVerifyNoMoreInteractionsBarksIfUnsatisfied(self, verification):
+        rex = Dog()
+        expect(rex, **verification).bark('Miau').thenReturn('Wuff')
+
+        with pytest.raises(VerificationError):
+            verifyNoMoreInteractions(rex)
+
+    def testExpectWitoutVerification(self):
+        rex = Dog()
+        expect(rex).bark('Miau').thenReturn('Wuff')
+        verifyNoMoreInteractions(rex)
+
+        rex.bark('Miau')
+        with pytest.raises(VerificationError):
+            verifyNoMoreInteractions(rex)
+
+    # Where to put this test? During first implementation I broke this
+    def testEnsureWhenGetsNotConfused(self):
+        m = mock()
+        when(m).foo(1).thenReturn()
+        m.foo(1)
+        with pytest.raises(VerificationError):
+            verifyNoMoreInteractions(m)
+
+    def testEnsureMultipleExpectsArentConfused(self):
+        rex = Dog()
+        expect(rex, times=1).bark('Miau').thenReturn('Wuff')
+        expect(rex, times=1).waggle().thenReturn('Wuff')
+        rex.bark('Miau')
+        rex.waggle()
 
 
 if __name__ == '__main__':

@@ -43,16 +43,16 @@ def _invalid_between(between):
             return True
     return False
 
-
-def verify(obj, times=1, atleast=None, atmost=None, between=None,
-           inorder=False):
-    if times < 0:
+def _get_wanted_verification(
+        times=None, atleast=None, atmost=None, between=None):
+    if times is not None and times < 0:
         raise ArgumentError("'times' argument has invalid value.\n"
                             "It should be at least 0. You wanted to set it to:"
                             " %i" % times)
     if _multiple_arguments_in_use(atleast, atmost, between):
-        raise ArgumentError("You can set only one of the arguments: 'atleast', "
-                            "'atmost' or 'between'.""")
+        raise ArgumentError(
+            "You can set only one of the arguments: 'atleast', "
+            "'atmost' or 'between'.""")
     if _invalid_argument(atleast):
         raise ArgumentError("'atleast' argument has invalid value.\n"
                             "It should be at least 1.  You wanted to set it "
@@ -67,24 +67,30 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
             than first e.g. [1, 4] or [0, 3] or [2, 2]
             You wanted to set it to: %s""" % between)
 
+    if atleast:
+        return verification.AtLeast(atleast)
+    elif atmost:
+        return verification.AtMost(atmost)
+    elif between:
+        return verification.Between(*between)
+    elif times is not None:
+        return verification.Times(times)
+
+
+def verify(obj, times=1, atleast=None, atmost=None, between=None,
+           inorder=False):
+
     if isinstance(obj, TestDouble):
         mocked_object = obj
     else:
         mocked_object = mock_registry.mock_for(obj)
 
-    if atleast:
-        mocked_object.verification = verification.AtLeast(atleast)
-    elif atmost:
-        mocked_object.verification = verification.AtMost(atmost)
-    elif between:
-        mocked_object.verification = verification.Between(*between)
-    else:
-        mocked_object.verification = verification.Times(times)
-
+    verification_fn = _get_wanted_verification(
+        times=times, atleast=atleast, atmost=atmost, between=between)
     if inorder:
-        mocked_object.verification = verification.InOrder(
-            mocked_object.verification)
+        verification_fn = verification.InOrder(verification_fn)
 
+    mocked_object.expect_verifying(verification_fn)
     return mocked_object
 
 
@@ -103,6 +109,16 @@ def when(obj, strict=True):
     theMock.expect_stubbing()
     return theMock
 
+def expect(obj, strict=True,
+           times=None, atleast=None, atmost=None, between=None):
+    verification_fn = _get_wanted_verification(
+        times=times, atleast=atleast, atmost=atmost, between=between)
+
+    mock = when(obj, strict=strict)
+    mock.expect_stubbing(verification_fn)
+    return mock
+
+
 
 def unstub():
     """Unstubs all stubbed methods and functions"""
@@ -115,6 +131,9 @@ def verifyNoMoreInteractions(*objs):
             theMock = obj
         else:
             theMock = mock_registry.mock_for(obj)
+
+        for i in theMock.stubbed_invocations:
+            i.verify()
 
         for i in theMock.invocations:
             if not i.verified:

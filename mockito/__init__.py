@@ -22,7 +22,7 @@
 
 
 from mockito import (mock, verify, verifyNoMoreInteractions,
-                     verifyZeroInteractions, when, unstub, ArgumentError)
+                     verifyZeroInteractions, when, expect, unstub, ArgumentError)
 import inorder
 from spying import spy
 from verification import VerificationError
@@ -32,8 +32,9 @@ from mocking import Mock
 from matchers import any, contains, times
 from verification import never
 
-__all__ = ['mock', 'spy', 'verify', 'verifyNoMoreInteractions',
-           'verifyZeroInteractions', 'inorder', 'when', 'unstub',
+__all__ = ['mock', 'spy', 'when', 'expect', 'verify',
+           'verifyNoMoreInteractions', 'verifyZeroInteractions',
+           'inorder', 'unstub',
            'VerificationError', 'ArgumentError',
            'Mock',      # deprecated
            'any',       # compatibility

@@ -19,6 +19,7 @@
 #  THE SOFTWARE.
 
 import matchers
+import verification as verificationModule
 
 
 class InvocationError(AttributeError):
@@ -89,6 +90,7 @@ class RememberedInvocation(Invocation):
 
         for matching_invocation in self.mock.stubbed_invocations:
             if matching_invocation.matches(self):
+                matching_invocation.should_answer(self)
                 return matching_invocation.answer_first()
 
         if self.strict:
@@ -142,6 +144,10 @@ class VerifiableInvocation(MatchingInvocation):
 
 
 class StubbedInvocation(MatchingInvocation):
+    def __init__(self, mock, method_name, verification):
+        super(StubbedInvocation, self).__init__(mock, method_name)
+        self.verification = verification
+
     def ensure_mocked_object_has_method(self, method_name):
         if not self.mock.has_method(method_name):
             raise InvocationError(
@@ -160,6 +166,49 @@ class StubbedInvocation(MatchingInvocation):
         if self.answers is None:
             self.answers = []
         self.answers.append(answer)
+
+    def should_answer(self, invocation):
+        # type: (RememberedInvocation) -> None
+        verification = self.verification
+        if not verification:
+            return
+
+        actual_count = len([inv for inv in self.mock.invocations
+                            if self.matches(inv)])
+
+        if isinstance(verification, verificationModule.Times):
+            if actual_count > verification.wanted_count:
+                raise InvocationError(
+                    "\nWanted times: %i, actual times: %i"
+                    % (verification.wanted_count, actual_count))
+        elif isinstance(verification, verificationModule.AtMost):
+            if actual_count > verification.wanted_count:
+                raise InvocationError(
+                    "\nWanted at most: %i, actual times: %i"
+                    % (verification.wanted_count, actual_count))
+        elif isinstance(verification, verificationModule.Between):
+            if actual_count > verification.wanted_to:
+                raise InvocationError(
+                    "\nWanted between: [%i, %i], actual times: %i"
+                    % (verification.wanted_from,
+                       verification.wanted_to,
+                       actual_count))
+
+        invocation.verified = True
+
+
+    def verify(self):
+        if not self.verification:
+            return
+
+        actual_count = len([
+            invocation
+            for invocation in self.mock.invocations
+            if self.matches(invocation)])
+
+        self.verification.verify(self, actual_count)
+
+
 
 
 class AnswerSelector(object):

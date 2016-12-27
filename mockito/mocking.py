@@ -51,6 +51,8 @@ class mock(TestDouble):
         self.stubbed_invocations = []
         self.original_methods = []
         self.stubbing = None
+
+        self.verifying = False
         self.verification = None
         if mocked_obj is None:
             mocked_obj = _Dummy()
@@ -63,9 +65,10 @@ class mock(TestDouble):
 
     def __getattr__(self, method_name):
         if self.stubbing is not None:
-            return invocation.StubbedInvocation(self, method_name)
+            return invocation.StubbedInvocation(
+                self, method_name, self.verification)
 
-        if self.verification is not None:
+        if self.verifying:
             return invocation.VerifiableInvocation(self, method_name)
 
         return RememberedInvocationBuilder(self, method_name)
@@ -76,13 +79,20 @@ class mock(TestDouble):
     def finish_stubbing(self, stubbed_invocation):
         self.stubbed_invocations.insert(0, stubbed_invocation)
         self.stubbing = None
+        self.verification = None
 
-    def expect_stubbing(self):
+    def expect_verifying(self, verification):
+        self.verifying = True
+        self.verification = verification
+
+    def expect_stubbing(self, verification=None):
         self.stubbing = True
+        self.verification = verification
 
     def pull_verification(self):
         v = self.verification
         self.verification = None
+        self.verifying = False
         return v
 
     def has_method(self, method_name):
