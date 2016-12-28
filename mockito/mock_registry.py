@@ -40,4 +40,5 @@ class MockRegistry:
             mock.unstub()
         self.mocks.clear()
 
+
 mock_registry = MockRegistry()

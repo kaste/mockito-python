@@ -99,11 +99,12 @@ class Gte(ValueMatcher):
 
 class And(Matcher):
     def __init__(self, matchers):
-        self.matchers = [matcher if isinstance(matcher, Matcher) else Eq(matcher)
-                         for matcher in matchers]
+        self.matchers = [
+            matcher if isinstance(matcher, Matcher) else Eq(matcher)
+            for matcher in matchers]
 
     def matches(self, arg):
-        return all([matcher.matches(arg) for matcher in self.matchers])
+        return all(matcher.matches(arg) for matcher in self.matchers)
 
     def __repr__(self):
         return "<And: %s>" % self.matchers
@@ -111,8 +112,9 @@ class And(Matcher):
 
 class Or(Matcher):
     def __init__(self, matchers):
-        self.matchers = [matcher if isinstance(matcher, Matcher) else Eq(matcher)
-                         for matcher in matchers]
+        self.matchers = [
+            matcher if isinstance(matcher, Matcher) else Eq(matcher)
+            for matcher in matchers]
 
     def matches(self, arg):
         return __builtins__['any'](
@@ -169,7 +171,8 @@ class Matches(Matcher):
 
     def __repr__(self):
         if self.regex.flags:
-            return "<Matches: %s flags=%d>" % (self.regex.pattern, self.regex.flags)
+            return "<Matches: %s flags=%d>" % (self.regex.pattern,
+                                               self.regex.flags)
         else:
             return "<Matches: %s>" % self.regex.pattern
 

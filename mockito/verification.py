@@ -73,8 +73,9 @@ class Times(object):
                                     % (invocation))
         else:
             if self.wanted_count == 0:
-                raise VerificationError("\nUnwanted invocation of %s, times: %i"
-                                        % (invocation, actual_count))
+                raise VerificationError(
+                    "\nUnwanted invocation of %s, times: %i"
+                    % (invocation, actual_count))
             else:
                 raise VerificationError("\nWanted times: %i, actual times: %i"
                                         % (self.wanted_count, actual_count))
@@ -106,5 +107,6 @@ class InOrder(object):
                 break
         # proceed with original verification
         self.original_verification.verify(wanted_invocation, count)
+
 
 never = 0

@@ -69,7 +69,8 @@ class MatchingInvocation(Invocation):
             return False
         if len(self.named_params) != len(invocation.named_params):
             return False
-        if set(self.named_params.keys()) != set(invocation.named_params.keys()):
+        if (set(self.named_params.keys()) !=
+                set(invocation.named_params.keys())):
             return False
 
         for x, p1 in enumerate(self.params):
@@ -277,5 +278,6 @@ class ReturnAnswer(object):
 
     def answer(self):
         current_invocation = self.mock.invocations[0]
-        return self.answerable(*current_invocation.params, **current_invocation.named_params)
+        return self.answerable(*current_invocation.params,
+                               **current_invocation.named_params)
 
