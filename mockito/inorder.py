@@ -18,7 +18,7 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-from mockito import verify as verify_main
+from .mockito import verify as verify_main
 
 
 def verify(object, *args, **kwargs):

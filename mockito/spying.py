@@ -20,8 +20,8 @@
 
 '''Spying on real objects.'''
 
-from invocation import RememberedProxyInvocation, VerifiableInvocation
-from mocking import TestDouble
+from .invocation import RememberedProxyInvocation, VerifiableInvocation
+from .mocking import TestDouble
 
 __all__ = ['spy']
 

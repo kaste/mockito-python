@@ -18,8 +18,8 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-import matchers
-import verification as verificationModule
+from . import matchers
+from . import verification as verificationModule
 
 
 class InvocationError(AttributeError):

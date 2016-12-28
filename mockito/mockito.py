@@ -18,10 +18,10 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
-import verification
-from mocking import mock, TestDouble
-from mock_registry import mock_registry
-from verification import VerificationError
+from . import verification
+from .mocking import mock, TestDouble
+from .mock_registry import mock_registry
+from .verification import VerificationError
 
 
 class ArgumentError(Exception):

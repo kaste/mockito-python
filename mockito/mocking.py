@@ -19,9 +19,10 @@
 #  THE SOFTWARE.
 
 import inspect
-import invocation
-from mock_registry import mock_registry
 import warnings
+
+from . import invocation
+from .mock_registry import mock_registry
 
 
 __all__ = ['mock', 'Mock']
