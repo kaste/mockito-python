@@ -2,15 +2,15 @@ language: python
 python:
 - '2.6'
 - '2.7'
-- '3.2'
 - '3.3'
 - '3.4'
 - '3.5'
 install:
-  - pip install .
   - pip install pytest --upgrade
+  # build to get 2to3 applied
+  - python setup.py build
 script:
-- py.test tests
+  - py.test build/lib
 deploy:
   provider: pypi
   user: herrkaste

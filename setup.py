@@ -25,7 +25,4 @@ setup(name='mockito',
           'Programming Language :: Python :: 2',
           'Programming Language :: Python :: 3'
       ],
-      test_suite='nose.collector',
-      py_modules=['distribute_setup'],
-      setup_requires=['nose'],
       **extra)
