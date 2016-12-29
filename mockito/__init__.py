@@ -30,7 +30,7 @@ from .verification import VerificationError
 
 # Imports for compatibility
 from .mocking import Mock
-from .matchers import any, contains, times, args
+from .matchers import any, contains, times, args, kwargs
 from .verification import never
 
 __all__ = ['mock', 'spy', 'when', 'expect', 'verify',
@@ -42,5 +42,5 @@ __all__ = ['mock', 'spy', 'when', 'expect', 'verify',
            'contains',  # compatibility
            'never',     # compatibility
            'times',     # deprecated
-           'args'
+           'args', 'kwargs'
            ]

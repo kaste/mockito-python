@@ -4,7 +4,7 @@ import pytest
 from collections import namedtuple
 from functools import partial
 
-from mockito import when, args
+from mockito import when, args, kwargs
 from mockito.invocation import InvocationError
 
 
@@ -99,3 +99,50 @@ class TestEllipsises:
         when(rex).bark('Wuff', *args, then='Wuff').thenReturn('Miau')
 
         assert rex.bark(*call.args, **call.kwargs) == 'Miau'
+
+
+    @pytest.mark.parametrize('call', [
+        sig(),
+        sig('Wuff').raises(InvocationError),
+        sig('Wuff', 'Wuff').raises(InvocationError),
+        sig('Wuff', then='Wuff').raises(InvocationError),
+        sig('Wuff', 'Wuff', then='Wuff').raises(InvocationError),
+        sig(then='Wuff'),
+        sig(then='Wuff', later='Waff')
+
+    ])
+    def testKwargsAsSoleArgument(self, call):
+        rex = Dog()
+        when(rex).bark(**kwargs).thenReturn('Miau')
+
+        assert rex.bark(*call.args, **call.kwargs) == 'Miau'
+
+
+    @pytest.mark.parametrize('call', [
+        sig().raises(InvocationError),
+        sig('Wuff').raises(InvocationError),
+        sig('Wuff', 'Wuff').raises(InvocationError),
+        sig('Wuff', then='Wuff').raises(InvocationError),
+        sig('Wuff', 'Wuff', then='Wuff').raises(InvocationError),
+        sig(then='Wuff'),
+        sig(then='Wuff', later='Waff'),
+        sig(later='Waff', then='Wuff'),
+        sig(first='Wuff', later='Waff').raises(InvocationError)
+
+    ])
+    def testKwargsAsSecondKwarg(self, call):
+        rex = Dog()
+        when(rex).bark(then='Wuff', **kwargs).thenReturn('Miau')
+
+        assert rex.bark(*call.args, **call.kwargs) == 'Miau'
+        # 1/0
+
+
+    # implementation detail: See MatchingInvocation.matches
+    def testEnsureKwargsSentinelIsAtTheEnd(self):
+        from mockito.matchers import KWARGS_SENTINEL
+
+        d = {'a': 1, KWARGS_SENTINEL: 3, 'Z': 2}
+        d_ = sorted(d.items(), reverse=True)
+        assert d_[-1][0] is KWARGS_SENTINEL
+

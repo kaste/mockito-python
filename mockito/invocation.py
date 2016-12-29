@@ -63,32 +63,44 @@ class MatchingInvocation(Invocation):
             return False
         return True
 
-    def matches(self, invocation):
+    def matches(self, invocation):  # noqa: C901 (too complex)
         if self.method_name != invocation.method_name:
             return False
 
-        hasEllipsis = Ellipsis in self.params
-        if hasEllipsis or matchers.ARGS_SENTINEL in self.params:
-            if len(self.params) - 1 > len(invocation.params):
-                return False
-        elif len(self.params) != len(invocation.params):
-            return False
-
         for x, p1 in enumerate(self.params):
-            if p1 is Ellipsis or p1 is matchers.ARGS_SENTINEL:
+            # assume Ellipsis is the last thing a user declares
+            if p1 is Ellipsis:
+                return True
+
+            if p1 is matchers.ARGS_SENTINEL:
                 break
-            if not self.compare(p1, invocation.params[x]):
+
+            try:
+                p2 = invocation.params[x]
+            except IndexError:
                 return False
 
-        if not hasEllipsis:
+            if not self.compare(p1, p2):
+                return False
+        else:
+            if len(self.params) != len(invocation.params):
+                return False
+
+        # sorted(reverse) to ensure KWARGS_SENTINEL is at the end
+        for key, p1 in sorted(self.named_params.iteritems(), reverse=True):
+            if key is matchers.KWARGS_SENTINEL:
+                break
+
+            try:
+                p2 = invocation.named_params[key]
+            except KeyError:
+                return False
+
+            if not self.compare(p1, p2):
+                return False
+        else:
             if len(self.named_params) != len(invocation.named_params):
                 return False
-            if (set(self.named_params.keys()) !=
-                    set(invocation.named_params.keys())):
-                return False
-            for x, p1 in self.named_params.iteritems():
-                if not self.compare(p1, invocation.named_params[x]):
-                    return False
 
         return True
 
