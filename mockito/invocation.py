@@ -42,7 +42,8 @@ class Invocation(object):
         self.named_params = named_params
 
     def __repr__(self):
-        args = [repr(p) for p in self.params]
+        args = [repr(p) if p is not Ellipsis else '...'
+                for p in self.params]
         kwargs = ["%s=%r" % (key, val)
                   for key, val in self.named_params.items()]
         params = ", ".join(args + kwargs)
@@ -65,21 +66,29 @@ class MatchingInvocation(Invocation):
     def matches(self, invocation):
         if self.method_name != invocation.method_name:
             return False
-        if len(self.params) != len(invocation.params):
-            return False
-        if len(self.named_params) != len(invocation.named_params):
-            return False
-        if (set(self.named_params.keys()) !=
-                set(invocation.named_params.keys())):
+
+        hasEllipsis = Ellipsis in self.params
+        if hasEllipsis or matchers.ARGS_SENTINEL in self.params:
+            if len(self.params) - 1 > len(invocation.params):
+                return False
+        elif len(self.params) != len(invocation.params):
             return False
 
         for x, p1 in enumerate(self.params):
+            if p1 is Ellipsis or p1 is matchers.ARGS_SENTINEL:
+                break
             if not self.compare(p1, invocation.params[x]):
                 return False
 
-        for x, p1 in self.named_params.iteritems():
-            if not self.compare(p1, invocation.named_params[x]):
+        if not hasEllipsis:
+            if len(self.named_params) != len(invocation.named_params):
                 return False
+            if (set(self.named_params.keys()) !=
+                    set(invocation.named_params.keys())):
+                return False
+            for x, p1 in self.named_params.iteritems():
+                if not self.compare(p1, invocation.named_params[x]):
+                    return False
 
         return True
 

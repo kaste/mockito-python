@@ -37,7 +37,15 @@ __all__ = [
     'matches',
     'captor',
     'times',
+    'args'
 ]
+
+class _ArgsSentinel(object):
+    def __repr__(self):
+        return '*args'
+
+ARGS_SENTINEL = _ArgsSentinel()
+args = [ARGS_SENTINEL]
 
 
 class Matcher:
