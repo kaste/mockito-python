@@ -86,8 +86,9 @@ class MatchingInvocation(Invocation):
             if len(self.params) != len(invocation.params):
                 return False
 
-        # sorted(reverse) to ensure KWARGS_SENTINEL is at the end
-        for key, p1 in sorted(self.named_params.iteritems(), reverse=True):
+        for key, p1 in sorted(
+                self.named_params.iteritems(),
+                key=lambda (k, v): 1 if k is matchers.KWARGS_SENTINEL else 0):
             if key is matchers.KWARGS_SENTINEL:
                 break
 

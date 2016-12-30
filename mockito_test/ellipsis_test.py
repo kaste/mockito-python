@@ -137,12 +137,3 @@ class TestEllipsises:
         assert rex.bark(*call.args, **call.kwargs) == 'Miau'
         # 1/0
 
-
-    # implementation detail: See MatchingInvocation.matches
-    def testEnsureKwargsSentinelIsAtTheEnd(self):
-        from mockito.matchers import KWARGS_SENTINEL
-
-        d = {'a': 1, KWARGS_SENTINEL: 3, 'Z': 2}
-        d_ = sorted(d.items(), reverse=True)
-        assert d_[-1][0] is KWARGS_SENTINEL
-
