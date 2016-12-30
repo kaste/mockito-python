@@ -49,13 +49,8 @@ class _ArgsSentinel(object):
 ARGS_SENTINEL = _ArgsSentinel()
 args = [ARGS_SENTINEL]
 
-class _KwargsKey(object):
-    def __repr__(self):
-        return 'kwargs'
-
-
 KWARGS_SENTINEL = '**'
-kwargs = {KWARGS_SENTINEL: _KwargsKey()}
+kwargs = {KWARGS_SENTINEL: '_'}
 
 class Matcher:
     def matches(self, arg):

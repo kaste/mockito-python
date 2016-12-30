@@ -45,6 +45,7 @@ class Invocation(object):
         args = [repr(p) if p is not Ellipsis else '...'
                 for p in self.params]
         kwargs = ["%s=%r" % (key, val)
+                  if key is not matchers.KWARGS_SENTINEL else '**kwargs'
                   for key, val in self.named_params.items()]
         params = ", ".join(args + kwargs)
         return "%s(%s)" % (self.method_name, params)
@@ -62,6 +63,20 @@ class MatchingInvocation(Invocation):
         elif p1 != p2:
             return False
         return True
+
+    def _remember_params(self, params, named_params):
+        if Ellipsis in params and (params[-1] is not Ellipsis or named_params):
+            raise TypeError('Ellipsis must be the last argument you specify.')
+
+        if matchers.args in params:
+            raise TypeError('args must be used as *args')
+
+        if matchers.kwargs in params or matchers.KWARGS_SENTINEL in params:
+            raise TypeError('kwargs must be used as **kwargs')
+
+        self.params = params
+        self.named_params = named_params
+
 
     def matches(self, invocation):  # noqa: C901 (too complex)
         if self.method_name != invocation.method_name:

@@ -4,7 +4,7 @@ import pytest
 from collections import namedtuple
 from functools import partial
 
-from mockito import when, args, kwargs
+from mockito import when, args, kwargs, invocation, mock
 from mockito.invocation import InvocationError
 
 
@@ -136,4 +136,47 @@ class TestEllipsises:
 
         assert rex.bark(*call.args, **call.kwargs) == 'Miau'
         # 1/0
+
+
+    @pytest.mark.parametrize('call', [
+        sig(Ellipsis),
+        sig(Ellipsis, 'Wuff').raises(TypeError),
+        sig(Ellipsis, then='Wuff').raises(TypeError),
+        sig(Ellipsis, 'Wuff', then='Waff').raises(TypeError),
+    ])
+    def testEllipsisMustBeLastThing(self, call):
+        rex = Dog()
+        when(rex).bark(*call.args, **call.kwargs).thenReturn('Miau')
+
+
+    def testArgsMustUsedAsStarArg(self):
+        rex = Dog()
+        with pytest.raises(TypeError):
+            when(rex).bark(args).thenReturn('Miau')
+
+    def testKwargsMustBeUsedAsStarKwarg(self):
+        rex = Dog()
+        with pytest.raises(TypeError):
+            when(rex).bark(kwargs).thenReturn('Miau')
+
+        with pytest.raises(TypeError):
+            when(rex).bark(*kwargs).thenReturn('Miau')
+
+    def testNiceFormattingForEllipsis(self):
+        inv = invocation.StubbedInvocation(mock(), 'bark', None)
+        inv(Ellipsis)
+
+        assert repr(inv) == 'bark(...)'
+
+    def testNiceFormattingForArgs(self):
+        inv = invocation.StubbedInvocation(mock(), 'bark', None)
+        inv(*args)
+
+        assert repr(inv) == 'bark(*args)'
+
+    def testNiceFormattingForKwargs(self):
+        inv = invocation.StubbedInvocation(mock(), 'bark', None)
+        inv(**kwargs)
+
+        assert repr(inv) == 'bark(**kwargs)'
 
