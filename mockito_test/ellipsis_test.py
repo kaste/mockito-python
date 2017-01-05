@@ -135,7 +135,26 @@ class TestEllipsises:
         when(rex).bark(then='Wuff', **kwargs).thenReturn('Miau')
 
         assert rex.bark(*call.args, **call.kwargs) == 'Miau'
-        # 1/0
+
+
+    @pytest.mark.parametrize('call', [
+        sig('Wuff', then='Waff'),
+        sig('Wuff', 'Wuff', then='Waff'),
+        sig('Wuff', then='Waff', later='Woff'),
+        sig('Wuff', first="Wiff", then='Waff', later='Woff'),
+        sig('Wuff', 'Wuff', then='Waff', later="Woff"),
+
+        sig().raises(InvocationError),
+        sig('Wuff').raises(InvocationError),
+        sig('Wuff', 'Wuff').raises(InvocationError),
+        sig(later='Woff').raises(InvocationError),
+        sig('Wuff', later='Woff').raises(InvocationError),
+    ])
+    def testCombinedArgsAndKwargs(self, call):
+        rex = Dog()
+        when(rex).bark('Wuff', *args, then='Waff', **kwargs).thenReturn('Miau')
+
+        assert rex.bark(*call.args, **call.kwargs) == 'Miau'
 
 
     @pytest.mark.parametrize('call', [
