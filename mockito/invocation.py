@@ -21,6 +21,12 @@
 from . import matchers
 from . import verification as verificationModule
 
+import inspect
+try:
+    from inspect import signature, Parameter
+except ImportError:
+    from funcsigs import signature, Parameter
+
 
 class InvocationError(AttributeError):
     pass
@@ -181,6 +187,16 @@ class VerifiableInvocation(MatchingInvocation):
             invocation.verified = True
 
 
+def positional_arguments(sig):
+    return len([p for n, p in sig.parameters.items()
+                if p.kind in (Parameter.POSITIONAL_ONLY,
+                              Parameter.POSITIONAL_OR_KEYWORD)])
+
+def has_var_keyword(sig):
+    return any(p for n, p in sig.parameters.items()
+               if p.kind is Parameter.VAR_KEYWORD)
+
+
 class StubbedInvocation(MatchingInvocation):
     def __init__(self, mock, method_name, verification):
         super(StubbedInvocation, self).__init__(mock, method_name)
@@ -192,10 +208,88 @@ class StubbedInvocation(MatchingInvocation):
                 "You tried to stub a method '%s' the object (%s) doesn't "
                 "have." % (method_name, self.mock.mocked_obj))
 
+    def ensure_signature_matches(                 # noqa: C901 (too complex)
+            self, method_name, args, kwargs):
+        method = getattr(self.mock.mocked_obj, method_name)
+        try:
+            sig = signature(method)
+        except:
+            return True
+
+        # unbound method
+        if (inspect.ismethod(method) and
+                method.__self__ is not self.mock.mocked_obj):
+            # add fake self
+            args = ({},) + args
+
+        ellipsis_provided = Ellipsis in args
+        if ellipsis_provided:
+            # Invariant: No args or kwargs allowed, but Ellipsis should consume
+            # at least one var
+            if not any(p for p in sig.parameters):
+                raise TypeError("method doesn't take any arguments")
+
+            has_kwargs = has_var_keyword(sig)
+            # Ellipsis is always the last arg in args; it matches all keyword
+            # arguments as well. So the strategy here is to strip off all
+            # the keyword arguments from the signature, and do a partial
+            # bind with the rest.
+            params = [p for n, p in sig.parameters.items()
+                      if p.kind not in (Parameter.KEYWORD_ONLY,
+                                        Parameter.VAR_KEYWORD)]
+            sig = sig.replace(parameters=params)
+            # Ellipsis should fill at least one argument. We strip it off if
+            # it can stand for a `kwargs` argument.
+            sig.bind_partial(*(args[:-1] if has_kwargs else args))
+        else:
+            # `*args` should at least match one arg (t.i. not `*[]`), so we
+            # keep it here. The value and its type is irrelevant in python.
+            args_provided = matchers.ARGS_SENTINEL in args
+
+            # If we find the `**kwargs` sentinel we must remove it, bc its
+            # name cannot be matched against the sig.
+            kwargs_provided = matchers.KWARGS_SENTINEL in kwargs
+            if kwargs_provided:
+                kwargs = kwargs.copy()
+                kwargs.pop(matchers.KWARGS_SENTINEL)
+
+
+            if args_provided or kwargs_provided:
+                try:
+                    sig.bind(*args, **kwargs)
+                except TypeError as e:
+                    error = str(e)
+                    if 'too many positional arguments' in error:
+                        raise
+                    if 'multiple values for argument' in error:
+                        raise
+                    if 'too many keyword arguments' in error:
+                        raise
+
+                else:
+                    if kwargs_provided and not has_var_keyword(sig):
+                        pos_args = positional_arguments(sig)
+                        len_args = len(args) - int(args_provided)
+                        len_kwargs = len(kwargs)
+                        provided_args = len_args + len_kwargs
+                        # Substitute at least one argument for the `**kwargs`,
+                        # the user provided; t.i. do not allow kwargs to
+                        # satisfy an empty `{}`.
+                        if provided_args + 1 > pos_args:
+                            raise TypeError
+
+            else:
+                sig.bind(*args, **kwargs)
+
+
+
     def __call__(self, *params, **named_params):
         if self.mock.strict:
             self.ensure_mocked_object_has_method(self.method_name)
+            self.ensure_signature_matches(
+                self.method_name, params, named_params)
         self._remember_params(params, named_params)
+
         self.mock.stub(self.method_name)
         self.mock.finish_stubbing(self)
         return AnswerSelector(self)

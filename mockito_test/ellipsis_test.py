@@ -5,7 +5,6 @@ from collections import namedtuple
 from functools import partial
 
 from mockito import when, args, kwargs, invocation, mock
-from mockito.invocation import InvocationError
 
 
 class Dog(object):
@@ -37,21 +36,21 @@ class TestEllipsises:
         sig(then='Wuff'),
     ])
     def testEllipsisAsSoleArgument(self, call):
-        rex = Dog()
+        rex = mock()
         when(rex).bark(Ellipsis).thenReturn('Miau')
 
         assert rex.bark(*call.args, **call.kwargs) == 'Miau'
 
 
     @pytest.mark.parametrize('call', [
-        sig().raises(InvocationError),
+        sig().raises(AssertionError),
         sig('Wuff'),
         sig('Wuff', 'Wuff'),
         sig('Wuff', then='Wuff'),
-        sig(then='Wuff').raises(InvocationError),
+        sig(then='Wuff').raises(AssertionError),
     ])
     def testEllipsisAsSecondArgument(self, call):
-        rex = Dog()
+        rex = mock()
         when(rex).bark('Wuff', Ellipsis).thenReturn('Miau')
 
         assert rex.bark(*call.args, **call.kwargs) == 'Miau'
@@ -61,41 +60,41 @@ class TestEllipsises:
         sig(),
         sig('Wuff'),
         sig('Wuff', 'Wuff'),
-        sig('Wuff', then='Wuff').raises(InvocationError),
-        sig(then='Wuff').raises(InvocationError),
+        sig('Wuff', then='Wuff').raises(AssertionError),
+        sig(then='Wuff').raises(AssertionError),
     ])
     def testArgsAsSoleArgument(self, call):
-        rex = Dog()
+        rex = mock()
         when(rex).bark(*args).thenReturn('Miau')
 
         assert rex.bark(*call.args, **call.kwargs) == 'Miau'
 
 
     @pytest.mark.parametrize('call', [
-        sig().raises(InvocationError),
+        sig().raises(AssertionError),
         sig('Wuff'),
         sig('Wuff', 'Wuff'),
-        sig('Wuff', then='Wuff').raises(InvocationError),
-        sig(then='Wuff').raises(InvocationError),
+        sig('Wuff', then='Wuff').raises(AssertionError),
+        sig(then='Wuff').raises(AssertionError),
     ])
     def testArgsAsSecondArgument(self, call):
-        rex = Dog()
+        rex = mock()
         when(rex).bark('Wuff', *args).thenReturn('Miau')
 
         assert rex.bark(*call.args, **call.kwargs) == 'Miau'
 
 
     @pytest.mark.parametrize('call', [
-        sig().raises(InvocationError),
-        sig('Wuff').raises(InvocationError),
-        sig('Wuff', 'Wuff').raises(InvocationError),
+        sig().raises(AssertionError),
+        sig('Wuff').raises(AssertionError),
+        sig('Wuff', 'Wuff').raises(AssertionError),
         sig('Wuff', then='Wuff'),
         sig('Wuff', 'Wuff', then='Wuff'),
-        sig(then='Wuff').raises(InvocationError),
+        sig(then='Wuff').raises(AssertionError),
 
     ])
     def testArgsBeforeConcreteKwarg(self, call):
-        rex = Dog()
+        rex = mock()
         when(rex).bark('Wuff', *args, then='Wuff').thenReturn('Miau')
 
         assert rex.bark(*call.args, **call.kwargs) == 'Miau'
@@ -103,35 +102,35 @@ class TestEllipsises:
 
     @pytest.mark.parametrize('call', [
         sig(),
-        sig('Wuff').raises(InvocationError),
-        sig('Wuff', 'Wuff').raises(InvocationError),
-        sig('Wuff', then='Wuff').raises(InvocationError),
-        sig('Wuff', 'Wuff', then='Wuff').raises(InvocationError),
+        sig('Wuff').raises(AssertionError),
+        sig('Wuff', 'Wuff').raises(AssertionError),
+        sig('Wuff', then='Wuff').raises(AssertionError),
+        sig('Wuff', 'Wuff', then='Wuff').raises(AssertionError),
         sig(then='Wuff'),
         sig(then='Wuff', later='Waff')
 
     ])
     def testKwargsAsSoleArgument(self, call):
-        rex = Dog()
+        rex = mock()
         when(rex).bark(**kwargs).thenReturn('Miau')
 
         assert rex.bark(*call.args, **call.kwargs) == 'Miau'
 
 
     @pytest.mark.parametrize('call', [
-        sig().raises(InvocationError),
-        sig('Wuff').raises(InvocationError),
-        sig('Wuff', 'Wuff').raises(InvocationError),
-        sig('Wuff', then='Wuff').raises(InvocationError),
-        sig('Wuff', 'Wuff', then='Wuff').raises(InvocationError),
+        sig().raises(AssertionError),
+        sig('Wuff').raises(AssertionError),
+        sig('Wuff', 'Wuff').raises(AssertionError),
+        sig('Wuff', then='Wuff').raises(AssertionError),
+        sig('Wuff', 'Wuff', then='Wuff').raises(AssertionError),
         sig(then='Wuff'),
         sig(then='Wuff', later='Waff'),
         sig(later='Waff', then='Wuff'),
-        sig(first='Wuff', later='Waff').raises(InvocationError)
+        sig(first='Wuff', later='Waff').raises(AssertionError)
 
     ])
     def testKwargsAsSecondKwarg(self, call):
-        rex = Dog()
+        rex = mock()
         when(rex).bark(then='Wuff', **kwargs).thenReturn('Miau')
 
         assert rex.bark(*call.args, **call.kwargs) == 'Miau'
@@ -144,14 +143,14 @@ class TestEllipsises:
         sig('Wuff', first="Wiff", then='Waff', later='Woff'),
         sig('Wuff', 'Wuff', then='Waff', later="Woff"),
 
-        sig().raises(InvocationError),
-        sig('Wuff').raises(InvocationError),
-        sig('Wuff', 'Wuff').raises(InvocationError),
-        sig(later='Woff').raises(InvocationError),
-        sig('Wuff', later='Woff').raises(InvocationError),
+        sig().raises(AssertionError),
+        sig('Wuff').raises(AssertionError),
+        sig('Wuff', 'Wuff').raises(AssertionError),
+        sig(later='Woff').raises(AssertionError),
+        sig('Wuff', later='Woff').raises(AssertionError),
     ])
     def testCombinedArgsAndKwargs(self, call):
-        rex = Dog()
+        rex = mock()
         when(rex).bark('Wuff', *args, then='Waff', **kwargs).thenReturn('Miau')
 
         assert rex.bark(*call.args, **call.kwargs) == 'Miau'
@@ -164,17 +163,17 @@ class TestEllipsises:
         sig(Ellipsis, 'Wuff', then='Waff').raises(TypeError),
     ])
     def testEllipsisMustBeLastThing(self, call):
-        rex = Dog()
+        rex = mock()
         when(rex).bark(*call.args, **call.kwargs).thenReturn('Miau')
 
 
     def testArgsMustUsedAsStarArg(self):
-        rex = Dog()
+        rex = mock()
         with pytest.raises(TypeError):
             when(rex).bark(args).thenReturn('Miau')
 
     def testKwargsMustBeUsedAsStarKwarg(self):
-        rex = Dog()
+        rex = mock()
         with pytest.raises(TypeError):
             when(rex).bark(kwargs).thenReturn('Miau')
 
