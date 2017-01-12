@@ -20,9 +20,11 @@
 
 import pytest
 
-from mockito_test.test_base import *
-from mockito import *
+from mockito_test.test_base import TestBase
+from mockito import (mock, when, expect, verify, unstub, any,
+                     verifyNoMoreInteractions, verifyZeroInteractions)
 from mockito.invocation import InvocationError
+from mockito.verification import VerificationError
 
 class Dog(object):
     def waggle(self):
@@ -59,7 +61,6 @@ class InstanceMethodsTest(TestBase):
 
         rex = Dog()
         self.assertEquals('Wuff', rex.bark('Miau'))
-        #self.assertEquals('Wuff', rex.bark('Wuff'))
 
     def testInvocateAStubbedMethodFromAnotherMethod(self):
         when(Dog).bark('Wau').thenReturn('Wuff')
@@ -71,11 +72,12 @@ class InstanceMethodsTest(TestBase):
     def testYouCantStubAnUnknownMethodInStrictMode(self):
         try:
             when(Dog).barks('Wau').thenReturn('Wuff')
-            self.fail('Stubbing an unknown method should have thrown a exception')
+            self.fail(
+                'Stubbing an unknown method should have thrown a exception')
         except InvocationError:
             pass
 
-    def testThrowEarlyIfCallingAStubbedMethodWithUnexpectedArgumentsInStrictMode(self):
+    def testThrowEarlyIfCallingWithUnexpectedArgumentsInStrictMode(self):
         when(Dog).bark('Miau').thenReturn('Wuff')
         rex = Dog()
         try:
@@ -85,7 +87,7 @@ class InstanceMethodsTest(TestBase):
         except InvocationError:
             pass
 
-    def testCallingAStubbedMethodWithUnexpectedArgumentsReturnsNoneIfNotStrict(self):
+    def testReturnNoneIfCallingWithUnexpectedArgumentsIfNotStrict(self):
         when(Dog, strict=False).bark('Miau').thenReturn('Wuff')
         rex = Dog()
         self.assertEquals(None, rex.bark('Shhh'))
@@ -186,6 +188,3 @@ class TestImplicitVerificationsUsingExpect:
         rex.bark('Miau')
         rex.waggle()
 
-
-if __name__ == '__main__':
-    unittest.main()
