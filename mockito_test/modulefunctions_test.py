@@ -20,9 +20,10 @@
 
 import os
 
-from mockito_test.test_base import *
-from mockito import *
+from mockito_test.test_base import TestBase
+from mockito import when, unstub, verify, any
 from mockito.invocation import InvocationError
+from mockito.verification import VerificationError
 
 
 class ModuleFunctionsTest(TestBase):
@@ -69,7 +70,7 @@ class ModuleFunctionsTest(TestBase):
 
         os.path.exists("test")
 
-        self.assertRaises(VerificationError, verify(os.path, times(2)).exists,
+        self.assertRaises(VerificationError, verify(os.path, times=2).exists,
                           "test")
 
     def testStubsTwiceAndUnstubs(self):
@@ -93,6 +94,3 @@ class ModuleFunctionsTest(TestBase):
         self.assertRaises(InvocationError,
                           lambda: when(os).walk_the_line().thenReturn(None))
 
-
-if __name__ == '__main__':
-    unittest.main()
