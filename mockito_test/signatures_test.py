@@ -1,7 +1,7 @@
 
 import pytest
 
-from mockito import when, args, kwargs
+from mockito import when, args, kwargs, unstub
 
 from collections import namedtuple
 
@@ -30,7 +30,7 @@ class SUT(object):
     def star_kwarg(self, **kwargs):
         pass
 
-    def arg_plus_star_arg(sel, a, *b):
+    def arg_plus_star_arg(self, a, *b):
         pass
 
     def arg_plus_star_kwarg(self, a, **b):
@@ -43,9 +43,102 @@ class SUT(object):
         pass
 
 
-@pytest.fixture
-def sut():
-    return SUT()
+class ClassMethods(object):
+    @classmethod
+    def none_args(cls):
+        pass
+
+    @classmethod
+    def one_arg(cls, a):
+        pass
+
+    @classmethod
+    def two_args(cls, a, b):
+        pass
+
+    @classmethod
+    def star_arg(cls, *a):
+        pass
+
+    @classmethod
+    def star_kwarg(cls, **kw):
+        pass
+
+    @classmethod
+    def arg_plus_star_arg(cls, a, *b):
+        pass
+
+    @classmethod
+    def arg_plus_star_kwarg(cls, a, **b):
+        pass
+
+    @classmethod
+    def two_args_wt_default(cls, a, b=None):
+        pass
+
+    @classmethod
+    def combination(cls, a, b=None, *c, **d):
+        pass
+
+
+class StaticMethods(object):
+    @staticmethod
+    def none_args():
+        pass
+
+    @staticmethod
+    def one_arg(a):
+        pass
+
+    @staticmethod
+    def two_args(a, b):
+        pass
+
+    @staticmethod
+    def star_arg(*a):
+        pass
+
+    @staticmethod
+    def star_kwarg(**kw):
+        pass
+
+    @staticmethod
+    def arg_plus_star_arg(a, *b):
+        pass
+
+    @staticmethod
+    def arg_plus_star_kwarg(a, **b):
+        pass
+
+    @staticmethod
+    def two_args_wt_default(a, b=None):
+        pass
+
+    @staticmethod
+    def combination(a, b=None, *c, **d):
+        pass
+
+
+@pytest.fixture(params=[
+    'instance',
+    'class',
+    'classmethods',
+    'staticmethods',
+    'staticmethods_2',
+])
+def sut(request):
+    if request.param == 'instance':
+        yield SUT()
+    elif request.param == 'class':
+        yield SUT
+    elif request.param == 'classmethods':
+        yield ClassMethods
+    elif request.param == 'staticmethods':
+        yield StaticMethods
+    elif request.param == 'staticmethods_2':
+        yield StaticMethods()
+
+    unstub()
 
 
 class TestSignatures:
@@ -200,9 +293,6 @@ class TestSignatures:
         def test_failing(self, sut, call):
             with pytest.raises(TypeError):
                 when(sut).star_kwarg(*call.args, **call.kwargs)
-
-        def test_real(self, sut):
-            sut.star_kwarg()
 
 
     class TestArgPlusStarArg:
