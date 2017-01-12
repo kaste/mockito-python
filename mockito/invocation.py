@@ -21,11 +21,17 @@
 from . import matchers
 from . import verification as verificationModule
 
+import functools
 import inspect
+import sys
+import types
 try:
     from inspect import signature, Parameter
 except ImportError:
     from funcsigs import signature, Parameter
+
+
+PY3 = sys.version_info >= (3,)
 
 
 class InvocationError(AttributeError):
@@ -210,17 +216,28 @@ class StubbedInvocation(MatchingInvocation):
 
     def ensure_signature_matches(                 # noqa: C901 (too complex)
             self, method_name, args, kwargs):
+        # Let's face it. If this doesn't work out, we have to do it the hard
+        # way and reimplement something like `sig.bind` with our specific
+        # need for `...`, `*args`, and `**kwargs` support.
+
         method = getattr(self.mock.mocked_obj, method_name)
+        # Eat self for unbound methods bc signature doesn't do it
+        if PY3:
+            if (inspect.isclass(self.mock.mocked_obj) and
+                    not inspect.ismethod(method) and
+                    not isinstance(
+                        self.mock.mocked_obj.__dict__.get(method_name),
+                        staticmethod)):
+                method = functools.partial(method, None)
+        else:
+            if (isinstance(method, types.UnboundMethodType) and
+                    method.__self__ is None):
+                method = functools.partial(method, None)
+
         try:
             sig = signature(method)
         except:
             return True
-
-        # unbound method
-        if (inspect.ismethod(method) and
-                method.__self__ is not self.mock.mocked_obj):
-            # add fake self
-            args = ({},) + args
 
         ellipsis_provided = Ellipsis in args
         if ellipsis_provided:
@@ -260,10 +277,12 @@ class StubbedInvocation(MatchingInvocation):
                 except TypeError as e:
                     error = str(e)
                     if 'too many positional arguments' in error:
-                        raise
+                        raise TypeError('no argument for *args left')
                     if 'multiple values for argument' in error:
                         raise
-                    if 'too many keyword arguments' in error:
+                    if 'too many keyword arguments' in error:          # PY<3.5
+                        raise
+                    if 'got an unexpected keyword argument' in error:  # PY>3.5
                         raise
 
                 else:
@@ -276,9 +295,12 @@ class StubbedInvocation(MatchingInvocation):
                         # the user provided; t.i. do not allow kwargs to
                         # satisfy an empty `{}`.
                         if provided_args + 1 > pos_args:
-                            raise TypeError
+                            raise TypeError(
+                                'no keyword argument for **kwargs left')
 
             else:
+                # Without Ellipsis and the other stuff this would really be
+                # straight forward.
                 sig.bind(*args, **kwargs)
 
 
