@@ -1,12 +1,11 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 from setuptools import setup
 import sys
 
 extra = {}
 if sys.version_info >= (3,):
     extra['use_2to3'] = True
+
+install_requires = ['funcsigs'] if sys.version_info < (3,) else []
 
 setup(name='mockito',
       version='0.7.1',
@@ -17,6 +16,7 @@ setup(name='mockito',
       license='MIT',
       description='Spying framework',
       long_description=open('README.rst').read(),
+      install_requires=install_requires,
       classifiers=[
           'Development Status :: 4 - Beta',
           'Intended Audience :: Developers',
