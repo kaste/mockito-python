@@ -7,6 +7,7 @@ python:
 - '3.5'
 install:
   - pip install pytest --upgrade
+  - pip install .
   # build to get 2to3 applied
   - python setup.py build
 script:
