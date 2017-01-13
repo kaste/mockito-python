@@ -45,6 +45,10 @@ class RememberedInvocationBuilder(object):
         invoc = invocation.RememberedInvocation(self.mock, self.method_name)
         return invoc(*params, **named_params)
 
+class State:
+    STUBBING = 0
+    CALLING = 1
+    VERIFYING = 2
 
 class Mock(TestDouble):
     def __init__(self, mocked_obj=None, strict=True, stub=False):
@@ -52,9 +56,8 @@ class Mock(TestDouble):
         self.stubbed_invocations = []
         self.original_methods = {}
         self._signatures_store = {}
-        self.stubbing = None
+        self._state = State.CALLING
 
-        self.verifying = False
         self.verification = None
         if mocked_obj is None:
             self.mocked_obj = None
@@ -68,35 +71,36 @@ class Mock(TestDouble):
         mock_registry.register(self)
 
     def __getattr__(self, method_name):
-        if self.stubbing is not None:
+        if self._state is State.STUBBING:
             return invocation.StubbedInvocation(
                 self, method_name, self.verification)
 
-        if self.verifying:
+        elif self._state is State.VERIFYING:
             return invocation.VerifiableInvocation(self, method_name)
 
-        return RememberedInvocationBuilder(self, method_name)
+        elif self._state is State.CALLING:
+            return RememberedInvocationBuilder(self, method_name)
 
     def remember(self, invocation):
         self.invocations.insert(0, invocation)
 
-    def finish_stubbing(self, stubbed_invocation):
-        self.stubbed_invocations.insert(0, stubbed_invocation)
-        self.stubbing = None
-        self.verification = None
-
-    def expect_verifying(self, verification):
-        self.verifying = True
+    def expect_stubbing(self, verification=None):
+        self._state = State.STUBBING
         self.verification = verification
 
-    def expect_stubbing(self, verification=None):
-        self.stubbing = True
+    def finish_stubbing(self, stubbed_invocation):
+        self.stubbed_invocations.insert(0, stubbed_invocation)
+        self.verification = None
+        self._state = State.CALLING
+
+    def expect_verifying(self, verification):
+        self._state = State.VERIFYING
         self.verification = verification
 
     def pull_verification(self):
         v = self.verification
         self.verification = None
-        self.verifying = False
+        self._state = State.CALLING
         return v
 
     def has_method(self, method_name):
