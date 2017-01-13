@@ -132,7 +132,7 @@ class MatchingInvocation(Invocation):
 
 class RememberedInvocation(Invocation):
     def __call__(self, *params, **named_params):
-        if self.mock.strict:
+        if self.strict:
             # self.ensure_mocked_object_has_method(self.method_name)
             self.ensure_signature_matches(
                 self.method_name, params, named_params)
@@ -207,7 +207,7 @@ class StubbedInvocation(MatchingInvocation):
                 "have." % (method_name, self.mock.mocked_obj))
 
     def __call__(self, *params, **named_params):
-        if self.mock.strict:
+        if self.strict:
             self.ensure_mocked_object_has_method(self.method_name)
             self.ensure_signature_matches(
                 self.method_name, params, named_params)
