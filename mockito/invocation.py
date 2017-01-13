@@ -30,14 +30,15 @@ class InvocationError(AttributeError):
 
 class Invocation(object):
     def __init__(self, mock, method_name):
-        self.method_name = method_name
         self.mock = mock
+        self.method_name = method_name
+        self.strict = mock.strict
+
         self.verified = False
         self.verified_inorder = False
+
         self.params = ()
         self.named_params = {}
-        self.answers = None
-        self.strict = mock.strict
 
     def _remember_params(self, params, named_params):
         self.params = params
@@ -51,9 +52,6 @@ class Invocation(object):
                   for key, val in self.named_params.items()]
         params = ", ".join(args + kwargs)
         return "%s(%s)" % (self.method_name, params)
-
-    def answer_first(self):
-        return self.answers[0].answer() if self.answers is not None else None
 
     def ensure_signature_matches(self, method_name, args, kwargs):
         sig = self.mock.get_signature(method_name)
@@ -199,6 +197,7 @@ class StubbedInvocation(MatchingInvocation):
     def __init__(self, mock, method_name, verification):
         super(StubbedInvocation, self).__init__(mock, method_name)
         self.verification = verification
+        self.answers = []
 
     def ensure_mocked_object_has_method(self, method_name):
         if not self.mock.has_method(method_name):
@@ -217,10 +216,13 @@ class StubbedInvocation(MatchingInvocation):
         self.mock.finish_stubbing(self)
         return AnswerSelector(self)
 
+
     def stub_with(self, answer):
-        if self.answers is None:
-            self.answers = []
         self.answers.append(answer)
+
+    def answer_first(self):
+        assert len(self.answers) < 2
+        return self.answers[0].answer() if self.answers else None
 
     def should_answer(self, invocation):
         # type: (RememberedInvocation) -> None
