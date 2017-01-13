@@ -1,24 +1,25 @@
-#  Copyright (c) 2008-2016 Szczepan Faber, Serhiy Oplakanets, Herr Kaste
+# Copyright (c) 2008-2016 Szczepan Faber, Serhiy Oplakanets, Herr Kaste
 #
-#  Permission is hereby granted, free of charge, to any person obtaining a copy
-#  of this software and associated documentation files (the "Software"), to deal
-#  in the Software without restriction, including without limitation the rights
-#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#  copies of the Software, and to permit persons to whom the Software is
-#  furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 #
-#  The above copyright notice and this permission notice shall be included in
-#  all copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 #
-#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-#  THE SOFTWARE.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
 
-from mockito_test.test_base import *
+
+from mockito_test.test_base import TestBase
 from mockito import mock, when, verify, times, any
 
 
@@ -235,8 +236,9 @@ class StubbingTest(TestBase):
 
     def testStubsWithMultipleChainedExceptions(self):
         theMock = mock()
-        when(theMock).getStuff().thenRaise(Exception("foo"), Exception("bar")) \
-                                .thenRaise(Exception("foobar"))
+        when(theMock).getStuff() \
+                     .thenRaise(Exception("foo"), Exception("bar")) \
+                     .thenRaise(Exception("foobar"))
 
         self.assertRaisesMessage("foo", theMock.getStuff)
         self.assertRaisesMessage("bar", theMock.getStuff)
@@ -276,7 +278,7 @@ class StubbingTest(TestBase):
         self.assertEquals(m.do_times(5, 4), 20)
         self.assertEquals(m.do_times(8, 5), 40)
 
-        when(m).do_dev_magic(any(), any()).thenAnswer(lambda a, b: a/b)
+        when(m).do_dev_magic(any(), any()).thenAnswer(lambda a, b: a / b)
 
         self.assertEquals(m.do_dev_magic(20, 4), 5)
         self.assertEquals(m.do_dev_magic(40, 5), 8)
@@ -288,7 +290,8 @@ class StubbingTest(TestBase):
         self.assertEquals(m.with_key_words(), "Magic Stuff")
 
         when(m).with_key_words(testing=any()).thenAnswer(test_key_words)
-        self.assertEquals(m.with_key_words(testing="Very Funky"), "Very Funky Stuff")
+        self.assertEquals(m.with_key_words(testing="Very Funky"),
+                          "Very Funky Stuff")
 
     def testSubsWithThenAnswerAndMixedArgs(self):
         repo = mock()
@@ -305,12 +308,12 @@ class StubbingTest(TestBase):
         when(repo).findby(1).thenAnswer(lambda x: "John May (%d)" % x)
         when(repo).findby(1, active_only=True).thenAnswer(method_one)
         when(repo).findby(name="Sarah").thenAnswer(method_two)
-        when(repo).findby(name="Sarah", active_only=True).thenAnswer(method_three)
+        when(repo).findby(
+            name="Sarah", active_only=True).thenAnswer(method_three)
 
         self.assertEquals("John May (1)", repo.findby(1))
         self.assertEquals(None, repo.findby(1, active_only=True))
         self.assertEquals(["Sarah Connor"], repo.findby(name="Sarah"))
-        self.assertEquals(["Sarah", True, 0], repo.findby(name="Sarah", active_only=True))
+        self.assertEquals(
+            ["Sarah", True, 0], repo.findby(name="Sarah", active_only=True))
 
-if __name__ == '__main__':
-    unittest.main()
