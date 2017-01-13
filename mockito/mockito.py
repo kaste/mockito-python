@@ -104,7 +104,7 @@ def when(obj, strict=True):
             # If we call when on something that is not TestDouble that means
             # we're trying to stub real object, (class, module etc.). Not to
             # be confused with generating stubs from real classes.
-            theMock.stubbing_real_object = True
+            theMock.stub_real_object = True
 
     theMock.expect_stubbing()
     return theMock

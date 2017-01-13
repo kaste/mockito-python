@@ -62,7 +62,7 @@ class mock(TestDouble):
             strict = False
         self.mocked_obj = mocked_obj
         self.strict = strict
-        self.stubbing_real_object = False
+        self.stub_real_object = False
 
         mock_registry.register(self)
 
@@ -127,13 +127,15 @@ class mock(TestDouble):
         self.set_method(method_name, new_mocked_method)
 
     def stub(self, method_name):
-        original_method = self.get_method(method_name)
-        self.original_methods.setdefault(method_name, original_method)
+        if not self.stub_real_object:
+            return
 
-        # If we're trying to stub real object(not a generated mock), then we
-        # should patch object to use our mock method.
-        # TODO: Polymorphism was invented long time ago. Refactor this.
-        if self.stubbing_real_object:
+        try:
+            self.original_methods[method_name]
+        except KeyError:
+            original_method = self.get_method(method_name)
+            self.original_methods[method_name] = original_method
+
             self.replace_method(method_name, original_method)
 
     def unstub(self):
