@@ -22,6 +22,7 @@ import inspect
 import warnings
 
 from . import invocation
+from . import signature
 from .mock_registry import mock_registry
 
 
@@ -50,7 +51,8 @@ class mock(TestDouble):
     def __init__(self, mocked_obj=None, strict=True):
         self.invocations = []
         self.stubbed_invocations = []
-        self.original_methods = []
+        self.original_methods = {}
+        self._signatures_store = {}
         self.stubbing = None
 
         self.verifying = False
@@ -126,8 +128,7 @@ class mock(TestDouble):
 
     def stub(self, method_name):
         original_method = self.get_method(method_name)
-        original = (method_name, original_method)
-        self.original_methods.append(original)
+        self.original_methods.setdefault(method_name, original_method)
 
         # If we're trying to stub real object(not a generated mock), then we
         # should patch object to use our mock method.
@@ -137,8 +138,16 @@ class mock(TestDouble):
 
     def unstub(self):
         while self.original_methods:
-            method_name, original_method = self.original_methods.pop()
+            method_name, original_method = self.original_methods.popitem()
             self.set_method(method_name, original_method)
+
+    def get_signature(self, method_name):
+        try:
+            return self._signatures_store[method_name]
+        except KeyError:
+            sig = signature.get_signature(self.mocked_obj, method_name)
+            self._signatures_store[method_name] = sig
+            return sig
 
 
 def Mock(*args, **kwargs):

@@ -151,7 +151,11 @@ class TestSignatures:
             sig()
         ])
         def test_passing(self, sut, call):
-            when(sut).none_args(*call.args, **call.kwargs)
+            when(sut).none_args(*call.args, **call.kwargs).thenReturn('stub')
+
+            if sut == SUT:
+                sut = sut()
+            assert sut.none_args(*call.args, **call.kwargs) == 'stub'
 
 
         @pytest.mark.parametrize('call', [
@@ -161,9 +165,19 @@ class TestSignatures:
             sig(**kwargs),
             sig(*args, **kwargs)
         ])
-        def test_failing(self, sut, call):
-            with pytest.raises(TypeError):
-                when(sut).none_args(*call.args, **call.kwargs)
+        class TestFailing:
+            def test_stubbing(self, sut, call):
+                with pytest.raises(TypeError):
+                    when(sut).none_args(*call.args, **call.kwargs)
+
+
+            def test_calling(self, sut, call):
+                when(sut).none_args()
+                if sut == SUT:
+                    sut = sut()
+                with pytest.raises(TypeError):
+                    sut.none_args(*call.args, **call.kwargs)
+
 
     class TestOneArg:
 
@@ -178,8 +192,10 @@ class TestSignatures:
             sig(**kwargs),
         ])
         def test_passing(self, sut, call):
-            when(sut).one_arg(*call.args, **call.kwargs)
-
+            when(sut).one_arg(*call.args, **call.kwargs).thenReturn('stub')
+            if sut == SUT:
+                sut = sut()
+            assert sut.one_arg(*call.args, **call.kwargs) == 'stub'
 
         @pytest.mark.parametrize('call', [
             sig(12, 13),
@@ -196,9 +212,17 @@ class TestSignatures:
             sig(*args, b=1),
             sig(1, **kwargs),
         ])
-        def test_failing(self, sut, call):
-            with pytest.raises(TypeError):
-                when(sut).one_arg(*call.args, **call.kwargs)
+        class TestFailing:
+            def test_stubbing(self, sut, call):
+                with pytest.raises(TypeError):
+                    when(sut).one_arg(*call.args, **call.kwargs)
+
+            def test_calling(self, sut, call):
+                when(sut).one_arg(Ellipsis)
+                if sut == SUT:
+                    sut = sut()
+                with pytest.raises(TypeError):
+                    sut.one_arg(*call.args, **call.kwargs)
 
     class TestTwoArgs:
 
