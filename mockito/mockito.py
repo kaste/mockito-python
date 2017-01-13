@@ -100,11 +100,7 @@ def when(obj, strict=True):
     else:
         theMock = mock_registry.mock_for(obj)
         if theMock is None:
-            theMock = Mock(obj, strict=strict)
-            # If we call when on something that is not TestDouble that means
-            # we're trying to stub real object, (class, module etc.). Not to
-            # be confused with generating stubs from real classes.
-            theMock.stub_real_object = True
+            theMock = Mock(obj, strict=strict, stub=True)
 
     theMock.expect_stubbing()
     return theMock
