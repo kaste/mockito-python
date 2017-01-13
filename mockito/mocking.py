@@ -157,5 +157,5 @@ def mock(obj=None, strict=True, stub=False):
         return Mock(None, strict=False, stub=False)  # no spec, nothing to stub
 
     theMock = Mock(obj, strict=strict, stub=stub)
-    mock_registry.register(theMock)
+    mock_registry.register(obj, theMock)
     return theMock

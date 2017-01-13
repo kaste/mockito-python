@@ -29,8 +29,8 @@ class MockRegistry:
     def __init__(self):
         self.mocks = {}
 
-    def register(self, mock):
-        self.mocks[mock.mocked_obj] = mock
+    def register(self, obj, mock):
+        self.mocks[obj] = mock
 
     def mock_for(self, cls):
         return self.mocks.get(cls, None)
