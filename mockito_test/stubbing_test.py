@@ -34,24 +34,24 @@ class StubbingTest(TestBase):
         self.assertEquals(None, theMock.getMoreStuff(1, 3))
 
     def testStubsWhenNoArgsGiven(self):
-            theMock = mock()
-            when(theMock).getStuff().thenReturn("foo")
-            when(theMock).getWidget().thenReturn("bar")
+        theMock = mock()
+        when(theMock).getStuff().thenReturn("foo")
+        when(theMock).getWidget().thenReturn("bar")
 
-            self.assertEquals("foo", theMock.getStuff())
-            self.assertEquals("bar", theMock.getWidget())
+        self.assertEquals("foo", theMock.getStuff())
+        self.assertEquals("bar", theMock.getWidget())
 
     def testStubsConsecutivelyWhenNoArgsGiven(self):
-            theMock = mock()
-            when(theMock).getStuff().thenReturn("foo").thenReturn("bar")
-            when(theMock).getWidget().thenReturn("baz").thenReturn("baz2")
+        theMock = mock()
+        when(theMock).getStuff().thenReturn("foo").thenReturn("bar")
+        when(theMock).getWidget().thenReturn("baz").thenReturn("baz2")
 
-            self.assertEquals("foo", theMock.getStuff())
-            self.assertEquals("bar", theMock.getStuff())
-            self.assertEquals("bar", theMock.getStuff())
-            self.assertEquals("baz", theMock.getWidget())
-            self.assertEquals("baz2", theMock.getWidget())
-            self.assertEquals("baz2", theMock.getWidget())
+        self.assertEquals("foo", theMock.getStuff())
+        self.assertEquals("bar", theMock.getStuff())
+        self.assertEquals("bar", theMock.getStuff())
+        self.assertEquals("baz", theMock.getWidget())
+        self.assertEquals("baz2", theMock.getWidget())
+        self.assertEquals("baz2", theMock.getWidget())
 
     def testStubsWithException(self):
         theMock = mock()
