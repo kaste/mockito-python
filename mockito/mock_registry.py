@@ -32,8 +32,8 @@ class MockRegistry:
     def register(self, obj, mock):
         self.mocks[obj] = mock
 
-    def mock_for(self, cls):
-        return self.mocks.get(cls, None)
+    def mock_for(self, obj):
+        return self.mocks.get(obj, None)
 
     def unstub_all(self):
         for mock in self.mocks.itervalues():
