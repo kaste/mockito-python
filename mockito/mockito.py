@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 from . import verification
-from .mocking import mock, TestDouble
+from .mocking import Mock, TestDouble
 from .mock_registry import mock_registry
 from .verification import VerificationError
 
@@ -95,12 +95,12 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
 
 
 def when(obj, strict=True):
-    if isinstance(obj, mock):
+    if isinstance(obj, Mock):
         theMock = obj
     else:
         theMock = mock_registry.mock_for(obj)
         if theMock is None:
-            theMock = mock(obj, strict=strict)
+            theMock = Mock(obj, strict=strict)
             # If we call when on something that is not TestDouble that means
             # we're trying to stub real object, (class, module etc.). Not to
             # be confused with generating stubs from real classes.
@@ -127,7 +127,7 @@ def unstub():
 
 def verifyNoMoreInteractions(*objs):
     for obj in objs:
-        if isinstance(obj, mock):
+        if isinstance(obj, Mock):
             theMock = obj
         else:
             theMock = mock_registry.mock_for(obj)

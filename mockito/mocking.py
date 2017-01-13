@@ -47,7 +47,7 @@ class RememberedInvocationBuilder(object):
         return invoc(*params, **named_params)
 
 
-class mock(TestDouble):
+class Mock(TestDouble):
     def __init__(self, mocked_obj=None, strict=True):
         self.invocations = []
         self.stubbed_invocations = []
@@ -152,11 +152,5 @@ class mock(TestDouble):
             return sig
 
 
-def Mock(*args, **kwargs):
-    '''A ``mock``() alias.
-
-    Alias for compatibility. To be removed in version 1.0.
-    '''
-    warnings.warn("\n`Mock()` is deprecated, please use `mock()` (lower 'm') "
-                  "instead.", DeprecationWarning)
-    return mock(*args, **kwargs)
+def mock(*args, **kwargs):
+    return Mock(*args, **kwargs)

@@ -21,7 +21,7 @@
 '''Mockito is a Test Spy framework.'''
 
 
-from .mockito import (mock, verify, verifyNoMoreInteractions,
+from .mockito import (verify, verifyNoMoreInteractions,
                       verifyZeroInteractions, when, expect, unstub,
                       ArgumentError)
 from . import inorder
@@ -29,7 +29,7 @@ from .spying import spy
 from .verification import VerificationError
 
 # Imports for compatibility
-from .mocking import Mock
+from .mocking import Mock, mock
 from .matchers import any, contains, times, args, kwargs
 from .verification import never
 
