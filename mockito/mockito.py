@@ -76,31 +76,29 @@ def _get_wanted_verification(
     elif times is not None:
         return verification.Times(times)
 
+def _get_mock(obj):
+    if isinstance(obj, TestDouble):
+        return obj
+    else:
+        return mock_registry.mock_for(obj)
 
 def verify(obj, times=1, atleast=None, atmost=None, between=None,
            inorder=False):
-
-    if isinstance(obj, TestDouble):
-        mocked_object = obj
-    else:
-        mocked_object = mock_registry.mock_for(obj)
 
     verification_fn = _get_wanted_verification(
         times=times, atleast=atleast, atmost=atmost, between=between)
     if inorder:
         verification_fn = verification.InOrder(verification_fn)
 
+    mocked_object = _get_mock(obj)
     mocked_object.expect_verifying(verification_fn)
     return mocked_object
 
 
 def when(obj, strict=True):
-    if isinstance(obj, TestDouble):
-        theMock = obj
-    else:
-        theMock = mock_registry.mock_for(obj)
-        if theMock is None:
-            theMock = mock(obj, strict=strict, stub=True)
+    theMock = _get_mock(obj)
+    if theMock is None:
+        theMock = mock(obj, strict=strict, stub=True)
 
     theMock.expect_stubbing()
     return theMock
@@ -123,10 +121,7 @@ def unstub():
 
 def verifyNoMoreInteractions(*objs):
     for obj in objs:
-        if isinstance(obj, TestDouble):
-            theMock = obj
-        else:
-            theMock = mock_registry.mock_for(obj)
+        theMock = _get_mock(obj)
 
         for i in theMock.stubbed_invocations:
             i.verify()
