@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 from . import verification
-from .mocking import Mock, TestDouble
+from .mocking import mock, TestDouble
 from .mock_registry import mock_registry
 from .verification import VerificationError
 
@@ -95,12 +95,12 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
 
 
 def when(obj, strict=True):
-    if isinstance(obj, Mock):
+    if isinstance(obj, TestDouble):
         theMock = obj
     else:
         theMock = mock_registry.mock_for(obj)
         if theMock is None:
-            theMock = Mock(obj, strict=strict, stub=True)
+            theMock = mock(obj, strict=strict, stub=True)
 
     theMock.expect_stubbing()
     return theMock
@@ -123,7 +123,7 @@ def unstub():
 
 def verifyNoMoreInteractions(*objs):
     for obj in objs:
-        if isinstance(obj, Mock):
+        if isinstance(obj, TestDouble):
             theMock = obj
         else:
             theMock = mock_registry.mock_for(obj)

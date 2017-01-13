@@ -52,23 +52,18 @@ class State:
 
 class Mock(TestDouble):
     def __init__(self, mocked_obj=None, strict=True, stub=False):
+        self.mocked_obj = mocked_obj
+        self.strict = strict
+        self.stub_real_object = stub
+
         self.invocations = []
         self.stubbed_invocations = []
+
         self.original_methods = {}
         self._signatures_store = {}
         self._state = State.CALLING
 
         self.verification = None
-        if mocked_obj is None:
-            self.mocked_obj = None
-            self.strict = False
-            self.stub_real_object = False
-        else:
-            self.mocked_obj = mocked_obj
-            self.strict = strict
-            self.stub_real_object = stub
-
-        mock_registry.register(self)
 
     def __getattr__(self, method_name):
         if self._state is State.STUBBING:
@@ -157,5 +152,10 @@ class Mock(TestDouble):
             return sig
 
 
-def mock(*args, **kwargs):
-    return Mock(*args, **kwargs)
+def mock(obj=None, strict=True, stub=False):
+    if obj is None:
+        return Mock(None, strict=False, stub=False)  # no spec, nothing to stub
+
+    theMock = Mock(obj, strict=strict, stub=stub)
+    mock_registry.register(theMock)
+    return theMock
