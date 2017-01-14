@@ -22,7 +22,7 @@ from . import matchers
 from . import signature
 from . import verification as verificationModule
 
-
+from collections import deque
 
 class InvocationError(AttributeError):
     pass
@@ -197,7 +197,7 @@ class StubbedInvocation(MatchingInvocation):
     def __init__(self, mock, method_name, verification):
         super(StubbedInvocation, self).__init__(mock, method_name)
         self.verification = verification
-        self.answers = []
+        self.answers = CompositeAnswer()
 
     def ensure_mocked_object_has_method(self, method_name):
         if not self.mock.has_method(method_name):
@@ -216,13 +216,11 @@ class StubbedInvocation(MatchingInvocation):
         self.mock.finish_stubbing(self)
         return AnswerSelector(self)
 
-
-    def stub_with(self, answer):
-        self.answers.append(answer)
+    def add_answer(self, answer):
+        self.answers.add(answer)
 
     def answer_first(self):
-        assert len(self.answers) < 2
-        return self.answers[0].answer() if self.answers else None
+        return self.answers.answer()
 
     def should_answer(self, invocation):
         # type: (RememberedInvocation) -> None
@@ -271,7 +269,6 @@ class StubbedInvocation(MatchingInvocation):
 class AnswerSelector(object):
     def __init__(self, invocation):
         self.invocation = invocation
-        self.answer = None
 
     def thenReturn(self, *return_values):
         for return_value in return_values:
@@ -289,24 +286,24 @@ class AnswerSelector(object):
         return self
 
     def __then(self, answer):
-        if not self.answer:
-            self.answer = CompositeAnswer(answer)
-            self.invocation.stub_with(self.answer)
-        else:
-            self.answer.add(answer)
+        self.invocation.add_answer(answer)
+
 
 class CompositeAnswer(object):
-    def __init__(self, answer):
-        self.answers = [answer]
+    def __init__(self):
+        self.answers = deque()
 
     def add(self, answer):
-        self.answers.insert(0, answer)
+        self.answers.append(answer)
 
     def answer(self):
-        if len(self.answers) > 1:
-            a = self.answers.pop()
-        else:
+        if len(self.answers) == 0:
+            return None
+
+        if len(self.answers) == 1:
             a = self.answers[0]
+        else:
+            a = self.answers.popleft()
 
         return a.answer()
 
