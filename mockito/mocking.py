@@ -102,7 +102,10 @@ class Mock(TestDouble):
         return hasattr(self.mocked_obj, method_name)
 
     def get_method(self, method_name):
-        return self.mocked_obj.__dict__.get(method_name)
+        if inspect.isclass(self.mocked_obj):
+            return self.mocked_obj.__dict__.get(method_name)
+        return getattr(self.mocked_obj, method_name)
+
 
     def set_method(self, method_name, new_method):
         setattr(self.mocked_obj, method_name, new_method)

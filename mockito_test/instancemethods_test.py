@@ -102,6 +102,15 @@ class InstanceMethodsTest(TestBase):
         max = Dog()
         self.assertEquals('Miau!', max.bark('Miau'))
 
+    def testUnstubInstance(self):
+        rex = Dog()
+        when(rex).bark('Miau').thenReturn('Wuff')
+
+        unstub()
+
+        assert rex.bark('Miau') == 'Miau!'
+
+
     def testNoExplicitReturnValueMeansNone(self):
         when(Dog).bark('Miau').thenReturn()
         rex = Dog()
