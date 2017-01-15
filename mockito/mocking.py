@@ -46,7 +46,6 @@ class RememberedInvocationBuilder(object):
         return invoc(*params, **named_params)
 
 class State:
-    STUBBING = 0
     CALLING = 1
     VERIFYING = 2
 
@@ -66,11 +65,7 @@ class Mock(TestDouble):
         self.verification = None
 
     def __getattr__(self, method_name):
-        if self._state is State.STUBBING:
-            return invocation.StubbedInvocation(
-                self, method_name, self.verification)
-
-        elif self._state is State.VERIFYING:
+        if self._state is State.VERIFYING:
             return invocation.VerifiableInvocation(self, method_name)
 
         elif self._state is State.CALLING:
@@ -78,10 +73,6 @@ class Mock(TestDouble):
 
     def remember(self, invocation):
         self.invocations.insert(0, invocation)
-
-    def expect_stubbing(self, verification=None):
-        self._state = State.STUBBING
-        self.verification = verification
 
     def finish_stubbing(self, stubbed_invocation):
         self.stubbed_invocations.insert(0, stubbed_invocation)

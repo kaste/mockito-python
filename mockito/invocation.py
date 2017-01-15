@@ -197,7 +197,7 @@ class VerifiableInvocation(MatchingInvocation):
 
 
 class StubbedInvocation(MatchingInvocation):
-    def __init__(self, mock, method_name, verification):
+    def __init__(self, mock, method_name, verification=None):
         super(StubbedInvocation, self).__init__(mock, method_name)
         self.verification = verification
         self.answers = CompositeAnswer()

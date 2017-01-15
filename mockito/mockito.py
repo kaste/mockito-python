@@ -18,7 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from . import invocation
 from . import verification
+
 from .mocking import mock, TestDouble
 from .mock_registry import mock_registry
 from .verification import VerificationError
@@ -100,17 +102,28 @@ def when(obj, strict=True):
     if theMock is None:
         theMock = mock(obj, strict=strict, stub=True)
 
-    theMock.expect_stubbing()
-    return theMock
+    class When(object):
+        def __getattr__(self, method_name):
+            return invocation.StubbedInvocation(theMock, method_name)
+
+    return When()
 
 def expect(obj, strict=True,
            times=None, atleast=None, atmost=None, between=None):
+
+    theMock = _get_mock(obj)
+    if theMock is None:
+        theMock = mock(obj, strict=strict, stub=True)
+
     verification_fn = _get_wanted_verification(
         times=times, atleast=atleast, atmost=atmost, between=between)
 
-    mock = when(obj, strict=strict)
-    mock.expect_stubbing(verification_fn)
-    return mock
+    class Expect(object):
+        def __getattr__(self, method_name):
+            return invocation.StubbedInvocation(
+                theMock, method_name, verification_fn)
+
+    return Expect()
 
 
 
