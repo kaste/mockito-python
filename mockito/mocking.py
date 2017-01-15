@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from collections import deque
 import inspect
 
 from . import invocation
@@ -52,8 +53,8 @@ class Mock(TestDouble):
         self.strict = strict
         self.stub_real_object = stub
 
-        self.invocations = []
-        self.stubbed_invocations = []
+        self.invocations = deque()
+        self.stubbed_invocations = deque()
 
         self.original_methods = {}
         self._signatures_store = {}
@@ -62,10 +63,10 @@ class Mock(TestDouble):
         return RememberedInvocationBuilder(self, method_name)
 
     def remember(self, invocation):
-        self.invocations.insert(0, invocation)
+        self.invocations.appendleft(invocation)
 
     def finish_stubbing(self, stubbed_invocation):
-        self.stubbed_invocations.insert(0, stubbed_invocation)
+        self.stubbed_invocations.appendleft(stubbed_invocation)
 
 
     def has_method(self, method_name):
