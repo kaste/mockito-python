@@ -182,6 +182,10 @@ class RememberedProxyInvocation(Invocation):
 
 
 class VerifiableInvocation(MatchingInvocation):
+    def __init__(self, mock, method_name, verification):
+        super(VerifiableInvocation, self).__init__(mock, method_name)
+        self.verification = verification
+
     def __call__(self, *params, **named_params):
         self._remember_params(params, named_params)
         matched_invocations = []
@@ -189,8 +193,7 @@ class VerifiableInvocation(MatchingInvocation):
             if self.matches(invocation):
                 matched_invocations.append(invocation)
 
-        verification = self.mock.pull_verification()
-        verification.verify(self, len(matched_invocations))
+        self.verification.verify(self, len(matched_invocations))
 
         for invocation in matched_invocations:
             invocation.verified = True

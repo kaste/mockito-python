@@ -92,9 +92,14 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
     if inorder:
         verification_fn = verification.InOrder(verification_fn)
 
-    mocked_object = _get_mock(obj)
-    mocked_object.expect_verifying(verification_fn)
-    return mocked_object
+    theMock = _get_mock(obj)
+
+    class Verify(object):
+        def __getattr__(self, method_name):
+            return invocation.VerifiableInvocation(
+                theMock, method_name, verification_fn)
+
+    return Verify()
 
 
 def when(obj, strict=True):

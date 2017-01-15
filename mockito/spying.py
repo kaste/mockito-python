@@ -20,8 +20,8 @@
 
 '''Spying on real objects.'''
 
-from .invocation import RememberedProxyInvocation, VerifiableInvocation
-from .mocking import TestDouble, State
+from .invocation import RememberedProxyInvocation
+from .mocking import TestDouble
 
 __all__ = ['spy']
 
@@ -37,24 +37,9 @@ class Spy(TestDouble):
         self.original_object = original_object
         self.invocations = []
         self.verification = None
-        self._state = State.CALLING
 
     def __getattr__(self, name):
-        if self._state == State.VERIFYING:
-            return VerifiableInvocation(self, name)
-        elif self._state == State.CALLING:
-            return RememberedProxyInvocation(self, name)
+        return RememberedProxyInvocation(self, name)
 
     def remember(self, invocation):
         self.invocations.insert(0, invocation)
-
-    def expect_verifying(self, verification):
-        self._state = State.VERIFYING
-        self.verifying = True
-        self.verification = verification
-
-    def pull_verification(self):
-        v = self.verification
-        self._state = State.CALLING
-        self.verification = None
-        return v

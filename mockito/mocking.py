@@ -45,9 +45,6 @@ class RememberedInvocationBuilder(object):
         invoc = invocation.RememberedInvocation(self.mock, self.method_name)
         return invoc(*params, **named_params)
 
-class State:
-    CALLING = 1
-    VERIFYING = 2
 
 class Mock(TestDouble):
     def __init__(self, mocked_obj=None, strict=True, stub=False):
@@ -60,34 +57,16 @@ class Mock(TestDouble):
 
         self.original_methods = {}
         self._signatures_store = {}
-        self._state = State.CALLING
-
-        self.verification = None
 
     def __getattr__(self, method_name):
-        if self._state is State.VERIFYING:
-            return invocation.VerifiableInvocation(self, method_name)
-
-        elif self._state is State.CALLING:
-            return RememberedInvocationBuilder(self, method_name)
+        return RememberedInvocationBuilder(self, method_name)
 
     def remember(self, invocation):
         self.invocations.insert(0, invocation)
 
     def finish_stubbing(self, stubbed_invocation):
         self.stubbed_invocations.insert(0, stubbed_invocation)
-        self.verification = None
-        self._state = State.CALLING
 
-    def expect_verifying(self, verification):
-        self._state = State.VERIFYING
-        self.verification = verification
-
-    def pull_verification(self):
-        v = self.verification
-        self.verification = None
-        self._state = State.CALLING
-        return v
 
     def has_method(self, method_name):
         return hasattr(self.mocked_obj, method_name)
@@ -96,7 +75,6 @@ class Mock(TestDouble):
         if inspect.isclass(self.mocked_obj):
             return self.mocked_obj.__dict__.get(method_name)
         return getattr(self.mocked_obj, method_name)
-
 
     def set_method(self, method_name, new_method):
         setattr(self.mocked_obj, method_name, new_method)
