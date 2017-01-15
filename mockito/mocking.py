@@ -20,6 +20,7 @@
 
 from collections import deque
 import inspect
+import functools
 
 from . import invocation
 from . import signature
@@ -37,14 +38,9 @@ class TestDouble(object):
     pass
 
 
-class RememberedInvocationBuilder(object):
-    def __init__(self, mock, method_name):
-        self.mock = mock
-        self.method_name = method_name
-
-    def __call__(self, *params, **named_params):
-        invoc = invocation.RememberedInvocation(self.mock, self.method_name)
-        return invoc(*params, **named_params)
+def remembered_invocation_builder(mock, method_name, *args, **kwargs):
+    invoc = invocation.RememberedInvocation(mock, method_name)
+    return invoc(*args, **kwargs)
 
 
 class Mock(TestDouble):
@@ -60,7 +56,8 @@ class Mock(TestDouble):
         self._signatures_store = {}
 
     def __getattr__(self, method_name):
-        return RememberedInvocationBuilder(self, method_name)
+        return functools.partial(
+            remembered_invocation_builder, self, method_name)
 
     def remember(self, invocation):
         self.invocations.appendleft(invocation)
