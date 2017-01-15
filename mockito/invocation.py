@@ -23,6 +23,8 @@ from . import signature
 from . import verification as verificationModule
 
 from collections import deque
+import functools
+
 
 class InvocationError(AttributeError):
     pass
@@ -141,7 +143,8 @@ class RememberedInvocation(Invocation):
         for matching_invocation in self.mock.stubbed_invocations:
             if matching_invocation.matches(self):
                 matching_invocation.should_answer(self)
-                return matching_invocation.answer_first()
+                return matching_invocation.answer_first(
+                    *params, **named_params)
 
         if self.strict:
             stubbed_invocations = self.mock.stubbed_invocations or [None]
@@ -219,8 +222,8 @@ class StubbedInvocation(MatchingInvocation):
     def add_answer(self, answer):
         self.answers.add(answer)
 
-    def answer_first(self):
-        return self.answers.answer()
+    def answer_first(self, *args, **kwargs):
+        return self.answers.answer(*args, **kwargs)
 
     def should_answer(self, invocation):
         # type: (RememberedInvocation) -> None
@@ -266,23 +269,30 @@ class StubbedInvocation(MatchingInvocation):
 
 
 
+def return_(value, *a, **kw):
+    return value
+
+def raise_(exception, *a, **kw):
+    raise exception
+
+
 class AnswerSelector(object):
     def __init__(self, invocation):
         self.invocation = invocation
 
     def thenReturn(self, *return_values):
         for return_value in return_values:
-            self.__then(Return(return_value))
+            self.__then(functools.partial(return_, return_value))
         return self
 
     def thenRaise(self, *exceptions):
         for exception in exceptions:
-            self.__then(Raise(exception))
+            self.__then(functools.partial(raise_, exception))
         return self
 
     def thenAnswer(self, *callables):
         for callable in callables:
-            self.__then(ReturnAnswer(self.invocation.mock, callable))
+            self.__then(callable)
         return self
 
     def __then(self, answer):
@@ -296,7 +306,7 @@ class CompositeAnswer(object):
     def add(self, answer):
         self.answers.append(answer)
 
-    def answer(self):
+    def answer(self, *args, **kwargs):
         if len(self.answers) == 0:
             return None
 
@@ -305,32 +315,5 @@ class CompositeAnswer(object):
         else:
             a = self.answers.popleft()
 
-        return a.answer()
-
-
-class Raise(object):
-    def __init__(self, exception):
-        self.exception = exception
-
-    def answer(self):
-        raise self.exception
-
-
-class Return(object):
-    def __init__(self, return_value):
-        self.return_value = return_value
-
-    def answer(self):
-        return self.return_value
-
-
-class ReturnAnswer(object):
-    def __init__(self, mock, answerable):
-        self.answerable = answerable
-        self.mock = mock
-
-    def answer(self):
-        current_invocation = self.mock.invocations[0]
-        return self.answerable(*current_invocation.params,
-                               **current_invocation.named_params)
+        return a(*args, **kwargs)
 
