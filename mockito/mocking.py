@@ -37,6 +37,9 @@ class _Dummy(object):
     def __getattr__(self, method_name):
         return mock_registry.mock_for(self).__getattr__(method_name)
 
+    def __call__(self, *args, **kwargs):
+        return self.__getattr__('__call__')(*args, **kwargs)
+
 
 class TestDouble(object):
     pass
