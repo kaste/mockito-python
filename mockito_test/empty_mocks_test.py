@@ -29,3 +29,16 @@ class TestEmptyMocks:
 
         verify(dummy).__call__(1, 2)
 
+
+class Action(object):
+    def __call__(self, task):
+        return task
+
+
+class TestAction:
+    def testA(self):
+        when(Action).__call__(Ellipsis).thenReturn('Done')
+
+        action = Action()
+        assert action('work') == 'Done'
+
