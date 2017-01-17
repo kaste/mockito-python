@@ -181,19 +181,25 @@ class TestEllipsises:
             when(rex).bark(*kwargs).thenReturn('Miau')
 
     def testNiceFormattingForEllipsis(self):
-        inv = invocation.StubbedInvocation(mock(), 'bark', None)
+        m = mock()
+        m.strict = False
+        inv = invocation.StubbedInvocation(m, 'bark', None)
         inv(Ellipsis)
 
         assert repr(inv) == 'bark(...)'
 
     def testNiceFormattingForArgs(self):
-        inv = invocation.StubbedInvocation(mock(), 'bark', None)
+        m = mock()
+        m.strict = False
+        inv = invocation.StubbedInvocation(m, 'bark', None)
         inv(*args)
 
         assert repr(inv) == 'bark(*args)'
 
     def testNiceFormattingForKwargs(self):
-        inv = invocation.StubbedInvocation(mock(), 'bark', None)
+        m = mock()
+        m.strict = False
+        inv = invocation.StubbedInvocation(m, 'bark', None)
         inv(**kwargs)
 
         assert repr(inv) == 'bark(**kwargs)'
