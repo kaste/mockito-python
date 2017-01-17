@@ -35,7 +35,7 @@ class _Dummy(object):
         self.__dict__.update(kwargs)
 
     def __getattr__(self, method_name):
-        return mock_registry.mock_for(self).__getattr__(method_name)
+        return self.__mock.__getattr__(method_name)
 
     def __call__(self, *args, **kwargs):
         return self.__getattr__('__call__')(*args, **kwargs)
@@ -138,11 +138,15 @@ class Mock(TestDouble):
 def mock(obj=None, strict=True, stub=False):
     config = obj if type(obj) is dict else {}
     if obj is None or config:
-        obj = _Dummy(**config)
-        theMock = Mock(obj, strict=False, stub=True)
+
+        theMock = Mock(None, strict=False, stub=True)
+
+        class Dummy(_Dummy):
+            __mock = theMock
+
+        theMock.mocked_obj = obj = Dummy(**config)
         mock_registry.register(obj, theMock)
         return obj
-        return Mock(None, strict=False, stub=False)  # no spec, nothing to stub
 
     theMock = Mock(obj, strict=strict, stub=stub)
     mock_registry.register(obj, theMock)
