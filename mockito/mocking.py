@@ -111,7 +111,13 @@ class Mock(TestDouble):
     def unstub(self):
         while self.original_methods:
             method_name, original_method = self.original_methods.popitem()
-            self.set_method(method_name, original_method)
+            # If we mocked an instance, our mocked function will actually hide
+            # the one on its class, so we delete it
+            if (not inspect.isclass(self.mocked_obj) and
+                    inspect.ismethod(original_method)):
+                delattr(self.mocked_obj, method_name)
+            else:
+                self.set_method(method_name, original_method)
 
     def get_signature(self, method_name):
         try:

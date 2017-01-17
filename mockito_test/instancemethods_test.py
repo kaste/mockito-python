@@ -40,7 +40,7 @@ class InstanceMethodsTest(TestBase):
     def tearDown(self):
         unstub()
 
-    def testUnstubAnInstanceMethod(self):
+    def testUnstubClassMethod(self):
         original_method = Dog.waggle
         when(Dog).waggle().thenReturn('Nope!')
 
@@ -49,6 +49,23 @@ class InstanceMethodsTest(TestBase):
         rex = Dog()
         self.assertEquals('Wuff!', rex.waggle())
         self.assertEquals(original_method, Dog.waggle)
+
+    def testUnstubMockedInstanceMethod(self):
+        rex = Dog()
+        when(rex).waggle().thenReturn('Nope!')
+        assert rex.waggle() == 'Nope!'
+        unstub()
+        assert rex.waggle() == 'Wuff!'
+
+    def testUnstubMockedInstanceDoesNotHideTheClass(self):
+        when(Dog).waggle().thenReturn('Nope!')
+        rex = Dog()
+        when(rex).waggle().thenReturn('Sure!')
+        assert rex.waggle() == 'Sure!'
+
+        unstub()
+        assert rex.waggle() == 'Wuff!'
+
 
     def testStubAnInstanceMethod(self):
         when(Dog).waggle().thenReturn('Boing!')
