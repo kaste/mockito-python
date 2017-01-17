@@ -21,7 +21,7 @@
 from . import invocation
 from . import verification
 
-from .mocking import mock, TestDouble
+from .mocking import Mock, TestDouble
 from .mock_registry import mock_registry
 from .verification import VerificationError
 
@@ -78,11 +78,15 @@ def _get_wanted_verification(
     elif times is not None:
         return verification.Times(times)
 
-def _get_mock(obj):
+def _get_mock(obj, strict=True):
     if isinstance(obj, TestDouble):
         return obj
     else:
-        return mock_registry.mock_for(obj)
+        theMock = mock_registry.mock_for(obj)
+        if theMock is None:
+            theMock = Mock(obj, strict=strict, stub=True)
+            mock_registry.register(obj, theMock)
+        return theMock
 
 def verify(obj, times=1, atleast=None, atmost=None, between=None,
            inorder=False):
@@ -92,6 +96,7 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
     if inorder:
         verification_fn = verification.InOrder(verification_fn)
 
+    # FIXME?: Catch error if obj is neither a Mock nor a known stubbed obj
     theMock = _get_mock(obj)
 
     class Verify(object):
@@ -103,9 +108,7 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
 
 
 def when(obj, strict=True):
-    theMock = _get_mock(obj)
-    if theMock is None:
-        theMock = mock(obj, strict=strict, stub=True)
+    theMock = _get_mock(obj, strict=strict)
 
     class When(object):
         def __getattr__(self, method_name):
@@ -116,9 +119,7 @@ def when(obj, strict=True):
 def expect(obj, strict=True,
            times=None, atleast=None, atmost=None, between=None):
 
-    theMock = _get_mock(obj)
-    if theMock is None:
-        theMock = mock(obj, strict=strict, stub=True)
+    theMock = _get_mock(obj, strict=strict)
 
     verification_fn = _get_wanted_verification(
         times=times, atleast=atleast, atmost=atmost, between=between)
