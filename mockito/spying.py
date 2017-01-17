@@ -36,6 +36,7 @@ class Spy(TestDouble):
     def __init__(self, original_object):
         self.original_object = original_object
         self.invocations = []
+        self.stubbed_invocations = []
         self.verification = None
 
     def __getattr__(self, name):

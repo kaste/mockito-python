@@ -36,9 +36,6 @@ class Invocation(object):
         self.method_name = method_name
         self.strict = mock.strict
 
-        self.verified = False
-        self.verified_inorder = False
-
         self.params = ()
         self.named_params = {}
 
@@ -131,6 +128,11 @@ class MatchingInvocation(Invocation):
 
 
 class RememberedInvocation(Invocation):
+    def __init__(self, mock, method_name):
+        super(RememberedInvocation, self).__init__(mock, method_name)
+        self.verified = False
+        self.verified_inorder = False
+
     def __call__(self, *params, **named_params):
         if self.strict:
             # self.ensure_mocked_object_has_method(self.method_name)
@@ -168,6 +170,11 @@ class RememberedProxyInvocation(Invocation):
 
     Calls method on original object and returns it's return value.
     '''
+    def __init__(self, mock, method_name):
+        super(RememberedProxyInvocation, self).__init__(mock, method_name)
+        self.verified = False
+        self.verified_inorder = False
+
     def __call__(self, *params, **named_params):
         self._remember_params(params, named_params)
         self.mock.remember(self)

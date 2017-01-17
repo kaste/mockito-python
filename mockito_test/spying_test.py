@@ -20,7 +20,7 @@
 
 
 from mockito_test.test_base import TestBase
-from mockito import spy, verify, VerificationError
+from mockito import spy, verify, VerificationError, verifyZeroInteractions
 
 
 class Dummy:
@@ -54,6 +54,10 @@ class SpyingTest(TestBase):
         dummy.foo()
         verify(dummy).foo()
         self.assertRaises(VerificationError, verify(dummy).bar)
+
+    def testVerifyZeroInteractionsWorks(self):
+        dummy = spy(Dummy())
+        verifyZeroInteractions(dummy)
 
     def testRaisesAttributeErrorIfNoSuchMethod(self):
         dummy = spy(Dummy())
