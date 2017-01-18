@@ -133,9 +133,15 @@ class RememberedInvocation(Invocation):
         self.verified = False
         self.verified_inorder = False
 
+    def ensure_mocked_object_has_method(self, method_name):
+        if not self.mock.has_method(method_name):
+            raise InvocationError(
+                "You tried to call a method '%s' the object (%s) doesn't "
+                "have." % (method_name, self.mock.mocked_obj))
+
     def __call__(self, *params, **named_params):
         if self.strict:
-            # self.ensure_mocked_object_has_method(self.method_name)
+            self.ensure_mocked_object_has_method(self.method_name)
             self.ensure_signature_matches(
                 self.method_name, params, named_params)
 

@@ -36,6 +36,9 @@ class Dog(object):
     def do_default_bark(self):
         return self.bark('Wau')
 
+    def __call__(self):
+        pass
+
 class InstanceMethodsTest(TestBase):
     def tearDown(self):
         unstub()
@@ -103,6 +106,12 @@ class InstanceMethodsTest(TestBase):
                       'should have thrown.')
         except InvocationError:
             pass
+
+    def testStubCallableObject(self):
+        when(Dog).__call__().thenReturn('done')
+
+        rex = Dog()  # <= important. not stubbed
+        assert rex() == 'done'
 
     def testReturnNoneIfCallingWithUnexpectedArgumentsIfNotStrict(self):
         when(Dog, strict=False).bark('Miau').thenReturn('Wuff')
