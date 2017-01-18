@@ -135,19 +135,21 @@ class Mock(TestDouble):
             return sig
 
 
-def mock(obj=None, strict=True, stub=False):
-    config = obj if type(obj) is dict else {}
-    if obj is None or config:
+def mock(config_or_spec=None, spec=None, strict=True):
+    if type(config_or_spec) is dict:
+        config = config_or_spec
+    else:
+        config = {}
+        spec = config_or_spec
 
-        theMock = Mock(None, strict=False, stub=True)
+    if spec is None:
+        strict = False
 
-        class Dummy(_Dummy):
-            __mock = theMock
+    theMock = Mock(spec, strict=strict, stub=False)
 
-        theMock.mocked_obj = obj = Dummy(**config)
-        mock_registry.register(obj, theMock)
-        return obj
+    class Dummy(_Dummy):
+        __mock = theMock
 
-    theMock = Mock(obj, strict=strict, stub=stub)
+    obj = Dummy(**config)
     mock_registry.register(obj, theMock)
-    return theMock
+    return obj

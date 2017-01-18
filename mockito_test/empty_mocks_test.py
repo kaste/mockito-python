@@ -1,4 +1,4 @@
-
+import pytest
 from mockito import mock, verify, when
 
 
@@ -31,6 +31,9 @@ class TestEmptyMocks:
 
 
 class Action(object):
+    def run(self, arg):
+        return arg
+
     def __call__(self, task):
         return task
 
@@ -41,4 +44,22 @@ class TestAction:
 
         action = Action()
         assert action('work') == 'Done'
+
+
+class TestSpeccing:
+    def testA(self):
+        action = mock(Action)
+
+        when(action).run(11).thenReturn(12)
+        with pytest.raises(Exception):
+            when(action).remember()
+
+        assert action.run(11) == 12
+
+    def testB(self):
+        action = mock({'foo': 'bar'}, spec=Action)
+
+        assert action.foo == 'bar'
+        with pytest.raises(Exception):
+            when(action).remember()
 
