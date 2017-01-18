@@ -34,7 +34,8 @@ class _Dummy(object):
     def __getattr__(self, method_name):
         if self.__mock.strict:
             raise AttributeError('Unexpected')
-        return self.__mock.__getattr__(method_name)
+        return functools.partial(
+            remembered_invocation_builder, self.__mock, method_name)
 
     def __call__(self, *args, **kwargs):
         return self.__getattr__('__call__')(*args, **kwargs)
@@ -60,10 +61,6 @@ class Mock(TestDouble):
 
         self.original_methods = {}
         self._signatures_store = {}
-
-    def __getattr__(self, method_name):
-        return functools.partial(
-            remembered_invocation_builder, self, method_name)
 
     def remember(self, invocation):
         self.invocations.appendleft(invocation)
@@ -92,9 +89,8 @@ class Mock(TestDouble):
                     not isinstance(original_method, staticmethod)):
                 args = args[1:]
 
-            # that is: invocation.RememberedInvocation(self, method_name)
-            call = self.__getattr__(method_name)
-            return call(*args, **kwargs)
+            return remembered_invocation_builder(
+                self, method_name, *args, **kwargs)
 
         if isinstance(original_method, staticmethod):
             new_mocked_method = staticmethod(new_mocked_method)
