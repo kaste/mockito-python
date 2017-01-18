@@ -32,6 +32,8 @@ __all__ = ['mock', 'Mock']
 
 class _Dummy(object):
     def __getattr__(self, method_name):
+        if self.__mock.strict:
+            raise AttributeError('Unexpected')
         return self.__mock.__getattr__(method_name)
 
     def __call__(self, *args, **kwargs):
@@ -72,10 +74,12 @@ class Mock(TestDouble):
 
     # STUBBING
 
-    def get_method(self, method_name):
-        if inspect.isclass(self.mocked_obj):
-            return self.mocked_obj.__dict__.get(method_name)
-        return getattr(self.mocked_obj, method_name)
+    def get_original_method(self, method_name):
+        if isinstance(self.mocked_obj, _Dummy):
+            return None
+        if inspect.isclass(self.spec):
+            return self.spec.__dict__.get(method_name)
+        return getattr(self.spec, method_name)
 
     def set_method(self, method_name, new_method):
         setattr(self.mocked_obj, method_name, new_method)
@@ -103,7 +107,7 @@ class Mock(TestDouble):
         try:
             self.original_methods[method_name]
         except KeyError:
-            original_method = self.get_method(method_name)
+            original_method = self.get_original_method(method_name)
             self.original_methods[method_name] = original_method
 
             self.replace_method(method_name, original_method)

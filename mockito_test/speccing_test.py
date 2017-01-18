@@ -57,20 +57,20 @@ class TestSpeccing:
     def testShouldScreamWhenCallingUnknownMethod(self):
         action = mock(Action)
 
-        with pytest.raises(InvocationError):
+        with pytest.raises(AttributeError):
             action.unknownMethod()
 
     def testShouldScreamWhenCallingUnexpectedMethod(self):
         action = mock(Action)
 
-        with pytest.raises(InvocationError):
+        with pytest.raises(AttributeError):
             action.run(11)
 
     def testPreconfigureMockWithAttributes(self):
         action = mock({'foo': 'bar'}, spec=Action)
 
         assert action.foo == 'bar'
-        with pytest.raises(Exception):
+        with pytest.raises(InvocationError):
             when(action).remember()
 
     def testPreconfigureWithFunction(self):
@@ -90,6 +90,12 @@ class TestSpeccing:
         assert action.no_arg() == 12
 
         verify(action).no_arg()
+
+    def testShouldScreamOnUnknownAttribute(self):
+        action = mock(Action)
+
+        with pytest.raises(AttributeError):
+            action.cam
 
 class TestSpeccingLoose:
     def testReturnNoneForEveryMethod(self):
