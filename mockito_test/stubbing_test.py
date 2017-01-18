@@ -56,6 +56,11 @@ class TestEmptyMocks:
 
         verify(dummy).__call__(1, 2)
 
+    def testCheckIsInstanceAgainstItself(self):
+        dummy = mock()
+        assert isinstance(dummy, dummy.__class__)
+
+
 class TestStrictEmptyMocks:
     def testScream(self):
         dummy = mock(strict=True)

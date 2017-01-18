@@ -97,6 +97,12 @@ class TestSpeccing:
         with pytest.raises(AttributeError):
             action.cam
 
+    def testShouldPassIsInstanceChecks(self):
+        action = mock(Action)
+
+        assert isinstance(action, Action)
+
+
 class TestSpeccingLoose:
     def testReturnNoneForEveryMethod(self):
         action = mock(Action, strict=False)

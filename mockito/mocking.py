@@ -147,6 +147,9 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
 
 
     class Dummy(_Dummy):
+        if spec:
+            __class__ = spec
+
         def __getattr__(self, method_name):
             if strict:
                 raise AttributeError(
