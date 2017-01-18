@@ -149,7 +149,6 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
     if strict is OMITTED:
         strict = False if spec is None else True
 
-    theMock = Mock(None, strict=strict, spec=spec)
 
     class Dummy(_Dummy):
         def __getattr__(self, method_name):
@@ -159,12 +158,15 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
             return functools.partial(
                 remembered_invocation_builder, theMock, method_name)
 
+
     obj = Dummy()
-    theMock.mocked_obj = obj
+    theMock = Mock(obj, strict=strict, spec=spec)
+
     for n, v in config.items():
         if inspect.isfunction(v):
             invocation.StubbedInvocation(theMock, n)(Ellipsis).thenAnswer(v)
         else:
             setattr(obj, n, v)
+
     mock_registry.register(obj, theMock)
     return obj
