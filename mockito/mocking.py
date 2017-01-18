@@ -154,7 +154,8 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
     class Dummy(_Dummy):
         def __getattr__(self, method_name):
             if strict:
-                raise AttributeError('Unexpected')
+                raise AttributeError(
+                    "'Dummy' has no attribute %r configured" % method_name)
             return functools.partial(
                 remembered_invocation_builder, theMock, method_name)
 
