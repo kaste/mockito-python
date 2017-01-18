@@ -26,21 +26,21 @@ from .mocking import Mock, _Dummy, mock_registry
 __all__ = ['spy']
 
 
-def spy(original_object):
+def spy(instance):
 
     class Spy(_Dummy):
-        __class__ = original_object.__class__
+        __class__ = instance.__class__
 
         def __getattr__(self, method_name):
             return RememberedProxyInvocation(theMock, method_name)
 
         def __repr__(self):
-            name = 'Spied' + original_object.__class__.__name__
+            name = 'Spied' + instance.__class__.__name__
             return "<%s id=%s>" % (name, id(self))
 
 
     obj = Spy()
-    theMock = Mock(obj, strict=True, spec=original_object)
+    theMock = Mock(obj, strict=True, spec=instance)
 
     mock_registry.register(obj, theMock)
     return obj
