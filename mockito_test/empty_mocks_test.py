@@ -39,7 +39,7 @@ class Action(object):
 
 
 class TestAction:
-    def testA(self):
+    def testSupportMockingCallableObjects(self):
         when(Action).__call__(Ellipsis).thenReturn('Done')
 
         action = Action()
@@ -47,7 +47,7 @@ class TestAction:
 
 
 class TestSpeccing:
-    def testA(self):
+    def testMockExistingFunction(self):
         action = mock(Action)
 
         when(action).run(11).thenReturn(12)
@@ -56,10 +56,17 @@ class TestSpeccing:
 
         assert action.run(11) == 12
 
-    def testB(self):
+    def testPreconfigureMock(self):
         action = mock({'foo': 'bar'}, spec=Action)
 
         assert action.foo == 'bar'
         with pytest.raises(Exception):
             when(action).remember()
+
+    def testPreconfigureWithFunction(self):
+        action = mock({
+            'run': lambda _: 12
+        }, spec=Action)
+
+        assert action.run(11) == 12
 
