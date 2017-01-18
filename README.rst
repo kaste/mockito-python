@@ -117,8 +117,7 @@ In general mockito is very picky::
     add_tasks('task1')  # will go
     add_tasks(verbose=True)  # will go
     add_tasks('task1', verbose=True)  # will go
-    add_tasks()  # will fail
-
+    add_tasks()  # will go
 
 
 To start with an empty stub use ``mock``::
@@ -132,6 +131,56 @@ To start with an empty stub use ``mock``::
 
     # back in the tests, verify the interactions
     verify(obj).say('Hi')
+
+    # by default all invoked methods take any arguments and return None
+    # you can configure your expected method calls with the ususal `when`
+    when(obj).say('Hi').thenReturn('Ho')
+
+    # There is also a shortcut to set some attributes
+    obj = mock({
+        'hi': 'ho'
+    })
+
+    assert obj.hi == 'ho'
+
+    # This would work for methods as well; in this case
+    obj = mock({
+        'say': lambda _: 'Ho'
+    })
+
+    # But you don't have any argument and signature matching
+    assert obj.say('Anything') == 'Ho'
+
+    # At least you can verify your calls
+    verify(obj).say(...)
+
+    # Btw, you can make screaming strict mocks::
+    obj = mock(strict=True)  # every unconfigured, unexpected call will raise
+
+
+You can use an empty stub specced against a concrete class::
+
+    # Given the above `Dog`
+    rex = mock(Dog)
+
+    # Now you can stub out any known method on `Dog` but other will throw
+    when(rex).bark().thenReturn('Miau')
+    # this one will fail
+    when(rex).waggle()
+
+    # These mocks are in general very strict, so even this will fail
+    rex.health  # unconfigured attribute
+
+    # Of course you can just set it in a setup routine
+    rex.health = 121
+
+    # Or again preconfigure
+    rex = mock({'health': 121}, spec=Dog)
+
+    # Btw, you can make loose specced mocks::
+    rex = mock(Dog, strict=False)
+
+
 
 
 Read the docs
