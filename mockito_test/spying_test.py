@@ -68,3 +68,13 @@ class SpyingTest(TestBase):
         except AttributeError as e:
             self.assertEquals("You tried to call method 'lol' which '%s' "
                               "instance does not have." % original, str(e))
+
+    def testIsInstanceFakesOriginalClass(self):
+        dummy = spy(Dummy())
+
+        assert isinstance(dummy, Dummy)
+
+    def testHasNiceRepr(self):
+        dummy = spy(Dummy())
+
+        assert repr(dummy) == "<SpiedDummy id=%s>" % id(dummy)

@@ -29,8 +29,15 @@ __all__ = ['spy']
 def spy(original_object):
 
     class Spy(_Dummy):
+        __class__ = original_object.__class__
+
         def __getattr__(self, method_name):
             return RememberedProxyInvocation(theMock, method_name)
+
+        def __repr__(self):
+            name = 'Spied' + original_object.__class__.__name__
+            return "<%s id=%s>" % (name, id(self))
+
 
     obj = Spy()
     theMock = Mock(obj, strict=True, spec=original_object)
