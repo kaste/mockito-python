@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import pytest
 
 from mockito_test.test_base import TestBase
 from mockito import mock, when, verify, times, any
@@ -54,6 +55,19 @@ class TestEmptyMocks:
         dummy(1, 2)
 
         verify(dummy).__call__(1, 2)
+
+class TestStrictEmptyMocks:
+    def testScream(self):
+        dummy = mock(strict=True)
+
+        with pytest.raises(AttributeError):
+            dummy.foo()
+
+    def testAllowStubbing(self):
+        dummy = mock(strict=True)
+        when(dummy).foo()
+        dummy.foo()
+        verify(dummy).foo()
 
 
 class StubbingTest(TestBase):

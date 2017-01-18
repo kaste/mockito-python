@@ -126,9 +126,15 @@ class Mock(TestDouble):
     # SPECCING
 
     def has_method(self, method_name):
-        return hasattr(self.spec, method_name)
+        if self.spec:
+            return hasattr(self.spec, method_name)
+        else:
+            return True
 
     def get_signature(self, method_name):
+        if self.spec is None:
+            return None
+
         try:
             return self._signatures_store[method_name]
         except KeyError:
@@ -137,15 +143,21 @@ class Mock(TestDouble):
             return sig
 
 
-def mock(config_or_spec=None, spec=None, strict=True):
+class _OMITTED(object):
+    pass
+
+
+OMITTED = _OMITTED()
+
+def mock(config_or_spec=None, spec=None, strict=OMITTED):
     if type(config_or_spec) is dict:
         config = config_or_spec
     else:
         config = {}
         spec = config_or_spec
 
-    if spec is None:
-        strict = False
+    if strict is OMITTED:
+        strict = False if spec is None else True
 
     theMock = Mock(None, strict=strict, spec=spec)
 
