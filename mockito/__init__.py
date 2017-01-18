@@ -26,21 +26,18 @@ from .mockito import (verify, verifyNoMoreInteractions,
                       ArgumentError)
 from . import inorder
 from .spying import spy
+from .mocking import mock
 from .verification import VerificationError
 
-# Imports for compatibility
-from .mocking import Mock, mock
-from .matchers import any, contains, times, args, kwargs
+from .matchers import *  # noqa: F403
 from .verification import never
 
 __all__ = ['mock', 'spy', 'when', 'expect', 'verify',
            'verifyNoMoreInteractions', 'verifyZeroInteractions',
            'inorder', 'unstub',
            'VerificationError', 'ArgumentError',
-           'Mock',      # deprecated
            'any',       # compatibility
            'contains',  # compatibility
            'never',     # compatibility
            'times',     # deprecated
-           'args', 'kwargs'
            ]

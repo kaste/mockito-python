@@ -27,7 +27,7 @@ from . import signature
 from .mock_registry import mock_registry
 
 
-__all__ = ['mock', 'Mock']
+__all__ = ['mock']
 
 
 class _Dummy(object):
