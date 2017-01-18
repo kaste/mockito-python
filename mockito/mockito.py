@@ -21,7 +21,7 @@
 from . import invocation
 from . import verification
 
-from .mocking import Mock, TestDouble
+from .mocking import Mock
 from .mock_registry import mock_registry
 from .verification import VerificationError
 
@@ -79,14 +79,11 @@ def _get_wanted_verification(
         return verification.Times(times)
 
 def _get_mock(obj, strict=True):
-    if isinstance(obj, TestDouble):
-        return obj
-    else:
-        theMock = mock_registry.mock_for(obj)
-        if theMock is None:
-            theMock = Mock(obj, strict=strict, spec=obj)
-            mock_registry.register(obj, theMock)
-        return theMock
+    theMock = mock_registry.mock_for(obj)
+    if theMock is None:
+        theMock = Mock(obj, strict=strict, spec=obj)
+        mock_registry.register(obj, theMock)
+    return theMock
 
 def verify(obj, times=1, atleast=None, atmost=None, between=None,
            inorder=False):
