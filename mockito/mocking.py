@@ -35,16 +35,12 @@ class _Dummy(object):
         return self.__getattr__('__call__')(*args, **kwargs)
 
 
-class TestDouble(object):
-    pass
-
-
 def remembered_invocation_builder(mock, method_name, *args, **kwargs):
     invoc = invocation.RememberedInvocation(mock, method_name)
     return invoc(*args, **kwargs)
 
 
-class Mock(TestDouble):
+class Mock(object):
     def __init__(self, mocked_obj, strict=True, spec=None):
         self.mocked_obj = mocked_obj
         self.strict = strict
