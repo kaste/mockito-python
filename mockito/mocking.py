@@ -31,12 +31,6 @@ __all__ = ['mock', 'Mock']
 
 
 class _Dummy(object):
-    def __getattr__(self, method_name):
-        if self.__mock.strict:
-            raise AttributeError('Unexpected')
-        return functools.partial(
-            remembered_invocation_builder, self.__mock, method_name)
-
     def __call__(self, *args, **kwargs):
         return self.__getattr__('__call__')(*args, **kwargs)
 
@@ -158,7 +152,11 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
     theMock = Mock(None, strict=strict, spec=spec)
 
     class Dummy(_Dummy):
-        __mock = theMock
+        def __getattr__(self, method_name):
+            if strict:
+                raise AttributeError('Unexpected')
+            return functools.partial(
+                remembered_invocation_builder, theMock, method_name)
 
     obj = Dummy()
     theMock.mocked_obj = obj
