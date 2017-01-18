@@ -60,10 +60,11 @@ class SpyingTest(TestBase):
         verifyZeroInteractions(dummy)
 
     def testRaisesAttributeErrorIfNoSuchMethod(self):
-        dummy = spy(Dummy())
+        original = Dummy()
+        dummy = spy(original)
         try:
             dummy.lol()
             self.fail("Should fail if no such method.")
         except AttributeError as e:
-            self.assertEquals("You tried to call method 'lol' which 'Dummy' "
-                              "instance does not have.", str(e))
+            self.assertEquals("You tried to call method 'lol' which '%s' "
+                              "instance does not have." % original, str(e))

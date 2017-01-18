@@ -184,13 +184,13 @@ class RememberedProxyInvocation(Invocation):
     def __call__(self, *params, **named_params):
         self._remember_params(params, named_params)
         self.mock.remember(self)
-        obj = self.mock.original_object
+        obj = self.mock.spec
         try:
             method = getattr(obj, self.method_name)
         except AttributeError:
             raise AttributeError(
                 "You tried to call method '%s' which '%s' instance does not "
-                "have." % (self.method_name, obj.__class__.__name__))
+                "have." % (self.method_name, obj))
         return method(*params, **named_params)
 
 

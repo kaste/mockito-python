@@ -21,26 +21,23 @@
 '''Spying on real objects.'''
 
 from .invocation import RememberedProxyInvocation
-from .mocking import TestDouble
+from .mocking import Mock, _Dummy, mock_registry
 
 __all__ = ['spy']
 
 
 def spy(original_object):
-    return Spy(original_object)
 
+    theMock = Mock(None, strict=True, spec=original_object)
 
-class Spy(TestDouble):
-    strict = True  # spies always have to check if method exists
+    class Spy(_Dummy):
+        __mock = theMock
 
-    def __init__(self, original_object):
-        self.original_object = original_object
-        self.invocations = []
-        self.stubbed_invocations = []
-        self.verification = None
+        def __getattr__(self, method_name):
+            return RememberedProxyInvocation(self.__mock, method_name)
 
-    def __getattr__(self, name):
-        return RememberedProxyInvocation(self, name)
+    obj = Spy()
+    theMock.mocked_obj = obj
+    mock_registry.register(obj, theMock)
+    return obj
 
-    def remember(self, invocation):
-        self.invocations.insert(0, invocation)
