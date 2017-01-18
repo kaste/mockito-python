@@ -43,10 +43,11 @@ def match_signature(sig, args, kwargs):     # noqa: C901 (too complex)
     # need for `...`, `*args`, and `**kwargs` support.
 
     if Ellipsis in args:
-        # Invariant: No args or kwargs allowed, but Ellipsis should consume
-        # at least one var
-        if not any(p for p in sig.parameters):
-            raise TypeError("method doesn't take any arguments")
+        # Invariant: Ellipsis as the sole argument should just pass, regardless
+        # if it actually can consume an arg or the function does not take any
+        # arguments at all
+        if len(args) == 1:
+            return
 
         has_kwargs = has_var_keyword(sig)
         # Ellipsis is always the last arg in args; it matches all keyword

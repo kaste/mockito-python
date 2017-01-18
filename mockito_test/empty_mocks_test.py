@@ -31,6 +31,9 @@ class TestEmptyMocks:
 
 
 class Action(object):
+    def no_arg(self):
+        pass
+
     def run(self, arg):
         return arg
 
@@ -70,3 +73,13 @@ class TestSpeccing:
 
         assert action.run(11) == 12
 
+        verify(action).run(11)
+
+    def testPreconfigureWithFunctionThatTakesNoArgs(self):
+        action = mock({
+            'no_arg': lambda: 12
+        }, spec=Action)
+
+        assert action.no_arg() == 12
+
+        verify(action).no_arg()

@@ -148,7 +148,8 @@ class TestSignatures:
 
 
         @pytest.mark.parametrize('call', [
-            sig()
+            sig(),
+            sig(Ellipsis),
         ])
         def test_passing(self, sut, call):
             when(sut).none_args(*call.args, **call.kwargs).thenReturn('stub')
@@ -160,7 +161,6 @@ class TestSignatures:
 
         @pytest.mark.parametrize('call', [
             sig(12),
-            sig(Ellipsis),
             sig(*args),
             sig(**kwargs),
             sig(*args, **kwargs)

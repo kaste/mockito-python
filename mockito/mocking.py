@@ -31,9 +31,6 @@ __all__ = ['mock', 'Mock']
 
 
 class _Dummy(object):
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
-
     def __getattr__(self, method_name):
         return self.__mock.__getattr__(method_name)
 
@@ -150,6 +147,11 @@ def mock(config_or_spec=None, spec=None, strict=True):
     class Dummy(_Dummy):
         __mock = theMock
 
-    obj = Dummy(**config)
+    obj = Dummy()
+    for n, v in config.items():
+        if inspect.isfunction(v):
+            invocation.StubbedInvocation(theMock, n)(Ellipsis).thenAnswer(v)
+        else:
+            setattr(obj, n, v)
     mock_registry.register(obj, theMock)
     return obj
