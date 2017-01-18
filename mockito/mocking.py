@@ -48,10 +48,10 @@ def remembered_invocation_builder(mock, method_name, *args, **kwargs):
 
 
 class Mock(TestDouble):
-    def __init__(self, mocked_obj=None, strict=True, stub=False):
+    def __init__(self, mocked_obj, strict=True, spec=None):
         self.mocked_obj = mocked_obj
         self.strict = strict
-        self.stub_real_object = stub
+        self.spec = spec
 
         self.invocations = deque()
         self.stubbed_invocations = deque()
@@ -70,8 +70,7 @@ class Mock(TestDouble):
         self.stubbed_invocations.appendleft(stubbed_invocation)
 
 
-    def has_method(self, method_name):
-        return hasattr(self.mocked_obj, method_name)
+    # STUBBING
 
     def get_method(self, method_name):
         if inspect.isclass(self.mocked_obj):
@@ -101,9 +100,6 @@ class Mock(TestDouble):
         self.set_method(method_name, new_mocked_method)
 
     def stub(self, method_name):
-        if not self.stub_real_object:
-            return
-
         try:
             self.original_methods[method_name]
         except KeyError:
@@ -123,11 +119,16 @@ class Mock(TestDouble):
             else:
                 self.set_method(method_name, original_method)
 
+    # SPECCING
+
+    def has_method(self, method_name):
+        return hasattr(self.spec, method_name)
+
     def get_signature(self, method_name):
         try:
             return self._signatures_store[method_name]
         except KeyError:
-            sig = signature.get_signature(self.mocked_obj, method_name)
+            sig = signature.get_signature(self.spec, method_name)
             self._signatures_store[method_name] = sig
             return sig
 
@@ -142,12 +143,13 @@ def mock(config_or_spec=None, spec=None, strict=True):
     if spec is None:
         strict = False
 
-    theMock = Mock(spec, strict=strict, stub=False)
+    theMock = Mock(None, strict=strict, spec=spec)
 
     class Dummy(_Dummy):
         __mock = theMock
 
     obj = Dummy()
+    theMock.mocked_obj = obj
     for n, v in config.items():
         if inspect.isfunction(v):
             invocation.StubbedInvocation(theMock, n)(Ellipsis).thenAnswer(v)

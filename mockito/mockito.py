@@ -84,7 +84,7 @@ def _get_mock(obj, strict=True):
     else:
         theMock = mock_registry.mock_for(obj)
         if theMock is None:
-            theMock = Mock(obj, strict=strict, stub=True)
+            theMock = Mock(obj, strict=strict, spec=obj)
             mock_registry.register(obj, theMock)
         return theMock
 
