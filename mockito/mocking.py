@@ -148,7 +148,7 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
 
     class Dummy(_Dummy):
         if spec:
-            __class__ = spec
+            __class__ = spec  # make isinstance work
 
         def __getattr__(self, method_name):
             if strict:
@@ -156,6 +156,12 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
                     "'Dummy' has no attribute %r configured" % method_name)
             return functools.partial(
                 remembered_invocation_builder, theMock, method_name)
+
+        def __repr__(self):
+            name = 'Dummy'
+            if spec:
+                name += spec.__name__
+            return "<%s id=%s>" % (name, id(self))
 
 
     obj = Dummy()

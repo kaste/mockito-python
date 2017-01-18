@@ -102,6 +102,11 @@ class TestSpeccing:
 
         assert isinstance(action, Action)
 
+    def testHasANiceName(self):
+        action = mock(Action)
+
+        assert repr(action) == "<DummyAction id=%s>" % id(action)
+
 
 class TestSpeccingLoose:
     def testReturnNoneForEveryMethod(self):
