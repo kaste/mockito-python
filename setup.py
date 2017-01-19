@@ -1,6 +1,17 @@
 from setuptools import setup
 import sys
 
+import re
+import ast
+
+
+_version_re = re.compile(r'__version__\s+=\s+(.*)')
+
+with open('mockito/__init__.py', 'rb') as f:
+    version = str(ast.literal_eval(_version_re.search(
+        f.read().decode('utf-8')).group(1)))
+
+
 extra = {}
 if sys.version_info >= (3,):
     extra['use_2to3'] = True
@@ -8,7 +19,7 @@ if sys.version_info >= (3,):
 install_requires = ['funcsigs'] if sys.version_info < (3,) else []
 
 setup(name='mockito',
-      version='1.0.0-pre0',
+      version=version,
       packages=['mockito', 'mockito.tests'],
       url='https://github.com/kaste/mockito-python',
       maintainer='herr.kaste',

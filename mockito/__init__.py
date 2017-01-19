@@ -32,6 +32,8 @@ from .verification import VerificationError
 from .matchers import *  # noqa: F403
 from .verification import never
 
+__version__ = '1.0.0-dev'
+
 __all__ = ['mock', 'spy', 'when', 'expect', 'verify',
            'verifyNoMoreInteractions', 'verifyZeroInteractions',
            'inorder', 'unstub',
