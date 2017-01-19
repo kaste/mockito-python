@@ -9,7 +9,7 @@ install_requires = ['funcsigs'] if sys.version_info < (3,) else []
 
 setup(name='mockito',
       version='1.0.0-pre0',
-      packages=['mockito', 'mockito_test'],
+      packages=['mockito', 'mockito.tests'],
       url='https://github.com/kaste/mockito-python',
       maintainer='herr.kaste',
       maintainer_email='herr.kaste@gmail.com',

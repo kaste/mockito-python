@@ -20,7 +20,7 @@
 
 import pytest
 
-from mockito_test.test_base import TestBase
+from .test_base import TestBase
 from mockito import mock, when, verify, times, any
 
 

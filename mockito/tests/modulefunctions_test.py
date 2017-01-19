@@ -20,7 +20,7 @@
 
 import os
 
-from mockito_test.test_base import TestBase
+from .test_base import TestBase
 from mockito import when, unstub, verify, any
 from mockito.invocation import InvocationError
 from mockito.verification import VerificationError

@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from mockito_test.test_base import TestBase
+from .test_base import TestBase
 from mockito import mock, verify
 from mockito.matchers import and_, or_, not_, eq, neq, lt, lte, gt, gte, \
     any_, arg_that, contains, matches, captor

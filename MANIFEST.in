@@ -1,5 +1,3 @@
-recursive-include mockito_test *.py
-
 include AUTHORS
 include CHANGES.txt
 include LICENSE

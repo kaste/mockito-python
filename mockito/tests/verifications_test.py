@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from mockito_test.test_base import TestBase
+from .test_base import TestBase
 from mockito import (mock, verify, inorder, VerificationError, ArgumentError,
                      verifyNoMoreInteractions, verifyZeroInteractions, any)
 from mockito.verification import never

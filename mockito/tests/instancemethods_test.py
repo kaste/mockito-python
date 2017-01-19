@@ -20,7 +20,7 @@
 
 import pytest
 
-from mockito_test.test_base import TestBase
+from .test_base import TestBase
 from mockito import (mock, when, expect, verify, unstub, any,
                      verifyNoMoreInteractions, verifyZeroInteractions)
 from mockito.invocation import InvocationError
