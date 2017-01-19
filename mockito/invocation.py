@@ -21,6 +21,7 @@
 from . import matchers
 from . import signature
 from . import verification as verificationModule
+from .mock_registry import mock_registry
 
 from collections import deque
 import functools
@@ -313,6 +314,12 @@ class AnswerSelector(object):
 
     def __then(self, answer):
         self.invocation.add_answer(answer)
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, *exc_info):
+        mock_registry.unstub(self.invocation.mock.mocked_obj)
 
 
 class CompositeAnswer(object):
