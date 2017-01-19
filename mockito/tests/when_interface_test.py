@@ -7,6 +7,14 @@ class Dog(object):
         pass
 
 
+class Unhashable(object):
+    def update(self, **kwargs):
+        pass
+
+    def __hash__(self):
+        raise TypeError("I'm immutable")
+
+
 class TestUserExposedInterfaces:
 
     def testWhen(self):
@@ -20,3 +28,9 @@ class TestUserExposedInterfaces:
     def testVerify(self):
         verifying = verify(Dog)
         assert verifying.__dict__ == {}
+
+
+    def testEnsureUnhashableObjectCanBeMocked(self):
+        obj = Unhashable()
+        when(obj).update().thenReturn(None)
+

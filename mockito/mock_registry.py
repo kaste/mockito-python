@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 
+
 class MockRegistry:
     """Registry for mocks
 
@@ -27,7 +28,7 @@ class MockRegistry:
     """
 
     def __init__(self):
-        self.mocks = {}
+        self.mocks = _Dict()
 
     def register(self, obj, mock):
         self.mocks[obj] = mock
@@ -44,9 +45,43 @@ class MockRegistry:
             mock.unstub()
 
     def unstub_all(self):
-        for mock in self.mocks.itervalues():
+        for mock in self.mocks.values():
             mock.unstub()
         self.mocks.clear()
+
+
+# We have this dict like because we want non-hashable items in our registry.
+# This is just enough to match the invoking code above. TBC
+class _Dict(object):
+    def __init__(self):
+        self._store = []
+
+    def __setitem__(self, key, value):
+        self.remove(key)
+        self._store.append((key, value))
+
+    def remove(self, key):
+        self._store = filter(lambda (k, v): k != key, self._store)
+
+    def pop(self, key):
+        rv = self.get(key)
+        if rv is not None:
+            self.remove(key)
+            return rv
+        else:
+            raise KeyError()
+
+    def get(self, key, default=None):
+        for k, value in self._store:
+            if k == key:
+                return value
+        return default
+
+    def values(self):
+        return [v for k, v in self._store]
+
+    def clear(self):
+        self._store[:] = []
 
 
 mock_registry = MockRegistry()
