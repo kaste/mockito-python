@@ -25,7 +25,6 @@ from .mock_registry import mock_registry
 
 from collections import deque
 import functools
-import inspect
 
 
 class InvocationError(AttributeError):
@@ -85,8 +84,6 @@ class MatchingInvocation(Invocation):
         def wrap(p):
             if p in (any, matchers.any_):
                 return matchers.any_()
-            if inspect.isclass(p):
-                return matchers.any_(p)
             return p
 
         self.params = tuple(wrap(p) for p in params)

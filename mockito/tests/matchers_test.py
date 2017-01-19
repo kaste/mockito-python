@@ -44,42 +44,6 @@ class TestConvenienceMatchers:
         dummy.foo(True)
         verify(dummy, times=3).foo(any_)
 
-    def testIntStandsForAnyInt(self):
-        dummy = mock()
-
-        dummy.foo(1)
-        dummy.foo('a')
-
-        verify(dummy).foo(int)
-
-    def testStrStandsForAnyStr(self):
-        dummy = mock()
-
-        dummy.foo(1)
-        dummy.foo('a')
-
-        verify(dummy).foo(str)
-
-    def testBoolStandsForAnyBool(self):
-        dummy = mock()
-
-        dummy.foo(1)
-        dummy.foo(True)
-
-        verify(dummy).foo(bool)
-
-    def testEnsureEscape(self):
-        dummy = mock()
-
-        dummy.foo(any)
-        dummy.foo(int)
-        dummy.foo(bool)
-        dummy.foo(str)
-
-        verify(dummy).foo(eq(any))
-        verify(dummy).foo(eq(int))
-        verify(dummy).foo(eq(bool))
-        verify(dummy).foo(eq(str))
 
 class TestAliases:
     def testANY(self):
