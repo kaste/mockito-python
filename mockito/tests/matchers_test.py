@@ -25,6 +25,57 @@ from mockito.matchers import and_, or_, not_, eq, neq, lt, lte, gt, gte, \
 import re
 
 
+class TestConvenienceMatchers:
+    def testBuiltinAnyStandsForOurAny(self):
+        dummy = mock()
+        dummy.foo(1)
+        dummy.foo('a')
+        dummy.foo(True)
+
+        verify(dummy, times=3).foo(any)
+
+        dummy.foo(a=12)
+        verify(dummy).foo(a=any)
+
+    def testIntStandsForAnyInt(self):
+        dummy = mock()
+
+        dummy.foo(1)
+        dummy.foo('a')
+
+        verify(dummy).foo(int)
+
+    def testStrStandsForAnyStr(self):
+        dummy = mock()
+
+        dummy.foo(1)
+        dummy.foo('a')
+
+        verify(dummy).foo(str)
+
+    def testBoolStandsForAnyBool(self):
+        dummy = mock()
+
+        dummy.foo(1)
+        dummy.foo(True)
+
+        verify(dummy).foo(bool)
+
+    def testEnsureEscape(self):
+        dummy = mock()
+
+        dummy.foo(any)
+        dummy.foo(int)
+        dummy.foo(bool)
+        dummy.foo(str)
+
+        verify(dummy).foo(eq(any))
+        verify(dummy).foo(eq(int))
+        verify(dummy).foo(eq(bool))
+        verify(dummy).foo(eq(str))
+
+
+
 class MatchersTest(TestBase):
     def testVerifiesUsingContainsMatcher(self):
         ourMock = mock()

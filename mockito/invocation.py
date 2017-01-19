@@ -81,8 +81,15 @@ class MatchingInvocation(Invocation):
         if matchers.kwargs in params or matchers.KWARGS_SENTINEL in params:
             raise TypeError('kwargs must be used as **kwargs')
 
-        self.params = params
-        self.named_params = named_params
+        def wrap(p):
+            if p is any:
+                return matchers.any_()
+            if p in (int, str, bool):
+                return matchers.any_(p)
+            return p
+
+        self.params = tuple(wrap(p) for p in params)
+        self.named_params = {k: wrap(v) for k, v in named_params.items()}
 
 
     def matches(self, invocation):  # noqa: C901 (too complex)
