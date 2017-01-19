@@ -21,9 +21,10 @@
 '''Mockito is a Test Spy framework.'''
 
 
-from .mockito import (verify, verifyNoMoreInteractions,
-                      verifyZeroInteractions, when, expect, unstub,
-                      ArgumentError)
+from .mockito import (
+    when, expect, unstub, verify, verifyNoMoreInteractions,
+    verifyZeroInteractions, verifyNoUnwantedInteractions,
+    ArgumentError)
 from . import inorder
 from .spying import spy
 from .mocking import mock
@@ -36,6 +37,7 @@ __version__ = '1.0.0-dev'
 
 __all__ = ['mock', 'spy', 'when', 'expect', 'verify',
            'verifyNoMoreInteractions', 'verifyZeroInteractions',
+           'verifyNoUnwantedInteractions',
            'inorder', 'unstub',
            'VerificationError', 'ArgumentError',
            'any',       # compatibility

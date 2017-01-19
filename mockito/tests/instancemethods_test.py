@@ -21,8 +21,9 @@
 import pytest
 
 from .test_base import TestBase
-from mockito import (mock, when, expect, verify, unstub, any,
-                     verifyNoMoreInteractions, verifyZeroInteractions)
+from mockito import (
+    mock, when, expect, unstub, any, verify, verifyNoMoreInteractions,
+    verifyZeroInteractions, verifyNoUnwantedInteractions)
 from mockito.invocation import InvocationError
 from mockito.verification import VerificationError
 
@@ -187,6 +188,14 @@ class TestImplicitVerificationsUsingExpect:
 
         verifyNoMoreInteractions(rex)
 
+    def testNoUnwantedInteractionsWorks(self, verification):
+        rex = Dog()
+        expect(rex, **verification).bark('Miau').thenReturn('Wuff')
+        rex.bark('Miau')
+        rex.bark('Miau')
+
+        verifyNoUnwantedInteractions(rex)
+
     @pytest.mark.parametrize('verification', [
         {'times': 2},
         {'atleast': 2},
@@ -198,6 +207,18 @@ class TestImplicitVerificationsUsingExpect:
 
         with pytest.raises(VerificationError):
             verifyNoMoreInteractions(rex)
+
+    @pytest.mark.parametrize('verification', [
+        {'times': 2},
+        {'atleast': 2},
+        {'between': [1, 2]}
+    ], ids=['times', 'atleast', 'between'])
+    def testNoUnwantedInteractionsBarksIfUnsatisfied(self, verification):
+        rex = Dog()
+        expect(rex, **verification).bark('Miau').thenReturn('Wuff')
+
+        with pytest.raises(VerificationError):
+            verifyNoUnwantedInteractions(rex)
 
     def testExpectWitoutVerification(self):
         rex = Dog()

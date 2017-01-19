@@ -147,11 +147,10 @@ def unstub(*objs):
 
 
 def verifyNoMoreInteractions(*objs):
+    verifyNoUnwantedInteractions(*objs)
+
     for obj in objs:
         theMock = _get_mock(obj)
-
-        for i in theMock.stubbed_invocations:
-            i.verify()
 
         for i in theMock.invocations:
             if not i.verified:
@@ -160,3 +159,11 @@ def verifyNoMoreInteractions(*objs):
 
 def verifyZeroInteractions(*mocks):
     verifyNoMoreInteractions(*mocks)
+
+
+def verifyNoUnwantedInteractions(*objs):
+    for obj in objs:
+        theMock = _get_mock(obj)
+
+        for i in theMock.stubbed_invocations:
+            i.verify()
