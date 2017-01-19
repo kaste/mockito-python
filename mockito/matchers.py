@@ -31,7 +31,7 @@ __all__ = [
     'eq', 'neq',
     'lt', 'lte',
     'gt', 'gte',
-    'any', 'any_',
+    'any', 'any_', 'ANY',
     'arg_that',
     'contains',
     'matches',
@@ -217,7 +217,7 @@ def any(wanted_type=None):
     return Any(wanted_type)
 
 
-any_ = any
+ANY = any_ = any
 
 
 def eq(value):

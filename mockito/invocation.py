@@ -82,7 +82,7 @@ class MatchingInvocation(Invocation):
             raise TypeError('kwargs must be used as **kwargs')
 
         def wrap(p):
-            if p is any:
+            if p in (any, matchers.any_):
                 return matchers.any_()
             if p in (int, str, bool):
                 return matchers.any_(p)

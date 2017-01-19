@@ -21,7 +21,7 @@
 from .test_base import TestBase
 from mockito import mock, verify
 from mockito.matchers import and_, or_, not_, eq, neq, lt, lte, gt, gte, \
-    any_, arg_that, contains, matches, captor
+    any_, arg_that, contains, matches, captor, ANY
 import re
 
 
@@ -36,6 +36,13 @@ class TestConvenienceMatchers:
 
         dummy.foo(a=12)
         verify(dummy).foo(a=any)
+
+    def testOurAnyCanBeUsedAsAType(self):
+        dummy = mock()
+        dummy.foo(1)
+        dummy.foo('a')
+        dummy.foo(True)
+        verify(dummy, times=3).foo(any_)
 
     def testIntStandsForAnyInt(self):
         dummy = mock()
@@ -74,6 +81,11 @@ class TestConvenienceMatchers:
         verify(dummy).foo(eq(bool))
         verify(dummy).foo(eq(str))
 
+class TestAliases:
+    def testANY(self):
+        dummy = mock()
+        dummy.foo(1)
+        verify(dummy).foo(ANY)
 
 
 class MatchersTest(TestBase):
