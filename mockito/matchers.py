@@ -37,8 +37,8 @@ __all__ = [
     'matches',
     'captor',
     'times',
-    'args',
-    'kwargs'
+    'args', 'ARGS',
+    'kwargs', 'KWARGS'
 ]
 
 class _ArgsSentinel(object):
@@ -47,10 +47,10 @@ class _ArgsSentinel(object):
 
 
 ARGS_SENTINEL = _ArgsSentinel()
-args = [ARGS_SENTINEL]
+ARGS = args = [ARGS_SENTINEL]
 
 KWARGS_SENTINEL = '**'
-kwargs = {KWARGS_SENTINEL: '_'}
+KWARGS = kwargs = {KWARGS_SENTINEL: '_'}
 
 class Matcher:
     def matches(self, arg):

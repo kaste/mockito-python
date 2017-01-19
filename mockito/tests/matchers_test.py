@@ -21,7 +21,7 @@
 from .test_base import TestBase
 from mockito import mock, verify
 from mockito.matchers import and_, or_, not_, eq, neq, lt, lte, gt, gte, \
-    any_, arg_that, contains, matches, captor, ANY
+    any_, arg_that, contains, matches, captor, ANY, ARGS, KWARGS
 import re
 
 
@@ -86,6 +86,16 @@ class TestAliases:
         dummy = mock()
         dummy.foo(1)
         verify(dummy).foo(ANY)
+
+    def testARGS(self):
+        dummy = mock()
+        dummy.foo(1)
+        verify(dummy).foo(*ARGS)
+
+    def testKWARGS(self):
+        dummy = mock()
+        dummy.foo(a=1)
+        verify(dummy).foo(**KWARGS)
 
 
 class MatchersTest(TestBase):
