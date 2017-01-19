@@ -1,4 +1,6 @@
 
+import pytest
+
 from mockito.mock_registry import _Dict
 from mockito.mocking import Mock
 
@@ -23,11 +25,14 @@ class TestCustomDictLike:
     def testReplaceValueForSameKey(self):
         td = _Dict()
         obj = {}
-        mock = Mock(None)
-        td[obj] = mock
-        td[obj] = Mock(None)
+        mock1 = Mock(None)
+        mock2 = Mock(None)
+        td[obj] = mock1
+        td[obj] = mock2
 
-        assert td.get(obj) != mock
+        assert td.pop(obj) == mock2
+        with pytest.raises(KeyError):
+            td.pop(obj)
 
     def testPopKey(self):
         td = _Dict()
