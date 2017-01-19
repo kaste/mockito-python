@@ -1,6 +1,39 @@
 MOCKITO CHANGE LOG
 ==================
 
+Release 1.0.0 (yet to come)
+---------------------------
+
+This is a major update; mostly because of internal code reorganization (`imports`) it cannot be guaranteed that this will not break for you. Though if you just used the public API you should be fine. None of the vintage old tests have been removed and they at least pass.
+
+In general unclassified imports (``from mocktio import *``) are not recommended. But if you did, we do not export ``Mock`` anymore. ``Mock`` has been deprecated long ago and is now for internal use only. You must use ``mock``.
+
+Another important change is, that `mockito`s strict mode is far more strict than before. We now generally try to match the signature of the target method
+with your usage. Usually this should help you find bugs in your code, because
+it will make it easier to spot changing interfaces.
+
+- ``mock``, ``when``, ``verify`` return mostly empty objects. It is unlikely to have a method_name clash.
+
+- Specced mocks ``instance = mock(Class)`` will pass isinstance tests like ``isinstance(instance, Class)``
+
+- For ``when`` and ``verify`` the function signature or argument matchers can be greatly simplified. E.g. ``when(requests).get(...).thenReturn('OK')`` will match any argument you pass in. There are ``args`` and ``kwargs`` matchers as well. So ``when(requests).get('https://...', **kwargs).thenReturn(...)`` will make a exact match on the first argument, the url, and ignore all the headers and other stuff.
+
+- Mocks can be preconfigured: ``mock({'text': 'OK'})``. For specced mocks this would be e.g. ``mock({'text': 'OK'}, spec=requests.Response)``.
+
+- If you mock or patch an object, the function signatures will be matched. So::
+
+    def foo(a, b=1): ...
+
+    when(main).foo(12)  # will pass
+    when(main).foo(c=13)  # will raise immediately
+
+- Mock Dummies are now callable: ``m = mock(); m(1, 2); verify(m).__call__(...)``
+
+- ``Mock()`` is now an implementation detail; it is not exported anymore. Use ``mock()``.
+
+
+
+
 Release 0.7.1 (December 27, 2016)
 ---------------------------------
 
