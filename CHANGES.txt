@@ -33,7 +33,11 @@ it will make it easier to spot changing interfaces.
 
 - You unstub individual patched objects ``unstub(obj)``. (Before it was all or nothing.)
 
+- Added basic context manager support when using ``when``. Note that ``verify`` has to be called within the with context.
 
+    with when(rex).waggle().thenReturn('Yup'):
+        assert rex.waggle() == 'Yup'
+        verify(rex).waggle()
 
 
 
