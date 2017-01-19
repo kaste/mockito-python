@@ -39,6 +39,12 @@ it will make it easier to spot changing interfaces.
         assert rex.waggle() == 'Yup'
         verify(rex).waggle()
 
+- Aliased ``any_`` to ``ANY``, ``args`` to ``ARGS`` and ``kwargs`` to ``KWARGS``. You can use python's builtin ``any`` as a stand in for ``ANY``.
+
+- As a convenience you can use our ``any_`` matcher like a type instead of ``any_()``.
+
+    dummy(1)
+    verify(dummy).__call__(ANY)
 
 
 Release 0.7.1 (December 27, 2016)
