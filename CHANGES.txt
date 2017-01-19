@@ -31,6 +31,9 @@ it will make it easier to spot changing interfaces.
 
 - ``Mock()`` is now an implementation detail; it is not exported anymore. Use ``mock()``.
 
+- You unstub individual patched objects ``unstub(obj)``. (Before it was all or nothing.)
+
+
 
 
 

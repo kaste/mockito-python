@@ -35,6 +35,11 @@ class MockRegistry:
     def mock_for(self, obj):
         return self.mocks.get(obj, None)
 
+    def unstub(self, obj):
+        mock = self.mocks.pop(obj)
+        if mock:
+            mock.unstub()
+
     def unstub_all(self):
         for mock in self.mocks.itervalues():
             mock.unstub()

@@ -130,9 +130,20 @@ def expect(obj, strict=True,
 
 
 
-def unstub():
-    """Unstubs all stubbed methods and functions"""
-    mock_registry.unstub_all()
+def unstub(*objs):
+    """Unstubs all stubbed methods and functions
+
+    If you don't pass in any argument, __all__ registered mocks and
+    patched modules, classes etc. will be unstubbed.
+
+    Note that additionally, the underlying registry will be cleaned.
+    """
+
+    if objs:
+        for obj in objs:
+            mock_registry.unstub(obj)
+    else:
+        mock_registry.unstub_all()
 
 
 def verifyNoMoreInteractions(*objs):
