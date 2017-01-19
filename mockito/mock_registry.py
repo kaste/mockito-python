@@ -36,8 +36,11 @@ class MockRegistry:
         return self.mocks.get(obj, None)
 
     def unstub(self, obj):
-        mock = self.mocks.pop(obj)
-        if mock:
+        try:
+            mock = self.mocks.pop(obj)
+        except KeyError:
+            pass
+        else:
             mock.unstub()
 
     def unstub_all(self):
