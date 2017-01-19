@@ -2,3 +2,5 @@ include AUTHORS
 include CHANGES.txt
 include LICENSE
 include README.rst
+
+global-exclude *.py[co]
