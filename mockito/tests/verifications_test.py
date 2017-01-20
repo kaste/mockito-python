@@ -307,10 +307,10 @@ class VerifyNoMoreInteractionsTest(TestBase):
 
 
 class VerifyZeroInteractionsTest(TestBase):
-        def testVerifies(self):
-            theMock = mock()
-            verifyZeroInteractions(theMock)
-            theMock.foo()
-            self.assertRaises(VerificationError, verifyNoMoreInteractions,
-                              theMock)
+    def testVerifies(self):
+        theMock = mock()
+        verifyZeroInteractions(theMock)
+        theMock.foo()
+        self.assertRaises(
+            VerificationError, verifyNoMoreInteractions, theMock)
 
