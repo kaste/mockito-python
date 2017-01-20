@@ -162,8 +162,25 @@ def verifyZeroInteractions(*mocks):
 
 
 def verifyNoUnwantedInteractions(*objs):
-    for obj in objs:
-        theMock = _get_mock(obj)
+    """Verifies that expectations set via ``expect`` are met
 
-        for i in theMock.stubbed_invocations:
+    E.g.::
+
+        expect(os.path, times=1).exists(...).thenReturn(True)
+        os.path('/foo')
+        verifyNoUnwantedInteractions(os.path)  # ok, called once
+
+    If you leave out the argument __all__ registered objects will
+    be checked. DANGERZONE: If you did not ``unstub`` correctly,
+    it is possible that old registered mocks, from other tests
+    leak.
+    """
+
+    if objs:
+        theMocks = map(_get_mock, objs)
+    else:
+        theMocks = mock_registry.get_registered_mocks()
+
+    for mock in theMocks:
+        for i in mock.stubbed_invocations:
             i.verify()

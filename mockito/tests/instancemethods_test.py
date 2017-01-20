@@ -160,7 +160,7 @@ class InstanceMethodsTest(TestBase):
         when(Dog).bark('Miau')
         verifyZeroInteractions(Dog)
 
-
+@pytest.mark.usefixtures('unstub')
 class TestImplicitVerificationsUsingExpect:
 
     @pytest.fixture(params=[
@@ -219,6 +219,18 @@ class TestImplicitVerificationsUsingExpect:
 
         with pytest.raises(VerificationError):
             verifyNoUnwantedInteractions(rex)
+
+    def testNoUnwantedInteractionsForAllRegisteredObjects(self):
+        rex = Dog()
+        mox = Dog()
+
+        expect(rex, times=1).bark('Miau')
+        expect(mox, times=1).bark('Miau')
+
+        rex.bark('Miau')
+        mox.bark('Miau')
+
+        verifyNoUnwantedInteractions()
 
     def testExpectWitoutVerification(self):
         rex = Dog()

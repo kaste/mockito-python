@@ -45,9 +45,12 @@ class MockRegistry:
             mock.unstub()
 
     def unstub_all(self):
-        for mock in self.mocks.values():
+        for mock in self.get_registered_mocks():
             mock.unstub()
         self.mocks.clear()
+
+    def get_registered_mocks(self):
+        return self.mocks.values()
 
 
 # We have this dict like because we want non-hashable items in our registry.
