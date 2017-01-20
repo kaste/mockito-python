@@ -133,10 +133,12 @@ def expect(obj, strict=True,
 def unstub(*objs):
     """Unstubs all stubbed methods and functions
 
-    If you don't pass in any argument, __all__ registered mocks and
+    If you don't pass in any argument, *all* registered mocks and
     patched modules, classes etc. will be unstubbed.
 
     Note that additionally, the underlying registry will be cleaned.
+    After an ``unstub`` you can't ``verify`` anymore because all
+    interactions will be forgotten.
     """
 
     if objs:
@@ -170,8 +172,8 @@ def verifyNoUnwantedInteractions(*objs):
         os.path('/foo')
         verifyNoUnwantedInteractions(os.path)  # ok, called once
 
-    If you leave out the argument __all__ registered objects will
-    be checked. DANGERZONE: If you did not ``unstub`` correctly,
+    If you leave out the argument *all* registered objects will
+    be checked. **DANGERZONE**: If you did not ``unstub`` correctly,
     it is possible that old registered mocks, from other tests
     leak.
     """
