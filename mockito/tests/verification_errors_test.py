@@ -18,52 +18,47 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from .test_base import TestBase
+import pytest
+
 from mockito import (mock, when, verify, VerificationError,
-                     verifyNoMoreInteractions)
+                     verifyNoMoreInteractions, verification)
 from mockito.verification import never
 
 
-class VerificationErrorsTest(TestBase):
+class TestVerificationErrors:
 
     def testPrintsNicely(self):
         theMock = mock()
-        try:
+        with pytest.raises(VerificationError) as exc:
             verify(theMock).foo()
-        except VerificationError as e:
-            self.assertEquals("\nWanted but not invoked: foo()", str(e))
+        assert str(exc.value) == "\nWanted but not invoked: foo()"
 
     def testPrintsNicelyOneArgument(self):
         theMock = mock()
-        try:
+        with pytest.raises(VerificationError) as exc:
             verify(theMock).foo("bar")
-        except VerificationError as e:
-            self.assertEquals("\nWanted but not invoked: foo('bar')", str(e))
+        assert "\nWanted but not invoked: foo('bar')" == str(exc.value)
 
     def testPrintsNicelyArguments(self):
         theMock = mock()
-        try:
+        with pytest.raises(VerificationError) as exc:
             verify(theMock).foo(1, 2)
-        except VerificationError as e:
-            self.assertEquals("\nWanted but not invoked: foo(1, 2)", str(e))
+        assert "\nWanted but not invoked: foo(1, 2)" == str(exc.value)
 
     def testPrintsNicelyStringArguments(self):
         theMock = mock()
-        try:
+        with pytest.raises(VerificationError) as exc:
             verify(theMock).foo(1, 'foo')
-        except VerificationError as e:
-            self.assertEquals(
-                "\nWanted but not invoked: foo(1, 'foo')", str(e))
+        assert "\nWanted but not invoked: foo(1, 'foo')" == str(exc.value)
 
     def testPrintKeywordArgumentsNicely(self):
         theMock = mock()
-        try:
+        with pytest.raises(VerificationError) as exc:
             verify(theMock).foo(foo='foo', one=1)
-        except VerificationError as e:
-            message = str(e)
-            # We do not want to guarantee any order of arguments here
-            self.assertTrue("foo='foo'" in message)
-            self.assertTrue("one=1" in message)
+        message = str(exc.value)
+        # We do not want to guarantee any order of arguments here
+        assert "foo='foo'" in message
+        assert "one=1" in message
 
     def testPrintsOutThatTheActualAndExpectedInvocationCountDiffers(self):
         theMock = mock()
@@ -72,35 +67,38 @@ class VerificationErrorsTest(TestBase):
         theMock.foo()
         theMock.foo()
 
-        try:
+        with pytest.raises(VerificationError) as exc:
             verify(theMock).foo()
-        except VerificationError as e:
-            self.assertEquals("\nWanted times: 1, actual times: 2", str(e))
-
-
-    # TODO: implement
-    def disabled_PrintsNicelyWhenArgumentsDifferent(self):
-        theMock = mock()
-        theMock.foo('foo', 1)
-        try:
-            verify(theMock).foo(1, 'foo')
-        except VerificationError as e:
-            self.assertEquals("""Arguments are different.
-                              Wanted: foo(1, 'foo')
-                              Actual: foo('foo', 1)""", str(e))
+        assert "\nWanted times: 1, actual times: 2" == str(exc.value)
 
     def testPrintsUnwantedInteraction(self):
         theMock = mock()
         theMock.foo(1, 'foo')
-        try:
+        with pytest.raises(VerificationError) as exc:
             verifyNoMoreInteractions(theMock)
-        except VerificationError as e:
-            self.assertEquals("\nUnwanted interaction: foo(1, 'foo')", str(e))
+        assert "\nUnwanted interaction: foo(1, 'foo')" == str(exc.value)
 
     def testPrintsNeverWantedInteractionsNicely(self):
-            theMock = mock()
-            theMock.foo()
-            self.assertRaisesMessage(
-                "\nUnwanted invocation of foo(), times: 1",
-                verify(theMock, never).foo)
+        theMock = mock()
+        theMock.foo()
+        with pytest.raises(VerificationError) as exc:
+            verify(theMock, never).foo()
+        assert "\nUnwanted invocation of foo(), times: 1" == str(exc.value)
 
+
+class TestReprOfVerificationClasses:
+    def testTimes(self):
+        times = verification.Times(1)
+        assert repr(times) == "<Times wanted=1>"
+
+    def testAtLeast(self):
+        atleast = verification.AtLeast(2)
+        assert repr(atleast) == "<AtLeast wanted=2>"
+
+    def testAtMost(self):
+        atmost = verification.AtMost(3)
+        assert repr(atmost) == "<AtMost wanted=3>"
+
+    def testBetween(self):
+        between = verification.Between(1, 2)
+        assert repr(between) == "<Between [1, 2]>"

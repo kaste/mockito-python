@@ -38,6 +38,8 @@ class AtLeast(object):
             raise VerificationError("\nWanted at least: %i, actual times: %i"
                                     % (self.wanted_count, actual_count))
 
+    def __repr__(self):
+        return "<%s wanted=%s>" % (type(self).__name__, self.wanted_count)
 
 class AtMost(object):
     def __init__(self, wanted_count):
@@ -48,6 +50,8 @@ class AtMost(object):
             raise VerificationError("\nWanted at most: %i, actual times: %i"
                                     % (self.wanted_count, actual_count))
 
+    def __repr__(self):
+        return "<%s wanted=%s>" % (type(self).__name__, self.wanted_count)
 
 class Between(object):
     def __init__(self, wanted_from, wanted_to):
@@ -60,6 +64,9 @@ class Between(object):
                 "\nWanted between: [%i, %i], actual times: %i"
                 % (self.wanted_from, self.wanted_to, actual_count))
 
+    def __repr__(self):
+        return "<%s [%s, %s]>" % (
+            type(self).__name__, self.wanted_from, self.wanted_to)
 
 class Times(object):
     def __init__(self, wanted_count):
@@ -80,6 +87,8 @@ class Times(object):
                 raise VerificationError("\nWanted times: %i, actual times: %i"
                                         % (self.wanted_count, actual_count))
 
+    def __repr__(self):
+        return "<%s wanted=%s>" % (type(self).__name__, self.wanted_count)
 
 class InOrder(object):
     '''Verifies invocations in order.
