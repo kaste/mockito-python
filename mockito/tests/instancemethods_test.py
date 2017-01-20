@@ -232,6 +232,16 @@ class TestImplicitVerificationsUsingExpect:
 
         verifyNoUnwantedInteractions()
 
+    def testUseWhenAndExpectTogetherVerifyNoUnwatedInteractions(self):
+        rex = Dog()
+        when(rex).waggle()
+        expect(rex, times=1).bark('Miau')
+
+        rex.waggle()
+        rex.bark('Miau')
+
+        verifyNoUnwantedInteractions()
+
     def testExpectWitoutVerification(self):
         rex = Dog()
         expect(rex).bark('Miau').thenReturn('Wuff')
