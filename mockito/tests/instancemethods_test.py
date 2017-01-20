@@ -22,7 +22,7 @@ import pytest
 
 from .test_base import TestBase
 from mockito import (
-    mock, when, expect, unstub, any, verify, verifyNoMoreInteractions,
+    mock, when, expect, unstub, ANY, verify, verifyNoMoreInteractions,
     verifyZeroInteractions, verifyNoUnwantedInteractions)
 from mockito.invocation import InvocationError
 from mockito.verification import VerificationError
@@ -124,7 +124,7 @@ class InstanceMethodsTest(TestBase):
         when(rex).bark('Miau').thenReturn('Wuff')
 
         self.assertEquals('Wuff', rex.bark('Miau'))
-        verify(rex, times=1).bark(any())
+        verify(rex, times=1).bark(ANY)
 
         max = Dog()
         self.assertEquals('Miau!', max.bark('Miau'))
