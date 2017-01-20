@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import pytest
 
 from .test_base import TestBase
 from mockito import spy, verify, VerificationError, verifyZeroInteractions
@@ -32,6 +33,10 @@ class Dummy:
 
     def return_args(self, *args, **kwargs):
         return (args, kwargs)
+
+    @classmethod
+    def class_method(cls, arg):
+        return arg
 
 
 class SpyingTest(TestBase):
@@ -78,3 +83,24 @@ class SpyingTest(TestBase):
         dummy = spy(Dummy())
 
         assert repr(dummy) == "<SpiedDummy id=%s>" % id(dummy)
+
+
+
+    def testClassmethod(self):
+        dummy = spy(Dummy)
+
+        assert dummy.class_method('foo') == 'foo'
+        verify(dummy).class_method('foo')
+
+        with pytest.raises(TypeError):
+            dummy.return_args('foo')
+
+
+    def testModuleFunction(self):
+        import time
+        dummy = spy(time)
+
+        assert dummy.time() is not None
+
+        verify(dummy).time()
+

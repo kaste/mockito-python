@@ -20,27 +20,37 @@
 
 '''Spying on real objects.'''
 
+import inspect
+
 from .invocation import RememberedProxyInvocation
 from .mocking import Mock, _Dummy, mock_registry
 
 __all__ = ['spy']
 
 
-def spy(instance):
+def spy(object):
+
+    if inspect.isclass(object) or inspect.ismodule(object):
+        class_ = None
+    else:
+        class_ = object.__class__
 
     class Spy(_Dummy):
-        __class__ = instance.__class__
+        if class_:
+            __class__ = class_
 
         def __getattr__(self, method_name):
             return RememberedProxyInvocation(theMock, method_name)
 
         def __repr__(self):
-            name = 'Spied' + instance.__class__.__name__
+            name = 'Spied'
+            if class_:
+                name += class_.__name__
             return "<%s id=%s>" % (name, id(self))
 
 
     obj = Spy()
-    theMock = Mock(obj, strict=True, spec=instance)
+    theMock = Mock(obj, strict=True, spec=object)
 
     mock_registry.register(obj, theMock)
     return obj
