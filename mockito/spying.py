@@ -22,6 +22,7 @@
 
 import inspect
 
+from mockito import when2
 from .invocation import RememberedProxyInvocation
 from .mocking import Mock, _Dummy, mock_registry
 
@@ -74,4 +75,25 @@ def spy(object):
 
     mock_registry.register(obj, theMock)
     return obj
+
+
+def spy2(fn):  # type: (...) -> None
+    """Spy usage of given ``fn``
+
+    Patches the module, class or object ``fn`` lives in, so that all
+    interactions can be recorded; otherwise executes ``fn`` as before, so
+    that all side effects happen as before.
+
+    E.g.::
+
+        import time
+        spy(time.time)
+        do_work(...)  # nothing injected, uses global patched `time` module
+        verify(time).time()
+
+    Note that builtins often cannot be patched because they're read-only.
+
+
+    """
+    when2(fn, Ellipsis).thenAnswer(fn)
 

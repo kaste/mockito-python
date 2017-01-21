@@ -19,12 +19,15 @@
 # THE SOFTWARE.
 
 import pytest
+import sys
 
 from .test_base import TestBase
-from mockito import spy, verify, VerificationError, verifyZeroInteractions
+from mockito import (
+    spy, spy2, verify, VerificationError, verifyZeroInteractions)
 
+import time
 
-class Dummy:
+class Dummy(object):
     def foo(self):
         return "foo"
 
@@ -86,12 +89,18 @@ class SpyingTest(TestBase):
 
 
 
-    def testClassmethod(self):
+    def testCallClassmethod(self):
         dummy = spy(Dummy)
 
         assert dummy.class_method('foo') == 'foo'
         verify(dummy).class_method('foo')
 
+
+    @pytest.mark.xfail(
+        sys.version_info >= (3,),
+        reason="python3 allows any value for self")
+    def testCantCallInstanceMethodWhenSpyingClass(self):
+        dummy = spy(Dummy)
         with pytest.raises(TypeError):
             dummy.return_args('foo')
 
@@ -103,4 +112,27 @@ class SpyingTest(TestBase):
         assert dummy.time() is not None
 
         verify(dummy).time()
+
+
+class TestSpy2:
+
+    def testA(self):
+        dummy = Dummy()
+        spy2(dummy.foo)
+
+        assert dummy.foo() == 'foo'
+        verify(dummy).foo()
+
+    def testB(self):
+        spy2(Dummy.class_method)
+
+        assert Dummy.class_method('foo') == 'foo'
+        verify(Dummy).class_method('foo')
+
+    def testModule(self):
+        spy2(time.time)
+
+        assert time.time() is not None
+        verify(time).time()
+
 

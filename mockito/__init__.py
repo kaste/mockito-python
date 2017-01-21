@@ -26,7 +26,7 @@ from .mockito import (
     verifyZeroInteractions, verifyNoUnwantedInteractions,
     ArgumentError)
 from . import inorder
-from .spying import spy
+from .spying import spy, spy2
 from .mocking import mock
 from .verification import VerificationError
 
@@ -35,7 +35,7 @@ from .verification import never
 
 __version__ = '1.0.0-dev'
 
-__all__ = ['mock', 'spy', 'when', 'when2', 'patch', 'expect', 'verify',
+__all__ = ['mock', 'spy', 'spy2', 'when', 'when2', 'patch', 'expect', 'verify',
            'verifyNoMoreInteractions', 'verifyZeroInteractions',
            'verifyNoUnwantedInteractions',
            'inorder', 'unstub',
