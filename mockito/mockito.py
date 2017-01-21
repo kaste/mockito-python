@@ -105,6 +105,62 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
 
 
 def when(obj, strict=True):
+    """Central interface to stub functions on a given ``obj``
+
+    Stubbing in mockito's sense means turning functions into constants.
+    You specify more or less concrete arguments and a constant output, a return
+    value or a raised exception, for it. You hereby set expected interactions.
+    All interactions that do not met these expectations, the specified
+    arguments, will be rejected. They throw immediately at call time.
+
+    E.g.::
+
+        when(dog).bark('Grrr').thenReturn('Wuff')
+        when(dog).bark('Miau').thenRaise(TypeError())
+        assert dog.bark('Grrr') == 'Wuff'
+        verify(dog).bark('Grrr')
+
+        dog.bark('Miau')  # will throw TypeError
+        dog.bark('Wuff')  # will throw unwanted interaction
+
+    Stubbing can effectively be used as monkeypatching; usage shown with
+    the ``with`` context managing::
+
+        with when(os.path).exists('/foo').thenReturn(True):
+            ...
+
+    Most of the time verifying your interactions is not necessary, because
+    your code under tests implicitly verifies the return value by evaluating
+    it.
+
+    If your function is pure side effect and does not return something, you
+    can omit the specific answer. Python's default here is ``None``::
+
+        when(manager).do_work()
+
+    ``when`` verifies the method name, the expected argument signature, and the
+    actual, factual arguments your code under test uses against the original
+    object and its function so its easier to spot changing interfaces.
+
+    Sometimes it's tedious to spell out all arguments::
+
+        from mockito import ANY, ARGS, KWARGS
+        when(requests).get('http://example.com/', **KWARGS).thenReturn(...)
+        when(os.path).exists(ANY)
+        when(os.path).exists(ANY(str))
+
+    This is especially handy for subsequent ``verify`` calls::
+
+        when(manager).add_tasks(1, 2, 3)
+        ...
+        # no need to duplicate the specification; every other argument pattern
+        # would have raised anyway.
+        verify(manager).add_tasks(*ARGS)
+        verify(manager).add_tasks(...)       # Py3
+        verify(manager).add_tasks(Ellipsis)  # Py2
+
+
+    """
     theMock = _get_mock(obj, strict=strict)
 
     class When(object):
