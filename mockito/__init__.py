@@ -22,7 +22,7 @@
 
 
 from .mockito import (
-    when, expect, unstub, verify, verifyNoMoreInteractions,
+    when, when2, patch, expect, unstub, verify, verifyNoMoreInteractions,
     verifyZeroInteractions, verifyNoUnwantedInteractions,
     ArgumentError)
 from . import inorder
@@ -35,7 +35,7 @@ from .verification import never
 
 __version__ = '1.0.0-dev'
 
-__all__ = ['mock', 'spy', 'when', 'expect', 'verify',
+__all__ = ['mock', 'spy', 'when', 'when2', 'patch', 'expect', 'verify',
            'verifyNoMoreInteractions', 'verifyZeroInteractions',
            'verifyNoUnwantedInteractions',
            'inorder', 'unstub',

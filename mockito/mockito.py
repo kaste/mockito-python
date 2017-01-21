@@ -21,6 +21,7 @@
 from . import invocation
 from . import verification
 
+from .utils import get_function_host
 from .mocking import Mock
 from .mock_registry import mock_registry
 from .verification import VerificationError
@@ -168,6 +169,31 @@ def when(obj, strict=True):
             return invocation.StubbedInvocation(theMock, method_name)
 
     return When()
+
+
+def when2(fn, *args, **kwargs):
+    """Specialized ``when`` that takes a function and potential arguments
+
+    Returns ``AnswerSelector`` interface which exposes ``thenReturn``,
+    ``thenRaise``, and ``thenAnswer`` as usual. Always ``strict``.
+
+    Usage::
+
+        # when(dog).bark('Miau').thenReturn('Wuff')
+        when2(dog.bark, 'Miau').thenReturn('Wuff')
+
+
+
+    """
+    obj, name, fn = get_function_host(fn)
+    theMock = Mock(obj, strict=True, spec=obj)
+    mock_registry.register(obj, theMock)
+    return invocation.StubbedInvocation(theMock, name)(*args, **kwargs)
+
+
+def patch(fn, new_fn):
+    when2(fn, Ellipsis).thenAnswer(new_fn)
+
 
 def expect(obj, strict=True,
            times=None, atleast=None, atmost=None, between=None):
