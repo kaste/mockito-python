@@ -213,7 +213,7 @@ def when2(fn, *args, **kwargs):
     **MUST ``unstub`` after stubbing.** Or use ``with`` statement.
 
     """
-    obj, name, fn = get_function_host(fn)
+    obj, name = get_function_host(fn)
     theMock = _get_mock(obj, strict=True)
     return invocation.StubbedInvocation(theMock, name)(*args, **kwargs)
 
