@@ -24,6 +24,7 @@ import functools
 
 from . import invocation
 from . import signature
+from . import utils
 from .mock_registry import mock_registry
 
 
@@ -75,13 +76,18 @@ class Mock(object):
 
         def new_mocked_method(*args, **kwargs):
             # we throw away the first argument, if it's either self or cls
-            if (inspect.isclass(self.mocked_obj) and
+            if (inspect.ismethod(new_mocked_method) or
+                    inspect.isclass(self.mocked_obj) and
                     not isinstance(original_method, staticmethod)):
                 args = args[1:]
 
             return remembered_invocation_builder(
                 self, method_name, *args, **kwargs)
 
+        new_mocked_method.__name__ = method_name
+        if (inspect.ismethod(original_method)):
+            new_mocked_method = utils.newmethod(
+                new_mocked_method, self.mocked_obj)
         if isinstance(original_method, staticmethod):
             new_mocked_method = staticmethod(new_mocked_method)
         elif isinstance(original_method, classmethod):

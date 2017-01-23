@@ -214,8 +214,7 @@ def when2(fn, *args, **kwargs):
 
     """
     obj, name, fn = get_function_host(fn)
-    theMock = Mock(obj, strict=True, spec=obj)
-    mock_registry.register(obj, theMock)
+    theMock = _get_mock(obj, strict=True)
     return invocation.StubbedInvocation(theMock, name)(*args, **kwargs)
 
 

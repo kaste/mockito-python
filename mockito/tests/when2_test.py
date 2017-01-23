@@ -1,17 +1,8 @@
 
-import sys
-import types
-
 from mockito import when2 as when, patch
+from mockito.utils import newmethod
 
-PY3 = sys.version_info >= (3,)
 
-
-def newmethod(fn, obj):
-    if PY3:
-        return types.MethodType(fn, obj)
-    else:
-        return types.MethodType(fn, obj, obj.__class__)
 
 class Dog(object):
     def bark(self, sound):
@@ -25,6 +16,8 @@ class TestMockito2:
     def testWhen2(self):
         rex = Dog()
         when(rex.bark, 'Miau').thenReturn('Wuff')
+        when(rex.bark, 'Miau').thenReturn('Grrr')
+        assert rex.bark('Miau') == 'Grrr'
 
 
     def testPatch(self):

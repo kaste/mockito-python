@@ -1,5 +1,18 @@
 
 import inspect
+import sys
+import types
+
+
+PY3 = sys.version_info >= (3,)
+
+
+def newmethod(fn, obj):
+    if PY3:
+        return types.MethodType(fn, obj)
+    else:
+        return types.MethodType(fn, obj, obj.__class__)
+
 
 def get_function_host(fn):
     """Destructure a given function into its host, its name and itself
