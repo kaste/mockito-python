@@ -108,19 +108,28 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
 def when(obj, strict=True):
     """Central interface to stub functions on a given ``obj``
 
-    Stubbing in mockito's sense means turning functions into constants.
-    You specify more or less concrete arguments and a constant output, a return
-    value or a raised exception, for it. You hereby set expected interactions.
-    All interactions that do not met these expectations, the specified
-    arguments, will be rejected. They throw immediately at call time.
+    ``obj`` should be a module, a class or an instance of a class; it can be
+    a Dummy you created with ``mock``. ``when`` exposes a fluent interface
+    where you configure a stub in three steps::
+
+        when(<obj>).<method_name>(<args>).thenReturn(<value>)
+
+    Compared to simple *patching*, stubbing in mockito requires you to specify
+    conrete ``args`` for which the stub will answer with a concrete
+    ``<value>``. All invocations that do not match this specific call signature
+    will be rejected. They usually throw at call time.
+
+    Stubbing in mockito's sense thus means not only to get rid of unwanted
+    side effects, but effectively to turn function calls into constants.
 
     E.g.::
 
+        # Given ``dog`` is an instance of a ``Dog``
         when(dog).bark('Grrr').thenReturn('Wuff')
         when(dog).bark('Miau').thenRaise(TypeError())
-        assert dog.bark('Grrr') == 'Wuff'
-        verify(dog).bark('Grrr')
 
+        # With this configuration set up:
+        assert dog.bark('Grrr') == 'Wuff'
         dog.bark('Miau')  # will throw TypeError
         dog.bark('Wuff')  # will throw unwanted interaction
 
@@ -132,10 +141,11 @@ def when(obj, strict=True):
 
     Most of the time verifying your interactions is not necessary, because
     your code under tests implicitly verifies the return value by evaluating
-    it.
+    it. See ``verify`` if you need to, see also ``expect`` to setup expected
+    call counts up front.
 
     If your function is pure side effect and does not return something, you
-    can omit the specific answer. Python's default here is ``None``::
+    can omit the specific answer. The default then is ``None``::
 
         when(manager).do_work()
 
@@ -160,6 +170,11 @@ def when(obj, strict=True):
         verify(manager).add_tasks(...)       # Py3
         verify(manager).add_tasks(Ellipsis)  # Py2
 
+    **MUST ``unstub`` after stubbing.** Or use ``with`` statement.
+
+    Set ``strict=False`` to bypass the function signature checks.
+
+    See related ``when2`` which has a more pythonic interface.
 
     """
     theMock = _get_mock(obj, strict=strict)
@@ -172,17 +187,20 @@ def when(obj, strict=True):
 
 
 def when2(fn, *args, **kwargs):
-    """Specialized ``when`` that takes a function and potential arguments
+    """Stub a function call with the given arguments
+
+    Exposes a more pythonic interface than ``when``. See ``when`` for more
+    documentation.
 
     Returns ``AnswerSelector`` interface which exposes ``thenReturn``,
     ``thenRaise``, and ``thenAnswer`` as usual. Always ``strict``.
 
     Usage::
 
-        # when(dog).bark('Miau').thenReturn('Wuff')
+        # Given ``dog`` is an instance of a ``Dog``
         when2(dog.bark, 'Miau').thenReturn('Wuff')
 
-
+    **MUST ``unstub`` after stubbing.** Or use ``with`` statement.
 
     """
     obj, name, fn = get_function_host(fn)
@@ -197,6 +215,23 @@ def patch(fn, new_fn):
 
 def expect(obj, strict=True,
            times=None, atleast=None, atmost=None, between=None):
+    """Stub a function call, and set up an expected call count.
+
+    Usage::
+
+        # Given ``dog`` is an instance of a ``Dog``
+        expect(dog, times=1).bark('Wuff').thenReturn('Miau')
+        dog.bark('Wuff')
+        dog.bark('Wuff')  # will throw at call time: too many invocations
+
+        # maybe if you need to ensure that ``dog.bark()`` was called at all
+        verifyNoUnwantedInteractions()
+
+    **MUST ``unstub`` after stubbing.** Or use ``with`` statement.
+
+    See ``when``, ``when2``
+
+    """
 
     theMock = _get_mock(obj, strict=strict)
 
