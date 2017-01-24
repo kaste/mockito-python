@@ -3,6 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. module:: mockito
 
 Mockito is a spying framework originally based on the Java library with the same name.
 
@@ -16,62 +17,98 @@ Install
 ``pip install mockito``
 
 
-If you want, run the tests
---------------------------
-
-::
-
-    pip install nose
-    nosetests
-
-
 
 Walk-through
 ============
 
-Say you want to mock the class Dog::
+The 90% use case is that want to stub out a side effect. This is also known as (monkey-)patching. With mockito, it's::
 
-    class Dog(object):
-        def bark(self, sound):
-            return "%s!" % sound
+    from mockito import when
 
-To get you started::
+    # stub `os.path.exists`
+    when(os.path).exists('/foo').thenReturn(True)
 
-    from mockito import *
+    os.path.exists('/foo')  # => True
+    os.path.exists('/bar')  # -> throws unexpected invocation
 
-    # mock the class
-    when(Dog).bark('Wuff').thenReturn('Miau!')
+So in difference to traditional patching, in mockito you always specify concrete arguments (a call signature), and its outcome, usually a return value via `thenReturn` or a raised exception via `thenRaise`. That effectively turns function calls into constants for the time of the test.
 
-    # instantiate
-    rex = Dog()
-    assert rex.bark('Wuff') == 'Miau!'
+Do **not** forget to :func:`unstub` of course!
 
-    unstub()
+::
 
-You can also start with an empty stub::
-
-    obj = mock()
-
-    # pass it around, eventually it will be used
-    obj.say('Hi')
-
-    # verify interactions
-    verify(obj).say('Hi')
-    verifyNoMoreInteractions(obj)
+    from mockito import unstub
+    unstub()  # restore os.path module
 
 
+Now we mix global module patching with mocks. We want to test the following function using the fab `requests` library::
 
-There is a another :doc:`TL;DR <nutshell>` and *some* more docs at http://code.google.com/p/mockito-python/
+    import requests
+
+    def get_text(url):
+        res = requests.get(url)
+        if 200 <= res.status_code < 300:
+            return res.text
+        return None
+
+How, dare, we did not inject our dependencies! Obviously we can get over that by patching at the module level like before::
+
+    when(requests).get('https://example.com/api').thenReturn(...)
+
+But what should we return? We know it's a `requests.Response` object, (Actually I know this bc I typed this in the ipython REPL first.) But how to construct such a `Response`, its `__init__` doesn't even take any arguments?
+
+Should we actually use a 'real' response object? No, we fake it using :func:`mock`.
+
+::
+
+    # setup
+    response = mock({
+        'status_code': 200,
+        'text': 'Ok'
+    }, spec=requests.Response)
+    when(requests).get('https://example.com/api').thenReturn(response)
+
+    # run
+    assert get_text('https://example.com/api') == 'Ok'
+
+    # done!
+
+
 
 Report issues, contribute more documentation or give feedback at `Github <https://github.com/kaste/mockito-python>`_!
 
 
-.. Contents:
+The functions
+=============
 
-.. .. toctree::
-..    :maxdepth: 2
+Main entrypoints are: :func:`when`, :func:`when2`, :func:`expect`, :func:`mock`, :func:`unstub`, :func:`verify`, :func:`verifyNoUnwantedInteractions`, :func:`spy`, :func:`patch`
 
-..    nutshell
+.. autofunction:: when
+.. autofunction:: mock
+.. autofunction:: verify
+.. autofunction:: unstub
+.. autofunction:: expect
+.. autofunction:: verifyNoUnwantedInteractions
+.. autofunction:: when2
+.. autofunction:: patch
+.. autofunction:: spy
+
+
+
+.. The matchers
+.. ============
+
+.. .. automodule:: mockito.matchers
+..   :members:
+
+
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   nutshell
 
 
 

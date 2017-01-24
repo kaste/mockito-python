@@ -30,12 +30,12 @@ __all__ = ['spy']
 
 
 def spy(object):
-    """Spy an object
+    """Spy an object.
 
     Spying means that all functions will behave as before, so they will
     be side effects, but the interactions can be verified afterwards.
 
-    Returns Dummy-like, almost empty object as proxy to ``object``.
+    Returns Dummy-like, almost empty object as proxy to `object`.
 
     The *returned* object must be injected and used by the code under test;
     after that all interactions can be verified as usual.
@@ -78,10 +78,10 @@ def spy(object):
 
 
 def spy2(fn):  # type: (...) -> None
-    """Spy usage of given ``fn``
+    """Spy usage of given `fn`.
 
-    Patches the module, class or object ``fn`` lives in, so that all
-    interactions can be recorded; otherwise executes ``fn`` as before, so
+    Patches the module, class or object `fn` lives in, so that all
+    interactions can be recorded; otherwise executes `fn` as before, so
     that all side effects happen as before.
 
     E.g.::

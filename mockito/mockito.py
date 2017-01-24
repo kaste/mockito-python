@@ -90,11 +90,11 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
            inorder=False):
     """Central interface to verify interactions.
 
-    ``verify`` uses a fluent interface::
+    `verify` uses a fluent interface::
 
         verify(<obj>, times=2).<method_name>(<args>)
 
-    `args` can be as concrete as neccessary. Often a catch-all is enough,
+    `args` can be as concrete as necessary. Often a catch-all is enough,
     especially if you're working with strict mocks, bc they throw at call
     time on unwanted, unconfigured arguments::
 
@@ -103,6 +103,7 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
         ...
         # no need to duplicate the specification; every other argument pattern
         # would have raised anyway.
+        verify(manager).add_tasks(1, 2, 3)  # duplicates `when`call
         verify(manager).add_tasks(*ARGS)
         verify(manager).add_tasks(...)       # Py3
         verify(manager).add_tasks(Ellipsis)  # Py2
@@ -126,18 +127,18 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
 
 
 def when(obj, strict=True):
-    """Central interface to stub functions on a given ``obj``
+    """Central interface to stub functions on a given `obj`
 
-    ``obj`` should be a module, a class or an instance of a class; it can be
-    a Dummy you created with ``mock``. ``when`` exposes a fluent interface
+    `obj` should be a module, a class or an instance of a class; it can be
+    a Dummy you created with :func:`mock`. ``when`` exposes a fluent interface
     where you configure a stub in three steps::
 
         when(<obj>).<method_name>(<args>).thenReturn(<value>)
 
     Compared to simple *patching*, stubbing in mockito requires you to specify
-    conrete ``args`` for which the stub will answer with a concrete
-    ``<value>``. All invocations that do not match this specific call signature
-    will be rejected. They usually throw at call time.
+    conrete `args` for which the stub will answer with a concrete `<value>`.
+    All invocations that do not match this specific call signature will be
+    rejected. They usually throw at call time.
 
     Stubbing in mockito's sense thus means not only to get rid of unwanted
     side effects, but effectively to turn function calls into constants.
@@ -154,22 +155,22 @@ def when(obj, strict=True):
         dog.bark('Wuff')  # will throw unwanted interaction
 
     Stubbing can effectively be used as monkeypatching; usage shown with
-    the ``with`` context managing::
+    the `with` context managing::
 
         with when(os.path).exists('/foo').thenReturn(True):
             ...
 
     Most of the time verifying your interactions is not necessary, because
     your code under tests implicitly verifies the return value by evaluating
-    it. See ``verify`` if you need to, see also ``expect`` to setup expected
-    call counts up front.
+    it. See :func:`verify` if you need to, see also :func:`expect` to setup
+    expected call counts up front.
 
     If your function is pure side effect and does not return something, you
-    can omit the specific answer. The default then is ``None``::
+    can omit the specific answer. The default then is `None`::
 
         when(manager).do_work()
 
-    ``when`` verifies the method name, the expected argument signature, and the
+    `when` verifies the method name, the expected argument signature, and the
     actual, factual arguments your code under test uses against the original
     object and its function so its easier to spot changing interfaces.
 
@@ -180,11 +181,12 @@ def when(obj, strict=True):
         when(os.path).exists(ANY)
         when(os.path).exists(ANY(str))
 
-    **MUST ``unstub`` after stubbing.** Or use ``with`` statement.
+    .. note:: You must :func:`unstub` after stubbing, or use `with`
+        statement.
 
     Set ``strict=False`` to bypass the function signature checks.
 
-    See related ``when2`` which has a more pythonic interface.
+    See related :func:`when2` which has a more pythonic interface.
 
     """
     theMock = _get_mock(obj, strict=strict)
@@ -199,18 +201,19 @@ def when(obj, strict=True):
 def when2(fn, *args, **kwargs):
     """Stub a function call with the given arguments
 
-    Exposes a more pythonic interface than ``when``. See ``when`` for more
-    documentation.
+    Exposes a more pythonic interface than :func:`when`. See :func:`when` for
+    more documentation.
 
-    Returns ``AnswerSelector`` interface which exposes ``thenReturn``,
-    ``thenRaise``, and ``thenAnswer`` as usual. Always ``strict``.
+    Returns `AnswerSelector` interface which exposes `thenReturn`,
+    `thenRaise`, and `thenAnswer` as usual. Always `strict`.
 
     Usage::
 
-        # Given ``dog`` is an instance of a ``Dog``
+        # Given `dog` is an instance of a `Dog`
         when2(dog.bark, 'Miau').thenReturn('Wuff')
 
-    **MUST ``unstub`` after stubbing.** Or use ``with`` statement.
+    .. note:: You must :func:`unstub` after stubbing, or use `with`
+        statement.
 
     """
     obj, name = get_function_host(fn)
@@ -219,6 +222,19 @@ def when2(fn, *args, **kwargs):
 
 
 def patch(fn, new_fn):
+    """Patch/Replace given function.
+
+    Note that after that all interactions will be recorded and can be verified.
+
+    ::
+
+        with patch(os.path.exists, lambda str: True):
+            ...
+
+    .. note:: You must :func:`unstub` after stubbing, or use `with`
+        statement.
+
+    """
     when2(fn, Ellipsis).thenAnswer(new_fn)
 
 
@@ -228,17 +244,18 @@ def expect(obj, strict=True,
 
     Usage::
 
-        # Given ``dog`` is an instance of a ``Dog``
+        # Given `dog` is an instance of a `Dog`
         expect(dog, times=1).bark('Wuff').thenReturn('Miau')
         dog.bark('Wuff')
         dog.bark('Wuff')  # will throw at call time: too many invocations
 
-        # maybe if you need to ensure that ``dog.bark()`` was called at all
+        # maybe if you need to ensure that `dog.bark()` was called at all
         verifyNoUnwantedInteractions()
 
-    **MUST ``unstub`` after stubbing.** Or use ``with`` statement.
+    .. note:: You must :func:`unstub` after stubbing, or use `with`
+        statement.
 
-    See ``when``, ``when2``
+    See :func:`when`, :func:`when2`, :func:`verifyNoUnwantedInteractions`
 
     """
 
@@ -263,7 +280,7 @@ def unstub(*objs):
     patched modules, classes etc. will be unstubbed.
 
     Note that additionally, the underlying registry will be cleaned.
-    After an ``unstub`` you can't ``verify`` anymore because all
+    After an `unstub` you can't :func:`verify` anymore because all
     interactions will be forgotten.
     """
 
@@ -290,7 +307,7 @@ def verifyZeroInteractions(*mocks):
 
 
 def verifyNoUnwantedInteractions(*objs):
-    """Verifies that expectations set via ``expect`` are met
+    """Verifies that expectations set via `expect` are met
 
     E.g.::
 
@@ -299,9 +316,13 @@ def verifyNoUnwantedInteractions(*objs):
         verifyNoUnwantedInteractions(os.path)  # ok, called once
 
     If you leave out the argument *all* registered objects will
-    be checked. **DANGERZONE**: If you did not ``unstub`` correctly,
-    it is possible that old registered mocks, from other tests
-    leak.
+    be checked.
+
+    .. note:: **DANGERZONE**: If you did not :func:`unstub` correctly,
+        it is possible that old registered mocks, from other tests
+        leak.
+
+    See related :func:`expect`
     """
 
     if objs:

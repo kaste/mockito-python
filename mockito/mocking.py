@@ -136,32 +136,33 @@ class Mock(object):
 
 
 class _OMITTED(object):
-    pass
+    def __repr__(self):
+        return 'OMITTED'
 
 
 OMITTED = _OMITTED()
 
 def mock(config_or_spec=None, spec=None, strict=OMITTED):
-    """Create 'empty' objects ('Mocks')
+    """Create 'empty' objects ('Mocks').
 
     Will create an empty unconfigured object, that you can pass
     around. All interactions (method calls) will be recorded and can be
-    verified using ``verify`` et.al.
+    verified using :func:`verify` et.al.
 
-    A plain ``mock()`` will be not ``strict``, and thus all methods regardless
+    A plain `mock()` will be not `strict`, and thus all methods regardless
     of the arguments will return ``None``. [Technically all attributes will
     return an internal interface; thus e.g. ``if mock().foo:`` will pass!]
 
     If you set strict to ``True``: ``mock(strict=True)`` all unexpected
     interactions will raise an error instead.
 
-    You configure a mock using ``when``, ``when2`` or ``expect``. You can
-    also very conveniently just pass in a dict here::
+    You configure a mock using :func:`when`, :func:`when2` or :func:`expect`.
+    You can also very conveniently just pass in a dict here::
 
         response = mock({'text': 'ok', 'raise_for_status': lambda: None})
 
     You can also create an empty Mock which is specced against a given
-    ``spec``: ``mock(requests.Response)``. These mock are by default strict,
+    `spec`: ``mock(requests.Response)``. These mock are by default strict,
     thus they raise if you want to stub a method, the spec does not implement.
     Mockito will also match the function signature.
 
@@ -171,7 +172,7 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
                         spec=requests.Response)
 
 
-    See ``verify`` to verify your interactions after usage.
+    See :func:`verify` to verify your interactions after usage.
 
     """
 
