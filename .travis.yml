@@ -7,11 +7,13 @@ python:
 - '3.6'
 install:
   - pip install pytest --upgrade
+  - pip install sphinx-pypi-upload
   - pip install .
   # build to get 2to3 applied
   - python setup.py build
 script:
   - py.test build/lib
+  - python setup.py build_sphinx
 deploy:
   provider: pypi
   user: herrkaste
