@@ -195,7 +195,7 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
             __class__ = spec  # make isinstance work
 
         def __getattr__(self, method_name):
-            if strict:
+            if strict and not method_name == '__call__':
                 raise AttributeError(
                     "'Dummy' has no attribute %r configured" % method_name)
             return functools.partial(

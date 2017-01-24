@@ -22,6 +22,7 @@ import pytest
 
 from .test_base import TestBase
 from mockito import mock, when, verify, times, any
+from mockito.invocation import InvocationError
 
 
 class TestEmptyMocks:
@@ -49,6 +50,11 @@ class TestEmptyMocks:
         assert dummy() is None
         assert dummy(1, 2) is None
 
+    def testCallableDummiesAreWhenable(self):
+        dummy = mock()
+        when(dummy).__call__(1).thenReturn(2)
+
+        assert dummy(1) == 2
 
     def testCallsAreVerifiable(self):
         dummy = mock()
@@ -73,6 +79,18 @@ class TestStrictEmptyMocks:
         when(dummy).foo()
         dummy.foo()
         verify(dummy).foo()
+
+    def testCanConfigureCall(self):
+        dummy = mock(strict=True)
+        when(dummy).__call__(1).thenReturn(2)
+
+        assert dummy(1) == 2
+
+    def testScreamOnUnconfiguredCall(self):
+        dummy = mock(strict=True)
+
+        with pytest.raises(InvocationError):
+            dummy(1)
 
 
 class StubbingTest(TestBase):
