@@ -178,6 +178,13 @@ You can use an empty stub specced against a concrete class::
     # Or again preconfigure
     rex = mock({'health': 121}, spec=Dog)
 
+    # preconfigure stubbed method
+    rex = mock({'bark': lambda sound: 'Miau'}, spec=Dog)
+
+    # as you specced the mock, you get at least function signature matching
+    # `bark` does not take any arguments so
+    rex.bark('sound')  # will throw TypeError
+
     # Btw, you can make loose specced mocks::
     rex = mock(Dog, strict=False)
 
