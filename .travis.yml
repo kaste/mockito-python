@@ -12,7 +12,6 @@ install:
   - python setup.py build
 script:
   - py.test build/lib
-  - python setup.py upload_docs
 deploy:
   provider: pypi
   docs_dir: docs/_build/html
