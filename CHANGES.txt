@@ -6,9 +6,9 @@ Release 1.0.0 (yet to come)
 
 This is a major update; mostly because of internal code reorganization (`imports`) it cannot be guaranteed that this will not break for you. Though if you just used the public API you should be fine. None of the vintage old tests have been removed and they at least pass.
 
-In general unclassified imports (``from mocktio import *``) are not recommended. But if you did, we do not export ``Mock`` anymore. ``Mock`` has been deprecated long ago and is now for internal use only. You must use ``mock``.
+In general unclassified imports (``from mocktio import *``) are not recommended. But if you did, we do not export `Mock` anymore. `Mock` has been deprecated long ago and is now for internal use only. You must use `mock`.
 
-Another important change is, that `mockito`s strict mode is far more strict than before. We now generally try to match the signature of the target method
+Another important change is, that *mockito*'s strict mode is far more strict than before. We now generally try to match the signature of the target method
 with your usage. Usually this should help you find bugs in your code, because
 it will make it easier to spot changing interfaces.
 
@@ -27,13 +27,19 @@ it will make it easier to spot changing interfaces.
     when(main).foo(12)  # will pass
     when(main).foo(c=13)  # will raise immediately
 
-- Mock Dummies are now callable: ``m = mock(); m(1, 2); verify(m).__call__(...)``
+- Mock Dummies are now callable::
 
-- ``Mock()`` is now an implementation detail; it is not exported anymore. Use ``mock()``.
+    m = mock()
+    m(1, 2)
+    verify(m).__call__(...)
+
+- ``Mock()`` is now an implementation detail; it is **not** exported anymore. Use ``mock()``.
 
 - You can unstub individual patched objects ``unstub(obj)``. (Before it was all or nothing.)
 
 - Added basic context manager support when using ``when``. Note that ``verify`` has to be called within the with context.
+
+::
 
     with when(rex).waggle().thenReturn('Yup'):
         assert rex.waggle() == 'Yup'
@@ -41,21 +47,21 @@ it will make it easier to spot changing interfaces.
 
 - Aliased ``any_`` to ``ANY``, ``args`` to ``ARGS`` and ``kwargs`` to ``KWARGS``. You can use python's builtin ``any`` as a stand in for ``ANY``.
 
-- As a convenience you can use our ``any_`` matcher like a type instead of ``any_()``.
+- As a convenience you can use our ``any_`` matcher like a type instead of ``any_()``::
 
     dummy(1)
     verify(dummy).__call__(ANY)
 
-- Added `when2`, `expect`, `spy2`
+- Added ``when2``, ``expect``, ``spy2``
 
-- Make the mocked function (replacement) more inspectable. Copy __doc__, __name__ etc.
+- Make the mocked function (replacement) more inspectable. Copy `__doc__`, `__name__` etc.
 
 
 
 Release 0.7.1 (December 27, 2016)
 ---------------------------------
 
-- Fix: Allow verifyNoMoreInteractions call for real (stubbed) objects
+- Fix: Allow ``verifyNoMoreInteractions`` call for real (stubbed) objects
 
 
 Release 0.7.0 (July 15, 2016)
@@ -66,7 +72,7 @@ Release 0.7.0 (July 15, 2016)
     'and_', 'or_', 'not_', 'eq', 'neq', 'lt', 'lte', 'gt', 'gte',
     'arg_that', 'matches', 'captor'
 
-- Aliases 'any' matcher to 'any_' because it's a builtin.
+- Aliases ``any`` matcher to ``any_`` because it's a builtin.
 - Fixes an issue where mockito could not correctly verify your function invocations, if you grabbed a method from its object and used it ('detached') as a plain function::
 
     m = mock()

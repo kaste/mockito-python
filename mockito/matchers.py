@@ -18,10 +18,46 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-'''Matchers for stubbing and verifications.
+"""Argument matchers for stubbing and verifications.
 
-Common matchers for use in stubbing and verifications.
-'''
+In general the call signature you specify when stubbing or verifying in mockito
+is as concrete as possible: it consists of values only::
+
+    when(os.path).exists('/foo/bar.txt').thenReturn(True)
+
+This is for a reason. In controlled test environments, for the scope of a
+single test, you should usually know exactly how you use a function, and what
+you expect its outcome to be. In mockito usually (in `strict` mode) all
+invocations you did not specify upfront will throw at call time.
+
+If you reason about your code, the above `when` tirade turns - for the time
+of the test - the specific stubbed function into a constant.
+
+You can use so called argument matchers below if you can't or don't
+want to specify a single concrete value for an argument, but a type or class of
+possible values. E.g.::
+
+    when(os.path).exists(...).thenReturn(True)
+    when(os.path).exists(ANY).thenReturn(True)
+    when(os.path).exists(ANY(str)).thenReturn(True)
+
+    when(requests).get(ANY(str), **kwargs)
+    when(requests).get('https://example.com', ...)
+
+    when(math).sqrt(not_(_or(ANY(float), ANY(int)))).thenRaise(TypeError)
+
+Now what you get each time is a function that up to a degree takes various
+arguments and responds with the same outcome each time. Now that's a weird
+thing. So use the matchers for a reason, they're powerful.
+
+The one usage you should not care about is a loose signature when using
+:func:`verify`. Since mockito will throw for unexpected calls, a very loose
+`verify` should be ok::
+
+    verify(requests, times=1).get(...)
+
+
+"""
 
 import re
 
@@ -48,9 +84,27 @@ class _ArgsSentinel(object):
 
 ARGS_SENTINEL = _ArgsSentinel()
 ARGS = args = [ARGS_SENTINEL]
+# ARGS.__doc__ = """Matches multiple positional arguments.
+
+# Note: `args` must match at least one argument.
+
+# Example::
+
+#     when(manager).add_tasks(1, 2, *args)
+
+# """
 
 KWARGS_SENTINEL = '**'
 KWARGS = kwargs = {KWARGS_SENTINEL: '_'}
+# KWARGS.__doc__ = """Matches multiple keyword arguments.
+
+# Note that `kwargs` must match at least one remaining keyword argument.
+
+# Example::
+
+#     when(requests).get('http://myapi/', **KWARGS)
+
+# """
 
 class Matcher:
     def matches(self, arg):
@@ -208,11 +262,15 @@ class ArgumentCaptor(Matcher):
 
 
 def any(wanted_type=None):
-    """Matches any() argument OR any(SomeClass) argument
+    """Matches against type of argument (`isinstance`).
 
-    Examples:
-        when(mock).foo(any()).thenReturn(1)
+    If you want to match *any* type, use either `ANY` or `ANY()`.
+
+    Examples::
+
+        when(mock).foo(any).thenReturn(1)
         verify(mock).foo(any(int))
+
     """
     return Any(wanted_type)
 
@@ -221,55 +279,75 @@ ANY = any_ = any
 
 
 def eq(value):
-    """Matches particular value"""
+    """Matches particular value (`==`)"""
     return Eq(value)
 
 
 def neq(value):
-    """Matches any but given value"""
+    """Matches any but given value (`!=`)"""
     return Neq(value)
 
 
 def lt(value):
-    """Matches any value that is less than given value"""
+    """Matches any value that is less than given value (`<`)"""
     return Lt(value)
 
 
 def lte(value):
-    """Matches any value that is less than or equal to given value"""
+    """Matches any value that is less than or equal to given value (`<=`)"""
     return Lte(value)
 
 
 def gt(value):
-    """Matches any value that is greater than given value"""
+    """Matches any value that is greater than given value (`>`)"""
     return Gt(value)
 
 
 def gte(value):
-    """Matches any value that is greater than or equal to given value"""
+    """Matches any value that is greater than or equal to given value (`>=`)"""
     return Gte(value)
 
 
 def and_(*matchers):
-    """Matches if all given matchers match"""
+    """Matches if all given matchers match
+
+    Example::
+
+        when(mock).foo(and_(ANY(str), contains('foo')))
+
+    """
     return And(matchers)
 
 
 def or_(*matchers):
-    """Matches if any given matcher match"""
+    """Matches if any given matcher match
+
+    Example::
+
+        when(mock).foo(or_(ANY(int), ANY(float)))
+
+    """
     return Or(matchers)
 
 
 def not_(matcher):
-    """Matches if given matcher does not match"""
+    """Matches if given matcher does not match
+
+    Example::
+
+        when(mock).foo(not_(ANY(str))).thenRaise(TypeError)
+
+    """
     return Not(matcher)
 
 
 def arg_that(predicate):
     """Matches any argument for which predicate returns True
 
-    Example:
+    Example::
+
         verify(mock).foo(arg_that(lambda arg: arg > 3 and arg < 7))
+
     """
     return ArgThat(predicate)
 
@@ -277,9 +355,11 @@ def arg_that(predicate):
 def contains(sub):
     """Matches any string containing given substring
 
-    Example:
+    Example::
+
         mock.foo([120, 121, 122, 123])
         verify(mock).foo(contains(123))
+
     """
     return Contains(sub)
 
@@ -292,10 +372,13 @@ def matches(regex, flags=0):
 def captor(matcher=None):
     """Returns argument captor that captures value for further assertions
 
-    Exmaple:
+    Example::
+
         arg_captor = captor(any(int))
-        verify(mock).do_something(arg_captor)
+        when(mock).do_something(arg_captor)
+        mock.do_something(123)
         assert arg_captor.value == 123
+
     """
     return ArgumentCaptor(matcher)
 
