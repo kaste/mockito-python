@@ -16,7 +16,7 @@ it will make it easier to spot changing interfaces.
 
 - Specced mocks ``instance = mock(Class)`` will pass isinstance tests like ``isinstance(instance, Class)``
 
-- For ``when`` and ``verify`` the function signature or argument matchers can be greatly simplified. E.g. ``when(requests).get(...).thenReturn('OK')`` will match any argument you pass in. There are ``args`` and ``kwargs`` matchers as well. So ``when(requests).get('https://...', **kwargs).thenReturn(...)`` will make a exact match on the first argument, the url, and ignore all the headers and other stuff.
+- For ``when`` and ``verify`` the function signature or argument matchers can be greatly simplified. E.g. ``when(requests).get(...).thenReturn('OK')`` will match any argument you pass in. There are ``args`` and ``kwargs`` matchers as well. So ``when(requests).get('https://...', **kwargs).thenReturn(...)`` will make an exact match on the first argument, the url, and ignore all the headers and other stuff.
 
 - Mocks can be preconfigured: ``mock({'text': 'OK'})``. For specced mocks this would be e.g. ``mock({'text': 'OK'}, spec=requests.Response)``.
 
@@ -31,7 +31,7 @@ it will make it easier to spot changing interfaces.
 
 - ``Mock()`` is now an implementation detail; it is not exported anymore. Use ``mock()``.
 
-- You unstub individual patched objects ``unstub(obj)``. (Before it was all or nothing.)
+- You can unstub individual patched objects ``unstub(obj)``. (Before it was all or nothing.)
 
 - Added basic context manager support when using ``when``. Note that ``verify`` has to be called within the with context.
 
@@ -45,6 +45,11 @@ it will make it easier to spot changing interfaces.
 
     dummy(1)
     verify(dummy).__call__(ANY)
+
+- Added `when2`, `expect`, `spy2`
+
+- Make the mocked function (replacement) more inspectable. Copy __doc__, __name__ etc.
+
 
 
 Release 0.7.1 (December 27, 2016)
