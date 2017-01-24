@@ -63,7 +63,7 @@ class Mock(object):
     # STUBBING
 
     def get_original_method(self, method_name):
-        if isinstance(self.mocked_obj, _Dummy):
+        if not self.spec:
             return None
         if inspect.isclass(self.spec):
             return self.spec.__dict__.get(method_name)
@@ -85,6 +85,10 @@ class Mock(object):
                 self, method_name, *args, **kwargs)
 
         new_mocked_method.__name__ = method_name
+        if original_method:
+            new_mocked_method.__doc__ = original_method.__doc__
+            new_mocked_method.__wrapped__ = original_method
+
         if (inspect.ismethod(original_method)):
             new_mocked_method = utils.newmethod(
                 new_mocked_method, self.mocked_obj)
