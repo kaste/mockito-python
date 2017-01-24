@@ -187,6 +187,6 @@ You can use an empty stub specced against a concrete class::
 Read the docs
 =============
 
-http://pythonhosted.org/mockito/
+http://mockito-python.readthedocs.io/en/latest/
 
 
