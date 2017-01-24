@@ -10,14 +10,6 @@ Install
 ``pip install mockito``
 
 
-Run the tests
--------------
-
-::
-
-    pip install pytest
-    py.test
-
 
 Quick Start
 ===========
@@ -48,3 +40,10 @@ Read the docs
 http://mockito-python.readthedocs.io/en/latest/
 
 
+Run the tests
+-------------
+
+::
+
+    pip install pytest
+    py.test
