@@ -56,6 +56,12 @@ it will make it easier to spot changing interfaces.
 
 - Make the mocked function (replacement) more inspectable. Copy `__doc__`, `__name__` etc.
 
+- You can configure magic methods on mocks::
+
+    dummy = mock()
+    when(dummy).__getitem__(1).thenReturn(2)
+    assert dummy[1] == 2
+
 
 
 Release 0.7.1 (December 27, 2016)
