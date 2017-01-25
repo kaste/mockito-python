@@ -1,7 +1,7 @@
 
 import pytest
 
-from mockito import when, expect, verify, mock
+from mockito import when, expect, verify
 from mockito.invocation import InvocationError
 
 class Dog(object):
@@ -38,18 +38,58 @@ class TestUserExposedInterfaces:
         when(obj).update().thenReturn(None)
 
 
+@pytest.mark.usefixtures('unstub')
 class TestPassAroundStrictness:
 
-    def testA(self):
+    def testReconfigureStrictMock(self):
         when(Dog).bark()  # important first call, inits theMock
 
-        when(Dog, strict=False).waggle()
-        expect(Dog, strict=False).weggle()
+        when(Dog, strict=False).waggle().thenReturn('Sure')
+        expect(Dog, strict=False).weggle().thenReturn('Sure')
+
 
         with pytest.raises(InvocationError):
             when(Dog).wuggle()
 
         with pytest.raises(InvocationError):
             when(Dog).woggle()
+
+        rex = Dog()
+        assert rex.waggle() == 'Sure'
+        assert rex.weggle() == 'Sure'
+
+        # For documentation; the inital strict value of the mock will be used
+        # here. So the above when(..., strict=False) just assures we can
+        # actually *add* an attribute to the mocked object
+        with pytest.raises(InvocationError):
+            rex.waggle(1)
+
+        verify(Dog).waggle()
+        verify(Dog).weggle()
+
+
+
+    def testReconfigureLooseMock(self):
+        when(Dog, strict=False).bark()  # important first call, inits theMock
+
+        when(Dog, strict=False).waggle().thenReturn('Sure')
+        expect(Dog, strict=False).weggle().thenReturn('Sure')
+
+        with pytest.raises(InvocationError):
+            when(Dog).wuggle()
+
+        with pytest.raises(InvocationError):
+            when(Dog).woggle()
+
+        rex = Dog()
+        assert rex.waggle() == 'Sure'
+        assert rex.weggle() == 'Sure'
+
+        # For documentation; see test above. strict is inherited from the
+        # initial mock. So we return `None`
+        assert rex.waggle(1) is None
+
+        verify(Dog).waggle()
+        verify(Dog).weggle()
 
 
