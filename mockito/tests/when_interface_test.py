@@ -93,3 +93,11 @@ class TestPassAroundStrictness:
         verify(Dog).weggle()
 
 
+
+    def testEnsureAddedAttributesGetRemovedOnUnstub(self):
+        with when(Dog, strict=False).wggle():
+            pass
+
+        with pytest.raises(AttributeError):
+            getattr(Dog, 'wggle')
+
