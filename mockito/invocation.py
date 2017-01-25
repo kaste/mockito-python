@@ -219,9 +219,11 @@ class VerifiableInvocation(MatchingInvocation):
 
 
 class StubbedInvocation(MatchingInvocation):
-    def __init__(self, mock, method_name, verification=None):
+    def __init__(self, mock, method_name, verification=None, strict=None):
         super(StubbedInvocation, self).__init__(mock, method_name)
         self.verification = verification
+        if strict is not None:
+            self.strict = strict
         self.answers = CompositeAnswer()
 
     def ensure_mocked_object_has_method(self, method_name):

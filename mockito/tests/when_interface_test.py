@@ -1,9 +1,11 @@
 
-from mockito import when, expect, verify
+import pytest
 
+from mockito import when, expect, verify, mock
+from mockito.invocation import InvocationError
 
 class Dog(object):
-    def remember(self):
+    def bark(self):
         pass
 
 
@@ -15,6 +17,7 @@ class Unhashable(object):
         raise TypeError("I'm immutable")
 
 
+@pytest.mark.usefixtures('unstub')
 class TestUserExposedInterfaces:
 
     def testWhen(self):
@@ -33,4 +36,20 @@ class TestUserExposedInterfaces:
     def testEnsureUnhashableObjectCanBeMocked(self):
         obj = Unhashable()
         when(obj).update().thenReturn(None)
+
+
+class TestPassAroundStrictness:
+
+    def testA(self):
+        when(Dog).bark()  # important first call, inits theMock
+
+        when(Dog, strict=False).waggle()
+        expect(Dog, strict=False).weggle()
+
+        with pytest.raises(InvocationError):
+            when(Dog).wuggle()
+
+        with pytest.raises(InvocationError):
+            when(Dog).woggle()
+
 

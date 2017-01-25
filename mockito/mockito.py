@@ -126,7 +126,15 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
     return Verify()
 
 
-def when(obj, strict=True):
+class _OMITTED(object):
+    def __repr__(self):
+        return 'OMITTED'
+
+
+OMITTED = _OMITTED()
+
+
+def when(obj, strict=None):
     """Central interface to stub functions on a given `obj`
 
     `obj` should be a module, a class or an instance of a class; it can be
@@ -189,11 +197,14 @@ def when(obj, strict=True):
     See related :func:`when2` which has a more pythonic interface.
 
     """
+    if strict is None:
+        strict = True
     theMock = _get_mock(obj, strict=strict)
 
     class When(object):
         def __getattr__(self, method_name):
-            return invocation.StubbedInvocation(theMock, method_name)
+            return invocation.StubbedInvocation(
+                theMock, method_name, strict=strict)
 
     return When()
 
@@ -238,7 +249,7 @@ def patch(fn, new_fn):
     when2(fn, Ellipsis).thenAnswer(new_fn)
 
 
-def expect(obj, strict=True,
+def expect(obj, strict=None,
            times=None, atleast=None, atmost=None, between=None):
     """Stub a function call, and set up an expected call count.
 
@@ -258,7 +269,8 @@ def expect(obj, strict=True,
     See :func:`when`, :func:`when2`, :func:`verifyNoUnwantedInteractions`
 
     """
-
+    if strict is None:
+        strict = True
     theMock = _get_mock(obj, strict=strict)
 
     verification_fn = _get_wanted_verification(
@@ -267,7 +279,8 @@ def expect(obj, strict=True,
     class Expect(object):
         def __getattr__(self, method_name):
             return invocation.StubbedInvocation(
-                theMock, method_name, verification_fn)
+                theMock, method_name, verification=verification_fn,
+                strict=strict)
 
     return Expect()
 
