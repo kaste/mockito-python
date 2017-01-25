@@ -32,6 +32,9 @@ __all__ = ['mock']
 
 
 class _Dummy(object):
+    # We spell out `__call__` here for convenience. All other magic methods
+    # must be configured before use, but we want `mock`s to be callable by
+    # default.
     def __call__(self, *args, **kwargs):
         return self.__getattr__('__call__')(*args, **kwargs)
 
@@ -154,8 +157,10 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
     verified using :func:`verify` et.al.
 
     A plain `mock()` will be not `strict`, and thus all methods regardless
-    of the arguments will return ``None``. [Technically all attributes will
-    return an internal interface; thus e.g. ``if mock().foo:`` will pass!]
+    of the arguments will return ``None``.
+
+    .. note:: Technically all attributes will return an internal interface.
+        Because of that a simple ``if mock().foo:`` will surprisingly pass.
 
     If you set strict to ``True``: ``mock(strict=True)`` all unexpected
     interactions will raise an error instead.
@@ -174,6 +179,15 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
 
         response = mock({'json': lambda: {'status': 'Ok'}},
                         spec=requests.Response)
+
+    Mocks are by default callable. Configure the callable behavior using
+    `when`::
+
+        dummy = mock()
+        when(dummy).__call_(1).thenReturn(2)
+
+    All other magic methods must be configured this way or they will raise an
+    AttributeError.
 
 
     See :func:`verify` to verify your interactions after usage.
@@ -195,7 +209,7 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
             __class__ = spec  # make isinstance work
 
         def __getattr__(self, method_name):
-            if strict and not method_name == '__call__':
+            if strict:
                 raise AttributeError(
                     "'Dummy' has no attribute %r configured" % method_name)
             return functools.partial(
@@ -208,8 +222,11 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
             return "<%s id=%s>" % (name, id(self))
 
 
+    # That's a tricky one: The object we will return is an *instance* of our
+    # Dummy class, but the mock we register will point and patch the class.
+    # T.i. so that magic methods (`__call__` etc.) can be configured.
     obj = Dummy()
-    theMock = Mock(obj, strict=strict, spec=spec)
+    theMock = Mock(Dummy, strict=strict, spec=spec)
 
     for n, v in config.items():
         if inspect.isfunction(v):

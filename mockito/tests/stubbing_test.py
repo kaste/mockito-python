@@ -22,7 +22,6 @@ import pytest
 
 from .test_base import TestBase
 from mockito import mock, when, verify, times, any
-from mockito.invocation import InvocationError
 
 
 class TestEmptyMocks:
@@ -39,22 +38,16 @@ class TestEmptyMocks:
 
     def testConfigureDummyWithFunction(self):
         dummy = mock({
-            'getStuff': lambda: 'thing'
+            'getStuff': lambda s: s + ' thing'
         })
 
-        assert dummy.getStuff() == 'thing'
-        verify(dummy).getStuff()
+        assert dummy.getStuff('da') == 'da thing'
+        verify(dummy).getStuff('da')
 
     def testDummiesAreCallable(self):
         dummy = mock()
         assert dummy() is None
         assert dummy(1, 2) is None
-
-    def testCallableDummiesAreWhenable(self):
-        dummy = mock()
-        when(dummy).__call__(1).thenReturn(2)
-
-        assert dummy(1) == 2
 
     def testCallsAreVerifiable(self):
         dummy = mock()
@@ -62,10 +55,23 @@ class TestEmptyMocks:
 
         verify(dummy).__call__(1, 2)
 
+    def testConfigureCallBehavior(self):
+        dummy = mock()
+        when(dummy).__call__(1).thenReturn(2)
+
+        assert dummy(1) == 2
+        verify(dummy).__call__(1)
+
     def testCheckIsInstanceAgainstItself(self):
         dummy = mock()
         assert isinstance(dummy, dummy.__class__)
 
+
+    def testConfigureMagicMethod(self):
+        dummy = mock()
+        when(dummy).__getitem__(1).thenReturn(2)
+
+        assert dummy[1] == 2
 
 class TestStrictEmptyMocks:
     def testScream(self):
@@ -89,8 +95,14 @@ class TestStrictEmptyMocks:
     def testScreamOnUnconfiguredCall(self):
         dummy = mock(strict=True)
 
-        with pytest.raises(InvocationError):
+        with pytest.raises(AttributeError):
             dummy(1)
+
+    def testConfigureMagicMethod(self):
+        dummy = mock(strict=True)
+        when(dummy).__getitem__(1).thenReturn(2)
+
+        assert dummy[1] == 2
 
 
 class StubbingTest(TestBase):
