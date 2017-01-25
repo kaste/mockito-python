@@ -691,3 +691,23 @@ table.docutils.citation, table.docutils.citation td, table.docutils.citation th 
   -webkit-box-shadow: none;
   box-shadow: none;
 }
+
+code {
+    background-color: #eee;
+}
+code span.pre {
+    padding: 0px 4px;
+}
+
+dl {
+    margin: 3em 0;
+}
+
+div.note {
+    background-color: #dceef3;
+    border: 1px solid #85aabf;
+}
+
+dt:target, .highlighted {
+    background-color: #fbe54e;
+}
