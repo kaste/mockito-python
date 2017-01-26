@@ -1,5 +1,5 @@
 
-from mockito import when2 as when, patch
+from mockito import when2, patch
 from mockito.utils import newmethod
 
 
@@ -15,8 +15,8 @@ class Dog(object):
 class TestMockito2:
     def testWhen2(self):
         rex = Dog()
-        when(rex.bark, 'Miau').thenReturn('Wuff')
-        when(rex.bark, 'Miau').thenReturn('Grrr')
+        when2(rex.bark, 'Miau').thenReturn('Wuff')
+        when2(rex.bark, 'Miau').thenReturn('Grrr')
         assert rex.bark('Miau') == 'Grrr'
 
 

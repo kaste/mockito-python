@@ -1,7 +1,7 @@
 
 import pytest
 
-from mockito import when, expect, verify
+from mockito import when, when2, expect, verify, patch, mock, spy2
 from mockito.invocation import InvocationError
 
 class Dog(object):
@@ -94,6 +94,7 @@ class TestPassAroundStrictness:
 
 
 
+    # Where to put this test?
     def testEnsureAddedAttributesGetRemovedOnUnstub(self):
         with when(Dog, strict=False).wggle():
             pass
@@ -101,3 +102,43 @@ class TestPassAroundStrictness:
         with pytest.raises(AttributeError):
             getattr(Dog, 'wggle')
 
+
+@pytest.mark.usefixtures('unstub')
+class TestDottedPaths:
+
+    def testWhen(self):
+        when('os.path').exists('/Foo').thenReturn(True)
+
+        import os.path
+        assert os.path.exists('/Foo')
+
+    def testWhen2(self):
+        when2('os.path.exists', '/Foo').thenReturn(True)
+
+        import os.path
+        assert os.path.exists('/Foo')
+
+    def testPatch(self):
+        dummy = mock()
+        patch('os.path.exists', dummy)
+
+        import os.path
+        assert os.path.exists('/Foo') is None
+
+        verify(dummy).__call__('/Foo')
+
+    def testVerify(self):
+        when('os.path').exists('/Foo').thenReturn(True)
+
+        import os.path
+        os.path.exists('/Foo')
+
+        verify('os.path', times=1).exists('/Foo')
+
+    def testSpy2(self):
+        spy2('os.path.exists')
+
+        import os.path
+        assert not os.path.exists('/Foo')
+
+        verify('os.path', times=1).exists('/Foo')

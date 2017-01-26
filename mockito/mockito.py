@@ -21,7 +21,7 @@
 from . import invocation
 from . import verification
 
-from .utils import get_function_host
+from .utils import get_obj, get_obj_attr_tuple
 from .mocking import Mock
 from .mock_registry import mock_registry
 from .verification import VerificationError
@@ -110,6 +110,9 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
 
     """
 
+    if isinstance(obj, str):
+        obj = get_obj(obj)
+
     verification_fn = _get_wanted_verification(
         times=times, atleast=atleast, atmost=atmost, between=between)
     if inorder:
@@ -197,6 +200,10 @@ def when(obj, strict=None):
     See related :func:`when2` which has a more pythonic interface.
 
     """
+
+    if isinstance(obj, str):
+        obj = get_obj(obj)
+
     if strict is None:
         strict = True
     theMock = _get_mock(obj, strict=strict)
@@ -227,7 +234,7 @@ def when2(fn, *args, **kwargs):
         statement.
 
     """
-    obj, name = get_function_host(fn)
+    obj, name = get_obj_attr_tuple(fn)
     theMock = _get_mock(obj, strict=True)
     return invocation.StubbedInvocation(theMock, name)(*args, **kwargs)
 

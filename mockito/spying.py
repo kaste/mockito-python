@@ -25,6 +25,7 @@ import inspect
 from mockito import when2
 from .invocation import RememberedProxyInvocation
 from .mocking import Mock, _Dummy, mock_registry
+from .utils import get_obj
 
 __all__ = ['spy']
 
@@ -95,5 +96,10 @@ def spy2(fn):  # type: (...) -> None
 
 
     """
-    when2(fn, Ellipsis).thenAnswer(fn)
+    if isinstance(fn, str):
+        answer = get_obj(fn)
+    else:
+        answer = fn
+
+    when2(fn, Ellipsis).thenAnswer(answer)
 
