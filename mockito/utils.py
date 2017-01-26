@@ -3,6 +3,7 @@ import importlib
 import inspect
 import sys
 import types
+import re
 
 
 PY3 = sys.version_info >= (3,)
@@ -19,7 +20,8 @@ def get_function_host(fn):
     """Destructure a given function into its host and its name
 
     A host of a function is a module, for methods it is usually its instance
-    or its class.
+    or its class. This is safe only for methods, for module wide, globally
+    declared names it is experimental.
 
     For all fn: ``getattr(*get_function_host(fn)) == fn``
 
@@ -29,14 +31,77 @@ def get_function_host(fn):
     try:
         name = fn.__name__
     except AttributeError:
-        raise TypeError('given fn %r has no __name__ attribute' % fn)
-    else:
-        if inspect.ismethod(fn):
-            return fn.__self__, name
-        elif inspect.isfunction(fn) or inspect.isbuiltin(fn):
-            return (inspect.getmodule(fn) or fn.__self__), name
-        raise TypeError()
+        raise TypeError('given object %r has no __name__ attribute' % fn)
 
+    if inspect.ismethod(fn):
+        obj = fn.__self__
+    elif inspect.isfunction(fn) or inspect.isbuiltin(fn):
+        # Due to how python imports work, everything that is global on a module
+        # level must be regarded as not safe here. For now, we go for the extra
+        # mile, TBC, because just specifying `os.path.exists` would be cool.
+        #
+        # E.g. `inspect.getmodule(os.path.exists)` returns `genericpath` bc
+        # that's where `exists` is defined and comes from. But from the point
+        # of view of the user `exists` always comes and is used from `os.path`
+        # which points e.g. to `ntpath`. We thus must patch `ntpath`.
+        # But that's the same for most imports::
+        #
+        #     # b.py
+        #     from a import foo
+        #
+        # Now asking `getmodule(b.foo)` it tells you `a`, but we access and use
+        # `b.foo` and we therefore must patch `b`.
+
+        obj, name = find_invoking_frame_and_try_parse()
+        # safety check!
+        assert getattr(obj, name) == fn
+    else:
+        raise TypeError("given object '%s' is not a function" % fn)
+
+
+    return obj, name
+
+
+FIND_ID = re.compile(r'^.*(?:(?:when2|patch)\((.+),|spy2\((.+)\))')
+
+def find_invoking_frame_and_try_parse():
+    # Actually we just want the first frame in user land; we're open for
+    # refactorings here and don't yet decide on which frame exactly we hit
+    # that user land.
+    stack = inspect.stack()[2:10]
+    for frame_info in stack:
+        # Within `patch` and `spy2` we delegate to `when2` but that's not
+        # user land code
+        if frame_info[3] in ('patch', 'spy2'):
+            continue
+
+        source = ''.join(frame_info[4])
+        # print source
+        m = FIND_ID.match(source)
+        if m:
+            print m.groups()
+            # id should be something like `os.path.exists` etc.
+            id = m.group(1) or m.group(2)
+            # print id
+            parts = id.split('.')
+            if len(parts) < 2:
+                raise TypeError("can't guess origin of '%s'" % id)
+            # print parts
+
+            frame = frame_info[0]
+            vars = frame.f_globals.copy()
+            vars.update(frame.f_locals)
+
+            # Now that's a simple reduce; we get the initial value from the
+            # locally available `vars`, and then reduce the middle parts via
+            # `getattr`. The last path component gets not resolved, but is
+            # returned as plain string value.
+            obj = vars.get(parts[0])
+            for part in parts[1:-1]:
+                obj = getattr(obj, part)
+            return obj, parts[-1]
+
+    raise TypeError('could not destructure first argument')
 
 def get_obj(path):
     """Return obj for given dotted path.
