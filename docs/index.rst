@@ -18,6 +18,8 @@ Install
 
     pip install mockito
 
+If you already use `pytest`, consider using the plugin `pytest-mockito <https://github.com/kaste/pytest-mockito>`_.
+
 
 Use
 ---
@@ -39,6 +41,48 @@ Use
 
     # clean up
     unstub()
+
+
+Features
+--------
+
+Super easy to set up different answers.
+
+::
+
+    # Well, you know the internet
+    when(requests).get(...).thenReturn(mock({'status': 501})) \
+                           .thenRaise(Timeout("I'm flaky"))
+                           .thenReturn(mock({'status': 200, 'text': 'Ok'}))
+
+State-of-the-art, high-five argument matchers::
+
+    # Use the Ellipsis, if you don't care
+    when(deferred).defer(...).thenRaise(Timeout)
+
+    # Or **kwargs
+    from mockito import kwargs  # alias KWARGS
+    when(requests).get('http://my-api.com/user', **kwargs)
+
+    # The usual matchers
+    from mockito import ANY, or_, not_
+    number = or_(ANY(int), ANY(float))
+    when(math).sqrt(not_(number)).thenRaise(
+        TypeError('argument must be a number'))
+
+    # Different arguments, different answers
+    when(foo).bar(1).thenReturn(2)
+    when(foo).bar(2).thenReturn(3)
+
+    foo.bar(3)  # throws immediately: unexpected invocation
+
+Signature checking::
+
+    # when stubbing
+    when(requests).get()  # throws immediately: TypeError url required
+
+    # when calling
+    request.get(location='http://example.com/')  # TypeError
 
 
 Read
