@@ -52,7 +52,7 @@ Super easy to set up different answers.
 
     # Well, you know the internet
     when(requests).get(...).thenReturn(mock({'status': 501})) \
-                           .thenRaise(Timeout("I'm flaky"))
+                           .thenRaise(Timeout("I'm flaky")) \
                            .thenReturn(mock({'status': 200, 'text': 'Ok'}))
 
 State-of-the-art, high-five argument matchers::
@@ -70,11 +70,18 @@ State-of-the-art, high-five argument matchers::
     when(math).sqrt(not_(number)).thenRaise(
         TypeError('argument must be a number'))
 
+No need to `verify` (`assert_called_with`) all the time::
+
     # Different arguments, different answers
     when(foo).bar(1).thenReturn(2)
     when(foo).bar(2).thenReturn(3)
 
+    # but:
     foo.bar(3)  # throws immediately: unexpected invocation
+
+    # because of that you just know that when
+    # you get a `2`, you called it with `1`
+
 
 Signature checking::
 
