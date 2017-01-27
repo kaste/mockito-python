@@ -18,7 +18,7 @@ Quick Start
 
 ::
 
-    from mockito import when, unstub
+    from mockito import when, mock, unstub
 
     when(os.path).exists('/foo').thenReturn(True)
 
@@ -30,6 +30,9 @@ Quick Start
 
     # use it
     requests.get('http://google.com/')
+
+    # clean up
+    unstub()
 
 
 

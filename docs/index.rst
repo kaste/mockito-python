@@ -24,7 +24,7 @@ Use
 
 .. code-block:: python
 
-    from mockito import when, unstub
+    from mockito import when, mock, unstub
 
     when(os.path).exists('/foo').thenReturn(True)
 
@@ -36,6 +36,10 @@ Use
 
     # use it
     requests.get('http://google.com/')
+
+    # clean up
+    unstub()
+
 
 Read
 ----
