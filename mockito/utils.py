@@ -60,7 +60,7 @@ def get_function_host(fn):
     return obj, name
 
 
-FIND_ID = re.compile(r'^.*(?:(?:when2|patch)\((.+),|spy2\((.+)\))')
+FIND_ID = re.compile(r'^.*(?:when2|patch|spy2)\((.+?)[,\)]')
 
 def find_invoking_frame_and_try_parse():
     # Actually we just want the first frame in user land; we're open for
@@ -74,17 +74,13 @@ def find_invoking_frame_and_try_parse():
             continue
 
         source = ''.join(frame_info[4])
-        # print source
         m = FIND_ID.match(source)
         if m:
-            print m.groups()
             # id should be something like `os.path.exists` etc.
-            id = m.group(1) or m.group(2)
-            # print id
+            id = m.group(1)
             parts = id.split('.')
             if len(parts) < 2:
                 raise TypeError("can't guess origin of '%s'" % id)
-            # print parts
 
             frame = frame_info[0]
             vars = frame.f_globals.copy()

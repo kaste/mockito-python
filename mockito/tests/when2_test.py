@@ -24,7 +24,33 @@ class TestMockito2:
         when2(rex.bark, 'Miau').thenReturn('Grrr')
         assert rex.bark('Miau') == 'Grrr'
 
-    def testSafeWhen2(self):
+
+    def testPatch(self):
+        rex = Dog()
+        patch(rex.bark, lambda sound: sound + '!')
+        assert rex.bark('Miau') == 'Miau!'
+
+
+    def testPatch2(self):
+        rex = Dog()
+        patch(rex.bark, rex.bark_hard)
+        assert rex.bark('Miau') == 'Miau!'
+
+    def testPatch3(self):
+        rex = Dog()
+
+        def f(self, sound):
+            return self.bark_hard(sound)
+
+        f = newmethod(f, rex)
+        patch(rex.bark, f)
+
+        assert rex.bark('Miau') == 'Miau!'
+
+
+@pytest.mark.usefixtures('unstub')
+class TestFancyObjResolver:
+    def testWhen2WithArguments(self):
         # This test is a bit flaky bc pytest does not like a patched
         # `os.path.exists` module.
         when2(os.path.commonprefix, '/Foo').thenReturn(False)
@@ -34,13 +60,18 @@ class TestMockito2:
         assert os.path.commonprefix('/Foo')
         assert os.path.exists('/Foo')
 
-    def testSafePatch(self):
+    def testWhen2WithoutArguments(self):
+        import time
+        when2(time.time).thenReturn('None')
+        assert time.time() == 'None'
+
+    def testPatch(self):
         patch(os.path.commonprefix, lambda m: 'yup')
         patch(os.path.commonprefix, lambda m: 'yep')
 
         assert os.path.commonprefix(Ellipsis) == 'yep'
 
-    def testSafeSpy2(self):
+    def testSpy2(self):
         spy2(os.path.exists)
 
         assert os.path.exists('/Foo') is False
@@ -67,26 +98,3 @@ class TestMockito2:
                 when2(
                     os.path.exists)
             assert str(exc.value) == "could not destructure first argument"
-
-
-    def testPatch(self):
-        rex = Dog()
-        patch(rex.bark, lambda sound: sound + '!')
-        assert rex.bark('Miau') == 'Miau!'
-
-
-    def testPatch2(self):
-        rex = Dog()
-        patch(rex.bark, rex.bark_hard)
-        assert rex.bark('Miau') == 'Miau!'
-
-    def testPatch3(self):
-        rex = Dog()
-
-        def f(self, sound):
-            return self.bark_hard(sound)
-
-        f = newmethod(f, rex)
-        patch(rex.bark, f)
-
-        assert rex.bark('Miau') == 'Miau!'
