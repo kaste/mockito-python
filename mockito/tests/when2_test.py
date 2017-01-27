@@ -70,6 +70,14 @@ class TestFancyObjResolver:
             os.path.commonprefix, '/Foo').thenReturn(True)
         assert os.path.commonprefix('/Foo')
 
+    def testEnsureWithWhen2SameLine(self):
+        with when2(os.path.commonprefix, '/Foo'):
+            pass
+
+    def testEnsureWithWhen2SplitLine(self):
+        with when2(
+                os.path.commonprefix, '/Foo'):
+            pass
 
     def testPatch(self):
         patch(os.path.commonprefix, lambda m: 'yup')
