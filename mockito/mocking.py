@@ -68,9 +68,7 @@ class Mock(object):
     def get_original_method(self, method_name):
         if not self.spec:
             return None
-        if inspect.isclass(self.spec):
-            return self.spec.__dict__.get(method_name)
-        return getattr(self.spec, method_name)
+        return self.spec.__dict__.get(method_name)
 
     def set_method(self, method_name, new_method):
         setattr(self.mocked_obj, method_name, new_method)

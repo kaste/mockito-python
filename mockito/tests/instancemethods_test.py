@@ -83,7 +83,7 @@ class InstanceMethodsTest(TestBase):
         rex = Dog()
         self.assertEquals('Wuff', rex.bark('Miau'))
 
-    def testInvocateAStubbedMethodFromAnotherMethod(self):
+    def testInvokeAStubbedMethodFromAnotherMethod(self):
         when(Dog).bark('Wau').thenReturn('Wuff')
 
         rex = Dog()
@@ -97,6 +97,27 @@ class InstanceMethodsTest(TestBase):
                 'Stubbing an unknown method should have thrown a exception')
         except InvocationError:
             pass
+
+    def testStubUnknownMethodInLooseMode(self):
+        when(Dog, strict=False).walk()
+
+        rex = Dog()
+        rex.walk()
+
+        unstub()
+        with pytest.raises(AttributeError):
+            rex.walk
+        with pytest.raises(AttributeError):
+            Dog.walk
+
+    def testAddNewMethodOnInstanceInLooseMode(self):
+        rex = Dog()
+        when(rex, strict=False).walk()
+        rex.walk()
+
+        unstub()
+        with pytest.raises(AttributeError):
+            rex.walk
 
     def testThrowEarlyIfCallingWithUnexpectedArgumentsInStrictMode(self):
         when(Dog).bark('Miau').thenReturn('Wuff')
