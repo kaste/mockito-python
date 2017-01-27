@@ -47,6 +47,12 @@ class TestMockito2:
 
         assert rex.bark('Miau') == 'Miau!'
 
+    def testAddFnWithPatch(self):
+        rex = Dog()
+
+        patch(rex, 'newfn', lambda s: s)
+        assert rex.newfn('Hi') == 'Hi'
+
 
 @pytest.mark.usefixtures('unstub')
 class TestFancyObjResolver:
