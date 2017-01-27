@@ -17,29 +17,27 @@ def newmethod(fn, obj):
 
 
 def get_function_host(fn):
-    """Destructure a given function into its host and its name
+    """Destructure a given function into its host and its name.
 
-    A host of a function is a module, for methods it is usually its instance
-    or its class. This is safe only for methods, for module wide, globally
-    declared names it is experimental.
+    The 'host' of a function is a module, for methods it is usually its
+    instance or its class. This is safe only for methods, for module wide,
+    globally declared names it must be considered experimental.
 
-    For all fn: ``getattr(*get_function_host(fn)) == fn``
+    For all reasonable fn: ``getattr(*get_function_host(fn)) == fn``
 
     Returns tuple (host, fn-name)
     Otherwise should raise TypeError
     """
-    try:
-        name = fn.__name__
-    except AttributeError:
-        raise TypeError('given object %r has no __name__ attribute' % fn)
 
     if inspect.ismethod(fn):
+        name = fn.__name__
         obj = fn.__self__
     elif inspect.isfunction(fn) or inspect.isbuiltin(fn):
         # Due to how python imports work, everything that is global on a module
         # level must be regarded as not safe here. For now, we go for the extra
-        # mile, TBC, because just specifying `os.path.exists` would be cool.
+        # mile, TBC, because just specifying `os.path.exists` would be 'cool'.
         #
+        # TLDR;:
         # E.g. `inspect.getmodule(os.path.exists)` returns `genericpath` bc
         # that's where `exists` is defined and comes from. But from the point
         # of view of the user `exists` always comes and is used from `os.path`
@@ -106,13 +104,13 @@ def find_invoking_frame_and_try_parse():
 def get_obj(path):
     """Return obj for given dotted path.
 
-    Typical inputs for `path` are 'os', 'os.path' in which case you get a
+    Typical inputs for `path` are 'os' or 'os.path' in which case you get a
     module; or 'os.path.exists' in which case you get a function from that
     module.
 
-    Returns the given obj in case `path` is not a str. Note: Relative
-    imports not supported.
+    Just returns the given input in case it is not a str.
 
+    Note: Relative imports not supported.
     Raises ImportError or AttributeError as appropriate.
 
     """
@@ -151,9 +149,9 @@ def get_obj(path):
 def get_obj_attr_tuple(path):
     """Split path into (obj, attribute) tuple.
 
-    Given `path` is 'os.path.exists' will thus return (os.path, 'exists')
+    Given `path` is 'os.path.exists' will thus return `(os.path, 'exists')`
 
-    If path is not a str, delegates to get_function_host(path)
+    If path is not a str, delegates to `get_function_host(path)`
 
     """
     if not isinstance(path, str):
