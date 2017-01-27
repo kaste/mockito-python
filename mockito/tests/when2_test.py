@@ -65,6 +65,12 @@ class TestFancyObjResolver:
         when2(time.time).thenReturn('None')
         assert time.time() == 'None'
 
+    def testWhenSplitOnNextLine(self):
+        when2(
+            os.path.commonprefix, '/Foo').thenReturn(True)
+        assert os.path.commonprefix('/Foo')
+
+
     def testPatch(self):
         patch(os.path.commonprefix, lambda m: 'yup')
         patch(os.path.commonprefix, lambda m: 'yep')
@@ -92,9 +98,4 @@ class TestFancyObjResolver:
             ptch = patch
             with pytest.raises(TypeError) as exc:
                 ptch(os.path.exists, lambda: 'boo')
-            assert str(exc.value) == "could not destructure first argument"
-
-            with pytest.raises(TypeError) as exc:
-                when2(
-                    os.path.exists)
             assert str(exc.value) == "could not destructure first argument"
