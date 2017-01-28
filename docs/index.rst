@@ -61,7 +61,7 @@ State-of-the-art, high-five argument matchers::
     when(deferred).defer(...).thenRaise(Timeout)
 
     # Or **kwargs
-    from mockito import kwargs  # alias KWARGS
+    from mockito import kwargs  # or KWARGS
     when(requests).get('http://my-api.com/user', **kwargs)
 
     # The usual matchers
