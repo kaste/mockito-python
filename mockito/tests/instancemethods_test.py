@@ -27,6 +27,8 @@ from mockito import (
 from mockito.invocation import InvocationError
 from mockito.verification import VerificationError
 
+pytestmark = pytest.mark.usefixtures("unstub")
+
 class Dog(object):
     def waggle(self):
         return "Wuff!"
@@ -173,13 +175,47 @@ class InstanceMethodsTest(TestBase):
         self.assertEquals(None, rex.bark('Miau'))
         self.assertEquals(None, rex.waggle())
 
-    def testVerifyNoMoreInteractionsWorks(self):
-        when(Dog).bark('Miau')
-        verifyNoMoreInteractions(Dog)
+class TestVerifyInteractions:
+    class TestZeroInteractions:
+        def testVerifyNoMoreInteractionsWorks(self):
+            when(Dog).bark('Miau')
+            verifyNoMoreInteractions(Dog)
 
-    def testVerifyZeroInteractionsWorks(self):
-        when(Dog).bark('Miau')
-        verifyZeroInteractions(Dog)
+        def testVerifyZeroInteractionsWorks(self):
+            when(Dog).bark('Miau')
+            verifyZeroInteractions(Dog)
+
+    class TestOneInteraction:
+        def testNothingVerifiedVerifyNoMoreInteractionsRaises(self):
+            when(Dog).bark('Miau')
+            rex = Dog()
+            rex.bark('Miau')
+            with pytest.raises(VerificationError):
+                verifyNoMoreInteractions(Dog)
+
+        def testIfVerifiedVerifyNoMoreInteractionsPasses(self):
+            when(Dog).bark('Miau')
+            rex = Dog()
+            rex.bark('Miau')
+            verify(Dog).bark('Miau')
+            verifyNoMoreInteractions(Dog)
+
+        def testNothingVerifiedVerifyZeroInteractionsRaises(self):
+            when(Dog).bark('Miau')
+            rex = Dog()
+            rex.bark('Miau')
+            with pytest.raises(VerificationError):
+                verifyZeroInteractions(Dog)
+
+        @pytest.mark.xfail(reason='never implemented')
+        def testIfVerifiedVerifyZeroInteractionsStillRaises(self):
+            when(Dog).bark('Miau')
+            rex = Dog()
+            rex.bark('Miau')
+            verify(Dog).bark('Miau')
+            with pytest.raises(VerificationError):
+                verifyZeroInteractions(Dog)
+
 
 @pytest.mark.usefixtures('unstub')
 class TestImplicitVerificationsUsingExpect:
