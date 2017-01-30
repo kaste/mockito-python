@@ -1,6 +1,11 @@
 MOCKITO CHANGE LOG
 ==================
 
+Dev
+---
+
+- ``verifyZeroInteractions`` implemented!
+
 Release 1.0.0 - 1.0.5 (January 24 - 27, 2017)
 ---------------------------------------------
 
