@@ -1,8 +1,8 @@
 MOCKITO CHANGE LOG
 ==================
 
-Release 1.0.0 (yet to come)
----------------------------
+Release 1.0.0 - 1.0.5 (January 24 - 27, 2017)
+---------------------------------------------
 
 This is a major update; mostly because of internal code reorganization (`imports`) it cannot be guaranteed that this will not break for you. Though if you just used the public API you should be fine. None of the vintage old tests have been removed and they at least pass.
 
