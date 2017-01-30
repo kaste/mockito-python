@@ -207,7 +207,6 @@ class TestVerifyInteractions:
             with pytest.raises(VerificationError):
                 verifyZeroInteractions(Dog)
 
-        @pytest.mark.xfail(reason='never implemented')
         def testIfVerifiedVerifyZeroInteractionsStillRaises(self):
             when(Dog).bark('Miau')
             rex = Dog()
