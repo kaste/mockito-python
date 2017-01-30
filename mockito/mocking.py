@@ -89,6 +89,10 @@ class Mock(object):
         if original_method:
             new_mocked_method.__doc__ = original_method.__doc__
             new_mocked_method.__wrapped__ = original_method
+            try:
+                new_mocked_method.__module__ = original_method.__module__
+            except AttributeError:
+                pass
 
         if (inspect.ismethod(original_method)):
             new_mocked_method = utils.newmethod(
