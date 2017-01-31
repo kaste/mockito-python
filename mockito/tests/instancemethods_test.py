@@ -222,11 +222,18 @@ class TestEnsureStubsAreUsed:
         with pytest.raises(VerificationError):
             verifyStubbedInvocationsAreUsed(Dog)
 
-    def testPassUsedOnce(self):
+    def testPassUsedOnceImplicitAnswer(self):
         when(Dog).bark('Miau')
         rex = Dog()
         rex.bark('Miau')
         verifyStubbedInvocationsAreUsed(Dog)
+
+    def testPassUsedOnce(self):
+        dog = mock()
+        when(dog).waggle().thenReturn('Sure')
+
+        dog.waggle()
+        verifyStubbedInvocationsAreUsed(dog)
 
     def testFailSecondStubNotUsed(self):
         when(Dog).bark('Miau')

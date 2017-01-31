@@ -352,7 +352,7 @@ class CompositeAnswer(object):
 
     def __len__(self):
         # The minimum is '1' bc we always have a default answer of 'None'
-        return min(1, self.answer_count)
+        return max(1, self.answer_count)
 
     def add(self, answer):
         self.answer_count += 1
