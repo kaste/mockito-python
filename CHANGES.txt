@@ -1,10 +1,12 @@
 MOCKITO CHANGE LOG
 ==================
 
-Dev
----
+Release 1.0.7 (January 31, 2017)
+--------------------------------
 
-- ``verifyZeroInteractions`` implemented!
+- ``verifyZeroInteractions`` implemented
+- ``verifyStubbedInvocationsAreUsed`` implemented
+
 
 Release 1.0.0 - 1.0.5 (January 24 - 27, 2017)
 ---------------------------------------------
