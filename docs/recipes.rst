@@ -20,28 +20,25 @@ In a traditional sense this code is not designed for *testability*. But we don't
 
 Python has no `new` keyword to get fresh instances from classes. Man, that was a good decision, Guido! So the uppercase `S` in `requests.Session()` doesn't have to stop us in any way. It looks like a function call, and we treat it like such: The plan is to replace `Session` with a factory function that returns a (mocked) session::
 
-    .. code-block:: python
-       :emphasize-lines: 12
+    from mockito import when, mock
 
-       from mockito import when, mock
+    def test_fetch(unstub):
+        url = 'http://example.com/'
+        response = mock({'text': 'Ok'}, spec=requests.Response)
+        # remember: `mock` here just creates an empty object specced after
+        #           requests.Session
+        session = mock(requests.Session)
+        # `when` here configures the mock
+        when(session).get(url).thenReturn(response)
+        # `when` *patches* the globally available *requests* module
+        when(requests).Session().thenReturn(session)  # <=
 
-       def test_fetch(unstub):
-           url = 'http://example.com/'
-           response = mock({'text': 'Ok'}, spec=requests.Response)
-           # remember: `mock` here just creates an empty object specced after
-           #           requests.Session
-           session = mock(requests.Session)
-           # `when` here configures the mock
-           when(session).get(url).thenReturn(response)
-           # `when` *patches* the globally available *requests* module
-           when(requests).Session().thenReturn(session)  # <=
+        res = fetch(url)
+        assert res.text == 'Ok'
 
-           res = fetch(url)
-           assert res.text == 'Ok'
-
-           # no need to verify anything here, if we get the expected response
-           # back, `url` must have been passed through the system, otherwise
-           # mockito would have thrown.
+        # no need to verify anything here, if we get the expected response
+        # back, `url` must have been passed through the system, otherwise
+        # mockito would have thrown.
 
 
 Faking magic methods
@@ -57,23 +54,20 @@ We want to test the following code::
 
 It's basically the same problem, but we need to add support for the context manager, the `with` interface::
 
-    .. code-block:: python
-       :emphasize-lines: 9,10
+    from mockito import when, mock, args
 
-       from mockito import when, mock, args
+    def test_fetch_with(unstub):
+        url = 'http://example.com/'
+        response = mock({'text': 'Ok'}, spec=requests.Response)
 
-       def test_fetch_with(unstub):
-           url = 'http://example.com/'
-           response = mock({'text': 'Ok'}, spec=requests.Response)
+        session = mock(requests.Session)
+        when(session).get(url).thenReturn(response)
+        when(session).__enter__().thenReturn(session)  # <=
+        when(session).__exit__(*args)                  # <=
 
-           session = mock(requests.Session)
-           when(session).get(url).thenReturn(response)
-           when(session).__enter__().thenReturn(session)  # <=
-           when(session).__exit__(*args)                  # <=
+        when(requests).Session().thenReturn(session)
 
-           when(requests).Session().thenReturn(session)
-
-           res = fetch_2(url)
-           assert res.text == 'Ok'
+        res = fetch_2(url)
+        assert res.text == 'Ok'
 
 
