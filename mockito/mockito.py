@@ -384,6 +384,13 @@ def verifyNoUnwantedInteractions(*objs):
             i.verify()
 
 def verifyStubbedInvocationsAreUsed(*objs):
+    """Ensure stubs are actually used.
+
+    This functions just ensures that stubbed methods are actually used. Its
+    purpose is to detect interface changes after refactorings. It is meant
+    to be invoked usually without arguments just before :func:`unstub`.
+
+    """
     if objs:
         theMocks = map(_get_mock, objs)
     else:
