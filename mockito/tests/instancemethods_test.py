@@ -23,7 +23,8 @@ import pytest
 from .test_base import TestBase
 from mockito import (
     mock, when, expect, unstub, ANY, verify, verifyNoMoreInteractions,
-    verifyZeroInteractions, verifyNoUnwantedInteractions)
+    verifyZeroInteractions, verifyNoUnwantedInteractions,
+    verifyStubbedInvocationsAreUsed)
 from mockito.invocation import InvocationError
 from mockito.verification import VerificationError
 
@@ -214,6 +215,57 @@ class TestVerifyInteractions:
             verify(Dog).bark('Miau')
             with pytest.raises(VerificationError):
                 verifyZeroInteractions(Dog)
+
+class TestEnsureStubsAreUsed:
+    def testBarkOnUnusedStub(self):
+        when(Dog).bark('Miau')
+        with pytest.raises(VerificationError):
+            verifyStubbedInvocationsAreUsed(Dog)
+
+    def testPassUsedOnce(self):
+        when(Dog).bark('Miau')
+        rex = Dog()
+        rex.bark('Miau')
+        verifyStubbedInvocationsAreUsed(Dog)
+
+    def testFailSecondStubNotUsed(self):
+        when(Dog).bark('Miau')
+        when(Dog).waggle()
+        rex = Dog()
+        rex.bark('Miau')
+        with pytest.raises(VerificationError):
+            verifyStubbedInvocationsAreUsed(Dog)
+
+    def testFailSecondStubSameMethodUnused(self):
+        when(Dog).bark('Miau')
+        when(Dog).bark('Grrr')
+        rex = Dog()
+        rex.bark('Miau')
+        with pytest.raises(VerificationError):
+            verifyStubbedInvocationsAreUsed(Dog)
+
+    def testPassTwoStubsOnSameMethodUsed(self):
+        when(Dog).bark('Miau')
+        when(Dog).bark('Grrr')
+        rex = Dog()
+        rex.bark('Miau')
+        rex.bark('Grrr')
+        verifyStubbedInvocationsAreUsed(Dog)
+
+    def testPassOneCatchAllOneSpecificStubBothUsed(self):
+        when(Dog).bark(Ellipsis)
+        when(Dog).bark('Miau')
+        rex = Dog()
+        rex.bark('Miau')
+        rex.bark('Grrr')
+        verifyStubbedInvocationsAreUsed(Dog)
+
+    def testFailSecondAnswerUnused(self):
+        when(Dog).bark('Miau').thenReturn('Yep').thenReturn('Nop')
+        rex = Dog()
+        rex.bark('Miau')
+        with pytest.raises(VerificationError):
+            verifyStubbedInvocationsAreUsed(Dog)
 
 
 @pytest.mark.usefixtures('unstub')

@@ -382,3 +382,16 @@ def verifyNoUnwantedInteractions(*objs):
     for mock in theMocks:
         for i in mock.stubbed_invocations:
             i.verify()
+
+def verifyStubbedInvocationsAreUsed(*objs):
+    if objs:
+        theMocks = map(_get_mock, objs)
+    else:
+        theMocks = mock_registry.get_registered_mocks()
+
+
+    for mock in theMocks:
+        for i in mock.stubbed_invocations:
+            if i.used <= len(i.answers):
+                raise VerificationError("\nUnused stub: %s" % i)
+

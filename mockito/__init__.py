@@ -24,6 +24,7 @@
 from .mockito import (
     when, when2, patch, expect, unstub, verify, verifyNoMoreInteractions,
     verifyZeroInteractions, verifyNoUnwantedInteractions,
+    verifyStubbedInvocationsAreUsed,
     ArgumentError)
 from . import inorder
 from .spying import spy, spy2
@@ -37,7 +38,7 @@ __version__ = '1.0.5'
 
 __all__ = ['mock', 'spy', 'spy2', 'when', 'when2', 'patch', 'expect', 'verify',
            'verifyNoMoreInteractions', 'verifyZeroInteractions',
-           'verifyNoUnwantedInteractions',
+           'verifyNoUnwantedInteractions', 'verifyStubbedInvocationsAreUsed',
            'inorder', 'unstub',
            'VerificationError', 'ArgumentError',
            'any',       # compatibility

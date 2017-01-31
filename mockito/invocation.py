@@ -221,10 +221,20 @@ class VerifiableInvocation(MatchingInvocation):
 class StubbedInvocation(MatchingInvocation):
     def __init__(self, mock, method_name, verification=None, strict=None):
         super(StubbedInvocation, self).__init__(mock, method_name)
+
+        #: Holds the verification set up via `expect`.
+        #: The verification will be verified implicitly, while using this stub.
         self.verification = verification
+
         if strict is not None:
             self.strict = strict
+
         self.answers = CompositeAnswer()
+
+        #: Counts how many times this stub has been 'used'.
+        #: A stub gets used, when a real invocation matches its argument
+        #: signature, and asks for an answer.
+        self.used = 0
 
     def ensure_mocked_object_has_method(self, method_name):
         if not self.mock.has_method(method_name):
@@ -247,6 +257,7 @@ class StubbedInvocation(MatchingInvocation):
         self.answers.add(answer)
 
     def answer_first(self, *args, **kwargs):
+        self.used += 1
         return self.answers.answer(*args, **kwargs)
 
     def should_answer(self, invocation):
@@ -255,8 +266,9 @@ class StubbedInvocation(MatchingInvocation):
         if not verification:
             return
 
-        actual_count = len([inv for inv in self.mock.invocations
-                            if self.matches(inv)])
+        # This check runs before `answer_first`. We add '1' because we want
+        # to know if the verification passes if this call gets through.
+        actual_count = self.used + 1
 
         if isinstance(verification, verificationModule.Times):
             if actual_count > verification.wanted_count:
@@ -276,6 +288,12 @@ class StubbedInvocation(MatchingInvocation):
                        verification.wanted_to,
                        actual_count))
 
+        # The way mockito's `verify` works is, that it checks off all 'real',
+        # remembered invocations, if they get verified. This is a simple
+        # mechanism so that a later `verifyNoMoreInteractions` just has to
+        # ensure that all invocations have this flag set to ``True``.
+        # For verifications set up via `expect` we want all invocations
+        # to get verified 'implicitly', on-the-go, so we set this flag here.
         invocation.verified = True
 
 
@@ -283,13 +301,8 @@ class StubbedInvocation(MatchingInvocation):
         if not self.verification:
             return
 
-        actual_count = len([
-            invocation
-            for invocation in self.mock.invocations
-            if self.matches(invocation)])
-
+        actual_count = self.used
         self.verification.verify(self, actual_count)
-
 
 
 
@@ -331,9 +344,18 @@ class AnswerSelector(object):
 
 class CompositeAnswer(object):
     def __init__(self):
+        #: Container for answers, which are just ordinary callables
         self.answers = deque()
 
+        #: Counter for the maximum answers we ever had
+        self.answer_count = 0
+
+    def __len__(self):
+        # The minimum is '1' bc we always have a default answer of 'None'
+        return min(1, self.answer_count)
+
     def add(self, answer):
+        self.answer_count += 1
         self.answers.append(answer)
 
     def answer(self, *args, **kwargs):
