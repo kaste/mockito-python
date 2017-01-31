@@ -99,6 +99,7 @@ Read
    :maxdepth: 1
 
    walk-through
+   recipes
    the-functions
    the-matchers
    Changelog <changes>
