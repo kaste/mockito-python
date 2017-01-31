@@ -20,7 +20,7 @@ In a traditional sense this code is not designed for *testability*. But we don't
 
 Python has no `new` keyword to get fresh instances from classes. Man, that was a good decision, Guido! So the uppercase `S` in `requests.Session()` doesn't have to stop us in any way. It looks like a function call, and we treat it like such: The plan is to replace `Session` with a factory function that returns a (mocked) session::
 
-    from mockito import when, mock
+    from mockito import when, mock, verifyStubbedInvocationsAreUsed
 
     def test_fetch(unstub):
         url = 'http://example.com/'
@@ -39,6 +39,8 @@ Python has no `new` keyword to get fresh instances from classes. Man, that was a
         # no need to verify anything here, if we get the expected response
         # back, `url` must have been passed through the system, otherwise
         # mockito would have thrown.
+        # We *could* ensure that our mocks are actually used, if we want:
+        verifyStubbedInvocationsAreUsed()
 
 
 Faking magic methods
