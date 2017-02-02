@@ -79,7 +79,7 @@ class Mock(object):
             # we throw away the first argument, if it's either self or cls
             if (inspect.ismethod(new_mocked_method) or
                     inspect.isclass(self.mocked_obj) and
-                    not isinstance(original_method, staticmethod)):
+                    not isinstance(new_mocked_method, staticmethod)):
                 args = args[1:]
 
             return remembered_invocation_builder(
@@ -101,6 +101,8 @@ class Mock(object):
             new_mocked_method = staticmethod(new_mocked_method)
         elif isinstance(original_method, classmethod):
             new_mocked_method = classmethod(new_mocked_method)
+        elif inspect.isclass(original_method):
+            new_mocked_method = staticmethod(new_mocked_method)
 
         self.set_method(method_name, new_mocked_method)
 

@@ -86,6 +86,23 @@ class TestFancyObjResolver:
                 os.path.commonprefix, '/Foo'):
             pass
 
+    def testEnsureToResolveMethodOnClass(self):
+        class A(object):
+            class B(object):
+                def c(self):
+                    pass
+
+        when2(A.B.c)
+
+    def testEnsureToResolveClass(self):
+        class A(object):
+            class B(object):
+                pass
+
+        when2(A.B, 'Hi').thenReturn('Ho')
+        assert A.B('Hi') == 'Ho'
+
+
     def testPatch(self):
         patch(os.path.commonprefix, lambda m: 'yup')
         patch(os.path.commonprefix, lambda m: 'yep')
@@ -103,7 +120,7 @@ class TestFancyObjResolver:
         def testA(self):
             with pytest.raises(TypeError) as exc:
                 when2(os)
-            assert str(exc.value) == "given object '%s' is not a function" % os
+            assert str(exc.value) == "can't guess origin of 'os'"
 
             cp = os.path.commonprefix
             with pytest.raises(TypeError) as exc:

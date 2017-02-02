@@ -29,10 +29,12 @@ def get_function_host(fn):
     Otherwise should raise TypeError
     """
 
+    obj = None
     if inspect.ismethod(fn):
         name = fn.__name__
         obj = fn.__self__
-    elif inspect.isfunction(fn) or inspect.isbuiltin(fn):
+
+    if obj is None:
         # Due to how python imports work, everything that is global on a module
         # level must be regarded as not safe here. For now, we go for the extra
         # mile, TBC, because just specifying `os.path.exists` would be 'cool'.
@@ -53,8 +55,6 @@ def get_function_host(fn):
         obj, name = find_invoking_frame_and_try_parse()
         # safety check!
         assert getattr(obj, name) == fn
-    else:
-        raise TypeError("given object '%s' is not a function" % fn)
 
 
     return obj, name
