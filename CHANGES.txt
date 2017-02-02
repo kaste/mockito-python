@@ -1,11 +1,14 @@
 MOCKITO CHANGE LOG
 ==================
 
-Release 1.0.7 (January 31, 2017)
---------------------------------
+Release 1.0.7 - 1.0.10 (January 31 - February 2, 2017)
+------------------------------------------------------
 
-- ``verifyZeroInteractions`` implemented
-- ``verifyStubbedInvocationsAreUsed`` implemented
+- ``verifyZeroInteractions`` implemented. This is actually a *breaking change*, because ``verifyZeroInteractions`` was an alias for ``verifyNoMoreInteractions`` (sic!). If you used it, just call the other function.
+
+- ``verifyStubbedInvocationsAreUsed`` implemented. This is meant to be called right before an ``unstub`` and should improve long time maintenance. It doesn't help during design time. Note that `pytest-mockito` automatically calls this for you.
+
+- All `verify*` functions now warn you if you pass in an object which was never stubbed.
 
 
 Release 1.0.0 - 1.0.5 (January 24 - 27, 2017)
