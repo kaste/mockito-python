@@ -29,7 +29,8 @@ class TestUserExposedInterfaces:
         assert expecting.__dict__ == {}
 
     def testVerify(self):
-        verifying = verify(Dog)
+        dummy = mock()
+        verifying = verify(dummy)
         assert verifying.__dict__ == {}
 
 

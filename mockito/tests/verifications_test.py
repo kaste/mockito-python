@@ -18,9 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import pytest
+
 from .test_base import TestBase
-from mockito import (mock, verify, inorder, VerificationError, ArgumentError,
-                     verifyNoMoreInteractions, verifyZeroInteractions, any)
+from mockito import (
+    mock, verify, inorder, VerificationError, ArgumentError,
+    verifyNoMoreInteractions, verifyZeroInteractions,
+    verifyNoUnwantedInteractions, verifyStubbedInvocationsAreUsed,
+    any)
 from mockito.verification import never
 
 
@@ -313,4 +318,22 @@ class VerifyZeroInteractionsTest(TestBase):
         theMock.foo()
         self.assertRaises(
             VerificationError, verifyNoMoreInteractions, theMock)
+
+
+class TestRaiseOnUnknownObjects:
+    @pytest.mark.parametrize('verification_fn', [
+        verify,
+        verifyNoMoreInteractions,
+        verifyZeroInteractions,
+        verifyNoUnwantedInteractions,
+        verifyStubbedInvocationsAreUsed
+    ])
+    def testVerifyShouldRaise(self, verification_fn):
+        class Foo(object):
+            pass
+
+        with pytest.raises(ArgumentError) as exc:
+            verification_fn(Foo)
+        assert str(exc.value) == "obj '%s' is not registered" % Foo
+
 

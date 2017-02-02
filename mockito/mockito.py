@@ -86,6 +86,12 @@ def _get_mock(obj, strict=True):
         mock_registry.register(obj, theMock)
     return theMock
 
+def _get_mock_or_raise(obj):
+    theMock = mock_registry.mock_for(obj)
+    if theMock is None:
+        raise ArgumentError("obj '%s' is not registered" % obj)
+    return theMock
+
 def verify(obj, times=1, atleast=None, atmost=None, between=None,
            inorder=False):
     """Central interface to verify interactions.
@@ -119,7 +125,7 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
         verification_fn = verification.InOrder(verification_fn)
 
     # FIXME?: Catch error if obj is neither a Mock nor a known stubbed obj
-    theMock = _get_mock(obj)
+    theMock = _get_mock_or_raise(obj)
 
     class Verify(object):
         def __getattr__(self, method_name):
@@ -329,7 +335,7 @@ def verifyNoMoreInteractions(*objs):
     verifyNoUnwantedInteractions(*objs)
 
     for obj in objs:
-        theMock = _get_mock(obj)
+        theMock = _get_mock_or_raise(obj)
 
         for i in theMock.invocations:
             if not i.verified:
@@ -347,7 +353,7 @@ def verifyZeroInteractions(*objs):
 
     """
     for obj in objs:
-        theMock = _get_mock(obj)
+        theMock = _get_mock_or_raise(obj)
 
         if len(theMock.invocations) > 0:
             raise VerificationError(
@@ -375,7 +381,7 @@ def verifyNoUnwantedInteractions(*objs):
     """
 
     if objs:
-        theMocks = map(_get_mock, objs)
+        theMocks = map(_get_mock_or_raise, objs)
     else:
         theMocks = mock_registry.get_registered_mocks()
 
@@ -392,7 +398,7 @@ def verifyStubbedInvocationsAreUsed(*objs):
 
     """
     if objs:
-        theMocks = map(_get_mock, objs)
+        theMocks = map(_get_mock_or_raise, objs)
     else:
         theMocks = mock_registry.get_registered_mocks()
 
