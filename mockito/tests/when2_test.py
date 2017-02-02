@@ -8,6 +8,9 @@ from mockito.utils import newmethod
 import os
 
 
+pytestmark = pytest.mark.usefixtures("unstub")
+
+
 class Dog(object):
     def bark(self, sound):
         return sound
@@ -16,7 +19,6 @@ class Dog(object):
         return sound + '!'
 
 
-@pytest.mark.usefixtures('unstub')
 class TestMockito2:
     def testWhen2(self):
         rex = Dog()
@@ -54,7 +56,6 @@ class TestMockito2:
         assert rex.newfn('Hi') == 'Hi'
 
 
-@pytest.mark.usefixtures('unstub')
 class TestFancyObjResolver:
     def testWhen2WithArguments(self):
         # This test is a bit flaky bc pytest does not like a patched
