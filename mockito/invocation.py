@@ -90,6 +90,9 @@ class MatchingInvocation(Invocation):
         self.named_params = {k: wrap(v) for k, v in named_params.items()}
 
 
+    # Note: matches(a, b) does not imply matches(b, a) because
+    # the left side might contain wildcards (like Ellipsis) or matchers.
+    # In its current form the right side is a concrete call signature.
     def matches(self, invocation):  # noqa: C901 (too complex)
         if self.method_name != invocation.method_name:
             return False
@@ -217,6 +220,16 @@ class VerifiableInvocation(MatchingInvocation):
         for invocation in matched_invocations:
             invocation.verified = True
 
+        # Explicit verification counts as 'usage', e.g. after a
+        #   verify(Foo, times=0).bar()
+        # a subsequent verifyStubbedInvocationsAreUsed(Foo) should not throw
+        if (isinstance(self.verification, verificationModule.Times) and
+                self.verification.wanted_count == 0):
+            for stub in self.mock.stubbed_invocations:
+                # Remember: matches(a, b) doe not imply matches(b, a)
+                if stub.matches(self) or self.matches(stub):
+                    stub.used += 1
+
 
 class StubbedInvocation(MatchingInvocation):
     def __init__(self, mock, method_name, verification=None, strict=None):
@@ -233,7 +246,8 @@ class StubbedInvocation(MatchingInvocation):
 
         #: Counts how many times this stub has been 'used'.
         #: A stub gets used, when a real invocation matches its argument
-        #: signature, and asks for an answer.
+        #: signature, and asks for an answer. It's also 'used' when we
+        #: explicitly verify with `times=0`.
         self.used = 0
 
     def ensure_mocked_object_has_method(self, method_name):
