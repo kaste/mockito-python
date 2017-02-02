@@ -405,6 +405,6 @@ def verifyStubbedInvocationsAreUsed(*objs):
 
     for mock in theMocks:
         for i in mock.stubbed_invocations:
-            if i.used < len(i.answers):
+            if not i.allow_zero_invocations and i.used < len(i.answers):
                 raise VerificationError("\nUnused stub: %s" % i)
 

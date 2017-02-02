@@ -217,18 +217,29 @@ class VerifiableInvocation(MatchingInvocation):
 
         self.verification.verify(self, len(matched_invocations))
 
+        # check (real) invocations as verified
         for invocation in matched_invocations:
             invocation.verified = True
 
-        # Explicit verification counts as 'usage', e.g. after a
-        #   verify(Foo, times=0).bar()
-        # a subsequent verifyStubbedInvocationsAreUsed(Foo) should not throw
-        if (isinstance(self.verification, verificationModule.Times) and
-                self.verification.wanted_count == 0):
+        # check stubs as 'used'
+        if verification_has_lower_bound_of_zero(self.verification):
             for stub in self.mock.stubbed_invocations:
-                # Remember: matches(a, b) doe not imply matches(b, a)
+                # Remember: matches(a, b) does not imply matches(b, a)
+                # (see above!), so we check for both
                 if stub.matches(self) or self.matches(stub):
-                    stub.used += 1
+                    stub.allow_zero_invocations = True
+
+
+def verification_has_lower_bound_of_zero(verification):
+    if (isinstance(verification, verificationModule.Times) and
+            verification.wanted_count == 0):
+        return True
+
+    if (isinstance(verification, verificationModule.Between) and
+            verification.wanted_from == 0):
+        return True
+
+    return False
 
 
 class StubbedInvocation(MatchingInvocation):
@@ -246,9 +257,16 @@ class StubbedInvocation(MatchingInvocation):
 
         #: Counts how many times this stub has been 'used'.
         #: A stub gets used, when a real invocation matches its argument
-        #: signature, and asks for an answer. It's also 'used' when we
-        #: explicitly verify with `times=0`.
+        #: signature, and asks for an answer.
         self.used = 0
+
+        #: Set if `verifyStubbedInvocationsAreUsed` should pass, regardless
+        #: of any factual invocation. E.g. set by `verify(..., times=0)`
+        if verification_has_lower_bound_of_zero(verification):
+            self.allow_zero_invocations = True
+        else:
+            self.allow_zero_invocations = False
+
 
     def ensure_mocked_object_has_method(self, method_name):
         if not self.mock.has_method(method_name):
