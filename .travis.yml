@@ -7,10 +7,13 @@ python:
 - '3.6'
 install:
   - pip install pytest --upgrade
+  # We only flake at Py27 because mockito is still developed with that version
+  - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then pip install flake8; fi
   - pip install .
   # build to get 2to3 applied
   - python setup.py build
 script:
+  - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then flake8 .; fi
   - py.test build/lib
 deploy:
   provider: pypi
