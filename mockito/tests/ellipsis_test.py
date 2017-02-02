@@ -2,7 +2,6 @@
 import pytest
 
 from collections import namedtuple
-from functools import partial
 
 from mockito import when, args, kwargs, invocation, mock
 
@@ -19,8 +18,6 @@ class CallSignature(namedtuple('CallSignature', 'args kwargs')):
 def sig(*args, **kwargs):
     return CallSignature(args, kwargs)
 
-
-expect = partial(pytest.mark.xfail, strict=True)
 
 
 class TestEllipsises:
