@@ -101,7 +101,8 @@ class Mock(object):
             new_mocked_method = staticmethod(new_mocked_method)
         elif isinstance(original_method, classmethod):
             new_mocked_method = classmethod(new_mocked_method)
-        elif inspect.isclass(original_method):
+        elif (inspect.isclass(self.mocked_obj) and  # TBC: Inner classes
+                inspect.isclass(original_method)):
             new_mocked_method = staticmethod(new_mocked_method)
 
         self.set_method(method_name, new_mocked_method)

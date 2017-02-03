@@ -94,3 +94,7 @@ class ModuleFunctionsTest(TestBase):
         self.assertRaises(InvocationError,
                           lambda: when(os).walk_the_line().thenReturn(None))
 
+    def testEnsureWeCanMockTheClassOnAModule(self):
+        import module
+        when(module).Foo().thenReturn('mocked')
+        assert module.Foo() == 'mocked'
