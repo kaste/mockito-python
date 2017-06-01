@@ -269,7 +269,7 @@ class InorderVerifyTest(VerificationTestBase):
         self.mock.second()
         self.mock.first()
         self.assertRaisesMessage(
-            "\nWanted first() to be invoked, got second() instead",
+            '\nWanted first() to be invoked,\ngot    second() instead.',
             inorder.verify(self.mock).first)
 
 
