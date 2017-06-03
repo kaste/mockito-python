@@ -1,6 +1,13 @@
 MOCKITO CHANGE LOG
 ==================
 
+
+Release 1.0.12 (June 3, 2017)
+-----------------------------
+
+- Better error messages for failed verifications. By @lwoydziak
+
+
 Release 1.0.7 - 1.0.10 (January 31 - February 2, 2017)
 ------------------------------------------------------
 
