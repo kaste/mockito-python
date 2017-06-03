@@ -76,8 +76,11 @@ class Times(object):
         if actual_count == self.wanted_count:
                 return
         if actual_count == 0:
-            raise VerificationError("\nWanted but not invoked: %s"
-                                    % (invocation))
+            raise VerificationError(
+                '\nWanted but not invoked:  %s'
+                '\nInstead got:             %s' %
+                (invocation,
+                 str(list(reversed(invocation.mock.invocations)))))
         else:
             if self.wanted_count == 0:
                 raise VerificationError(
@@ -110,8 +113,9 @@ class InOrder(object):
             if not invocation.verified_inorder:
                 if not wanted_invocation.matches(invocation):
                     raise VerificationError(
-                        "\nWanted %s to be invoked, got %s instead"
-                        % (wanted_invocation, invocation))
+                        '\nWanted %s to be invoked,'
+                        '\ngot    %s instead.' %
+                        (wanted_invocation, invocation))
                 invocation.verified_inorder = True
                 break
         # proceed with original verification

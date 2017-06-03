@@ -31,25 +31,58 @@ class TestVerificationErrors:
         theMock = mock()
         with pytest.raises(VerificationError) as exc:
             verify(theMock).foo()
-        assert str(exc.value) == "\nWanted but not invoked: foo()"
+        assert str(exc.value) == '\nWanted but not invoked:  foo()' \
+                                 '\nInstead got:             []'
+
+    def testPrintsNicelyUnexpectedResultWithOneParameter(self):
+        theMock = mock()
+        theMock.foo("bar")
+        with pytest.raises(VerificationError) as exc:
+            verify(theMock).foo()
+        assert str(exc.value) == '\nWanted but not invoked:  foo()' \
+                                 '\nInstead got:             [foo(\'bar\')]'
+
+    def testPrintsNicelyUnexpectedResultWithTwoParameters(self):
+        theMock = mock()
+        theMock.foo("bar", 1)
+        with pytest.raises(VerificationError) as exc:
+            verify(theMock).foo()
+        assert str(exc.value) == \
+            '\nWanted but not invoked:  foo()' \
+            '\nInstead got:             [foo(\'bar\', 1)]'
+
+    def testPrintsNicelyUnexpectedResultWithNamedParameter(self):
+        theMock = mock()
+        theMock.foo("bar", baz=1)
+        with pytest.raises(VerificationError) as exc:
+            verify(theMock).foo()
+        assert str(exc.value) == \
+            '\nWanted but not invoked:  foo()' \
+            '\nInstead got:             [foo(\'bar\', baz=1)]'
 
     def testPrintsNicelyOneArgument(self):
         theMock = mock()
         with pytest.raises(VerificationError) as exc:
             verify(theMock).foo("bar")
-        assert "\nWanted but not invoked: foo('bar')" == str(exc.value)
+        assert str(exc.value) == \
+            '\nWanted but not invoked:  foo(\'bar\')' \
+            '\nInstead got:             []'
 
     def testPrintsNicelyArguments(self):
         theMock = mock()
         with pytest.raises(VerificationError) as exc:
             verify(theMock).foo(1, 2)
-        assert "\nWanted but not invoked: foo(1, 2)" == str(exc.value)
+        assert str(exc.value) == \
+            '\nWanted but not invoked:  foo(1, 2)' \
+            '\nInstead got:             []'
 
     def testPrintsNicelyStringArguments(self):
         theMock = mock()
         with pytest.raises(VerificationError) as exc:
             verify(theMock).foo(1, 'foo')
-        assert "\nWanted but not invoked: foo(1, 'foo')" == str(exc.value)
+        assert str(exc.value) == \
+            '\nWanted but not invoked:  foo(1, \'foo\')' \
+            '\nInstead got:             []'
 
     def testPrintKeywordArgumentsNicely(self):
         theMock = mock()
