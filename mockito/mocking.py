@@ -62,6 +62,8 @@ class Mock(object):
     def finish_stubbing(self, stubbed_invocation):
         self.stubbed_invocations.appendleft(stubbed_invocation)
 
+    def clear_invocations(self):
+        self.invocations = deque()
 
     # STUBBING
 

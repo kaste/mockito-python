@@ -22,7 +22,7 @@
 
 
 from .mockito import (
-    when, when2, patch, expect, unstub, verify, verifyNoMoreInteractions,
+    when, when2, patch, expect, unstub, clear, verify, verifyNoMoreInteractions,
     verifyZeroInteractions, verifyNoUnwantedInteractions,
     verifyStubbedInvocationsAreUsed,
     ArgumentError)
@@ -39,7 +39,7 @@ __version__ = '1.0.13-dev'
 __all__ = ['mock', 'spy', 'spy2', 'when', 'when2', 'patch', 'expect', 'verify',
            'verifyNoMoreInteractions', 'verifyZeroInteractions',
            'verifyNoUnwantedInteractions', 'verifyStubbedInvocationsAreUsed',
-           'inorder', 'unstub',
+           'inorder', 'unstub', 'clear',
            'VerificationError', 'ArgumentError',
            'any',       # compatibility
            'contains',  # compatibility
