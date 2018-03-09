@@ -22,7 +22,7 @@ import pytest
 
 from .test_base import TestBase
 from mockito import (
-    mock, verify, inorder, VerificationError, ArgumentError,
+    mock, when, verify, clear, inorder, VerificationError, ArgumentError,
     verifyNoMoreInteractions, verifyZeroInteractions,
     verifyNoUnwantedInteractions, verifyStubbedInvocationsAreUsed,
     any)
@@ -318,6 +318,31 @@ class VerifyZeroInteractionsTest(TestBase):
         theMock.foo()
         self.assertRaises(
             VerificationError, verifyNoMoreInteractions, theMock)
+
+
+class ClearInvocationsTest(TestBase):
+    def testClearsInvocations(self):
+        theMock1 = mock()
+        theMock2 = mock()
+        theMock1.do_foo()
+        theMock2.do_bar()
+
+        self.assertRaises(VerificationError, verifyZeroInteractions, theMock1)
+        self.assertRaises(VerificationError, verifyZeroInteractions, theMock2)
+
+        clear(theMock1, theMock2)
+
+        verifyZeroInteractions(theMock1)
+        verifyZeroInteractions(theMock2)
+
+    def testPreservesStubs(self):
+        theMock = mock()
+        when(theMock).do_foo().thenReturn('hello')
+        self.assertEqual('hello', theMock.do_foo())
+
+        clear(theMock)
+
+        self.assertEqual('hello', theMock.do_foo())
 
 
 class TestRaiseOnUnknownObjects:
