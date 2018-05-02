@@ -12,6 +12,7 @@ Stable entrypoints are: :func:`when`, :func:`mock`, :func:`unstub`, :func:`verif
 .. autofunction:: expect
 .. autofunction:: mock
 .. autofunction:: unstub
+.. autofunction:: forget_invocations
 .. autofunction:: spy
 .. autofunction:: spy2
 
