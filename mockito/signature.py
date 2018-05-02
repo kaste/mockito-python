@@ -33,7 +33,7 @@ def get_signature(obj, method_name):
 
     try:
         return signature(method)
-    except:
+    except Exception:
         return None
 
 
