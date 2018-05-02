@@ -2,6 +2,17 @@ MOCKITO CHANGE LOG
 ==================
 
 
+Release 1.1.0 (May 2, 2018)
+---------------------------
+
+- Added ``forget_invocations`` function. Thanks to @maximkulkin
+
+This is generally useful if you already call mocks during your setup routine.
+Now you could call ``forget_invocations`` at the end of your setup, and 
+have a clean 'recording' for your actual test code. T.i. you don't have
+to count the invocations from your setup code anymore.
+
+
 Release 1.0.12 (June 3, 2017)
 -----------------------------
 
