@@ -22,8 +22,8 @@ import pytest
 
 from .test_base import TestBase
 from mockito import (
-    mock, when, verify, clear, inorder, VerificationError, ArgumentError,
-    verifyNoMoreInteractions, verifyZeroInteractions,
+    mock, when, verify, forget_invocations, inorder, VerificationError,
+    ArgumentError, verifyNoMoreInteractions, verifyZeroInteractions,
     verifyNoUnwantedInteractions, verifyStubbedInvocationsAreUsed,
     any)
 from mockito.verification import never
@@ -330,7 +330,7 @@ class ClearInvocationsTest(TestBase):
         self.assertRaises(VerificationError, verifyZeroInteractions, theMock1)
         self.assertRaises(VerificationError, verifyZeroInteractions, theMock2)
 
-        clear(theMock1, theMock2)
+        forget_invocations(theMock1, theMock2)
 
         verifyZeroInteractions(theMock1)
         verifyZeroInteractions(theMock2)
@@ -340,7 +340,7 @@ class ClearInvocationsTest(TestBase):
         when(theMock).do_foo().thenReturn('hello')
         self.assertEqual('hello', theMock.do_foo())
 
-        clear(theMock)
+        forget_invocations(theMock)
 
         self.assertEqual('hello', theMock.do_foo())
 

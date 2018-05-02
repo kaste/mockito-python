@@ -331,8 +331,8 @@ def unstub(*objs):
         mock_registry.unstub_all()
 
 
-def clear(*objs):
-    """Clears all invocations from a mock."""
+def forget_invocations(*objs):
+    """Forget all invocations of given objs."""
     for obj in objs:
         theMock = _get_mock_or_raise(obj)
         theMock.clear_invocations()

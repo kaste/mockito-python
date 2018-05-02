@@ -22,9 +22,9 @@
 
 
 from .mockito import (
-    when, when2, patch, expect, unstub, clear, verify, verifyNoMoreInteractions,
-    verifyZeroInteractions, verifyNoUnwantedInteractions,
-    verifyStubbedInvocationsAreUsed,
+    when, when2, patch, expect, unstub, forget_invocations,
+    verify, verifyNoMoreInteractions, verifyZeroInteractions,
+    verifyNoUnwantedInteractions, verifyStubbedInvocationsAreUsed,
     ArgumentError)
 from . import inorder
 from .spying import spy, spy2
@@ -39,7 +39,7 @@ __version__ = '1.0.13-dev'
 __all__ = ['mock', 'spy', 'spy2', 'when', 'when2', 'patch', 'expect', 'verify',
            'verifyNoMoreInteractions', 'verifyZeroInteractions',
            'verifyNoUnwantedInteractions', 'verifyStubbedInvocationsAreUsed',
-           'inorder', 'unstub', 'clear',
+           'inorder', 'unstub', 'forget_invocations',
            'VerificationError', 'ArgumentError',
            'any',       # compatibility
            'contains',  # compatibility
