@@ -7,5 +7,6 @@ ignore =
   E303,
   E306,
   E731
-exclude = .git,.cache,docs,.env
+exclude = .git,.cache,docs,.env,.build
 max-complexity = 10
+max-line-length = 79
