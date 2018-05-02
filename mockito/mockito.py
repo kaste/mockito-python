@@ -332,7 +332,14 @@ def unstub(*objs):
 
 
 def forget_invocations(*objs):
-    """Forget all invocations of given objs."""
+    """Forget all invocations of given objs.
+
+    If you already *call* mocks during your setup routine, you can now call
+    ``forget_invocations`` at the end of your setup, and have a clean
+    'recording' for your actual test code. T.i. you don't have
+    to count the invocations from your setup code anymore when using
+    :func:`verify` afterwards.
+    """
     for obj in objs:
         theMock = _get_mock_or_raise(obj)
         theMock.clear_invocations()
