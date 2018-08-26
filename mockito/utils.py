@@ -9,6 +9,10 @@ import re
 PY3 = sys.version_info >= (3,)
 
 
+def contains_strict(seq, element):
+    return any(item is element for item in seq)
+
+
 def newmethod(fn, obj):
     if PY3:
         return types.MethodType(fn, obj)

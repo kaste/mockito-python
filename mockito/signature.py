@@ -1,5 +1,6 @@
 
 from . import matchers
+from .utils import contains_strict
 
 import functools
 import inspect
@@ -47,7 +48,7 @@ def match_signature_allowing_placeholders(sig, args, kwargs):  # noqa: C901
     # way and reimplement something like `sig.bind` with our specific
     # need for `...`, `*args`, and `**kwargs` support.
 
-    if Ellipsis in args:
+    if contains_strict(args, Ellipsis):
         # Invariant: Ellipsis as the sole argument should just pass, regardless
         # if it actually can consume an arg or the function does not take any
         # arguments at all
@@ -69,7 +70,7 @@ def match_signature_allowing_placeholders(sig, args, kwargs):  # noqa: C901
     else:
         # `*args` should at least match one arg (t.i. not `*[]`), so we
         # keep it here. The value and its type is irrelevant in python.
-        args_provided = matchers.ARGS_SENTINEL in args
+        args_provided = contains_strict(args, matchers.ARGS_SENTINEL)
 
         # If we find the `**kwargs` sentinel we must remove it, bc its
         # name cannot be matched against the sig.

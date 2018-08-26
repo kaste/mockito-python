@@ -21,6 +21,7 @@
 from . import matchers
 from . import signature
 from . import verification as verificationModule
+from .utils import contains_strict
 from .mock_registry import mock_registry
 
 from collections import deque
@@ -139,17 +140,17 @@ class MatchingInvocation(Invocation):
         return True
 
     def _remember_params(self, params, named_params):
-        if Ellipsis in params and (params[-1] is not Ellipsis or named_params):
+        if contains_strict(params, Ellipsis) and (params[-1] is not Ellipsis or named_params):
             raise TypeError('Ellipsis must be the last argument you specify.')
 
-        if matchers.args in params:
+        if contains_strict(params, matchers.args):
             raise TypeError('args must be used as *args')
 
-        if matchers.kwargs in params or matchers.KWARGS_SENTINEL in params:
+        if contains_strict(params, matchers.kwargs) or contains_strict(params, matchers.KWARGS_SENTINEL):
             raise TypeError('kwargs must be used as **kwargs')
 
         def wrap(p):
-            if p in (any, matchers.any_):
+            if p is any or p is matchers.any_:
                 return matchers.any_()
             return p
 
