@@ -61,6 +61,73 @@ class Invocation(object):
         signature.match_signature(sig, args, kwargs)
 
 
+class RememberedInvocation(Invocation):
+    def __init__(self, mock, method_name):
+        super(RememberedInvocation, self).__init__(mock, method_name)
+        self.verified = False
+        self.verified_inorder = False
+
+    def ensure_mocked_object_has_method(self, method_name):
+        if not self.mock.has_method(method_name):
+            raise InvocationError(
+                "You tried to call a method '%s' the object (%s) doesn't "
+                "have." % (method_name, self.mock.mocked_obj))
+
+    def __call__(self, *params, **named_params):
+        if self.strict:
+            self.ensure_mocked_object_has_method(self.method_name)
+            self.ensure_signature_matches(
+                self.method_name, params, named_params)
+
+        self._remember_params(params, named_params)
+        self.mock.remember(self)
+
+        for matching_invocation in self.mock.stubbed_invocations:
+            if matching_invocation.matches(self):
+                matching_invocation.should_answer(self)
+                return matching_invocation.answer_first(
+                    *params, **named_params)
+
+        if self.strict:
+            stubbed_invocations = self.mock.stubbed_invocations or [None]
+            raise InvocationError("""
+You called
+
+        %s,
+
+which is not expected. Stubbed invocations are:
+
+        %s
+
+(Set strict to False to bypass this check.)
+""" % (self, "\n    ".join(str(invoc) for invoc in stubbed_invocations)))
+
+        return None
+
+
+class RememberedProxyInvocation(Invocation):
+    '''Remeber params and proxy to method of original object.
+
+    Calls method on original object and returns it's return value.
+    '''
+    def __init__(self, mock, method_name):
+        super(RememberedProxyInvocation, self).__init__(mock, method_name)
+        self.verified = False
+        self.verified_inorder = False
+
+    def __call__(self, *params, **named_params):
+        self._remember_params(params, named_params)
+        self.mock.remember(self)
+        obj = self.mock.spec
+        try:
+            method = getattr(obj, self.method_name)
+        except AttributeError:
+            raise AttributeError(
+                "You tried to call method '%s' which '%s' instance does not "
+                "have." % (self.method_name, obj))
+        return method(*params, **named_params)
+
+
 class MatchingInvocation(Invocation):
     @staticmethod
     def compare(p1, p2):
@@ -135,73 +202,6 @@ class MatchingInvocation(Invocation):
                 return False
 
         return True
-
-
-class RememberedInvocation(Invocation):
-    def __init__(self, mock, method_name):
-        super(RememberedInvocation, self).__init__(mock, method_name)
-        self.verified = False
-        self.verified_inorder = False
-
-    def ensure_mocked_object_has_method(self, method_name):
-        if not self.mock.has_method(method_name):
-            raise InvocationError(
-                "You tried to call a method '%s' the object (%s) doesn't "
-                "have." % (method_name, self.mock.mocked_obj))
-
-    def __call__(self, *params, **named_params):
-        if self.strict:
-            self.ensure_mocked_object_has_method(self.method_name)
-            self.ensure_signature_matches(
-                self.method_name, params, named_params)
-
-        self._remember_params(params, named_params)
-        self.mock.remember(self)
-
-        for matching_invocation in self.mock.stubbed_invocations:
-            if matching_invocation.matches(self):
-                matching_invocation.should_answer(self)
-                return matching_invocation.answer_first(
-                    *params, **named_params)
-
-        if self.strict:
-            stubbed_invocations = self.mock.stubbed_invocations or [None]
-            raise InvocationError("""
-You called
-
-        %s,
-
-which is not expected. Stubbed invocations are:
-
-        %s
-
-(Set strict to False to bypass this check.)
-""" % (self, "\n    ".join(str(invoc) for invoc in stubbed_invocations)))
-
-        return None
-
-
-class RememberedProxyInvocation(Invocation):
-    '''Remeber params and proxy to method of original object.
-
-    Calls method on original object and returns it's return value.
-    '''
-    def __init__(self, mock, method_name):
-        super(RememberedProxyInvocation, self).__init__(mock, method_name)
-        self.verified = False
-        self.verified_inorder = False
-
-    def __call__(self, *params, **named_params):
-        self._remember_params(params, named_params)
-        self.mock.remember(self)
-        obj = self.mock.spec
-        try:
-            method = getattr(obj, self.method_name)
-        except AttributeError:
-            raise AttributeError(
-                "You tried to call method '%s' which '%s' instance does not "
-                "have." % (self.method_name, obj))
-        return method(*params, **named_params)
 
 
 class VerifiableInvocation(MatchingInvocation):
