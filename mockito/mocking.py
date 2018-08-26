@@ -68,8 +68,9 @@ class Mock(object):
     # STUBBING
 
     def get_original_method(self, method_name):
-        if not self.spec:
+        if self.spec is None:
             return None
+
         return self.spec.__dict__.get(method_name)
 
     def set_method(self, method_name, new_method):
@@ -134,10 +135,10 @@ class Mock(object):
     # SPECCING
 
     def has_method(self, method_name):
-        if self.spec:
-            return hasattr(self.spec, method_name)
-        else:
+        if self.spec is None:
             return True
+
+        return hasattr(self.spec, method_name)
 
     def get_signature(self, method_name):
         if self.spec is None:
