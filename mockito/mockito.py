@@ -267,7 +267,7 @@ def patch(fn, attr_or_replacement, replacement=None):
     """
     if replacement is None:
         replacement = attr_or_replacement
-        when2(fn, Ellipsis).thenAnswer(replacement)
+        return when2(fn, Ellipsis).thenAnswer(replacement)
     else:
         obj, name = fn, attr_or_replacement
         theMock = _get_mock(obj, strict=True)

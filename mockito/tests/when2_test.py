@@ -109,6 +109,18 @@ class TestFancyObjResolver:
 
         assert os.path.commonprefix(Ellipsis) == 'yep'
 
+    def testWithPatchGivenTwoArgs(self):
+        with patch(os.path.exists, lambda m: 'yup'):
+            assert os.path.exists('foo') == 'yup'
+
+        assert not os.path.exists('foo')
+
+    def testWithPatchGivenThreeArgs(self):
+        with patch(os.path, 'exists', lambda m: 'yup'):
+            assert os.path.exists('foo') == 'yup'
+
+        assert not os.path.exists('foo')
+
     def testSpy2(self):
         spy2(os.path.exists)
 
