@@ -10,6 +10,8 @@ class Dog(object):
     def bark(self, sound):
         return "%s!" % sound
 
+    def waggle(self):
+        return 'waggle'
 
 class CallSignature(namedtuple('CallSignature', 'args kwargs')):
     def raises(self, reason):
@@ -18,6 +20,137 @@ class CallSignature(namedtuple('CallSignature', 'args kwargs')):
 def sig(*args, **kwargs):
     return CallSignature(args, kwargs)
 
+
+class TestCallMethodWithSignature:
+    @pytest.mark.xfail
+    def testNoArg(self):
+        rex = Dog()
+        when(rex).waggle().thenReturn('wuff')
+
+        assert rex.waggle() == 'wuff'
+
+        with pytest.raises(TypeError):
+            rex.waggle(1)
+        with pytest.raises(TypeError):
+            rex.waggle(Ellipsis)
+        with pytest.raises(TypeError):
+            rex.waggle(args)
+        with pytest.raises(TypeError):
+            rex.waggle(kwargs)
+        with pytest.raises(TypeError):
+            rex.waggle(*args)
+        with pytest.raises(TypeError):
+            rex.waggle(**kwargs)
+
+    @pytest.mark.xfail
+    def testExpectingSpecificInputAsPositionalArgument(self):
+        rex = Dog()
+        when(rex).bark(1).thenReturn('wuff')
+
+        assert rex.bark(1) == 'wuff'
+
+        with pytest.raises(invocation.InvocationError):
+            rex.bark(sound=1)
+        with pytest.raises(invocation.InvocationError):
+            rex.bark(Ellipsis)
+        with pytest.raises(invocation.InvocationError):
+            rex.bark(args)
+        with pytest.raises(invocation.InvocationError):
+            rex.bark(*args)
+        with pytest.raises(invocation.InvocationError):
+            rex.bark(kwargs)
+
+        with pytest.raises(TypeError):
+            rex.bark(1, 2)
+        with pytest.raises(TypeError):
+            rex.bark(wuff=1)
+        with pytest.raises(TypeError):
+            rex.bark(**kwargs)
+
+    @pytest.mark.xfail
+    def testExpectingSpecificInputAsKeyword(self):
+        rex = Dog()
+        when(rex).bark(sound=1).thenReturn('wuff')
+
+        assert rex.bark(sound=1) == 'wuff'
+
+        with pytest.raises(invocation.InvocationError):
+            rex.bark(1)
+        with pytest.raises(invocation.InvocationError):
+            rex.bark(Ellipsis)
+        with pytest.raises(invocation.InvocationError):
+            rex.bark(args)
+        with pytest.raises(invocation.InvocationError):
+            rex.bark(*args)
+        with pytest.raises(invocation.InvocationError):
+            rex.bark(kwargs)
+
+        with pytest.raises(TypeError):
+            rex.bark(1, 2)
+        with pytest.raises(TypeError):
+            rex.bark(wuff=1)
+        with pytest.raises(TypeError):
+            rex.bark(**kwargs)
+
+    @pytest.mark.xfail
+    def testExpectingStarKwargs(self):
+        rex = Dog()
+        when(rex).bark(**kwargs).thenReturn('wuff')
+
+        assert rex.bark(sound='miau') == 'wuff'
+
+        with pytest.raises(invocation.InvocationError):
+            rex.bark('miau')
+        with pytest.raises(invocation.InvocationError):
+            rex.bark(Ellipsis)
+        with pytest.raises(invocation.InvocationError):
+            rex.bark(kwargs)
+        with pytest.raises(invocation.InvocationError):
+            rex.bark(args)
+
+        with pytest.raises(TypeError):
+            rex.bark(wuff='miau')
+        with pytest.raises(TypeError):
+            rex.bark(**kwargs)
+
+    @pytest.mark.xfail
+    def testExpectingEllipsis(self):
+        rex = Dog()
+        when(rex).bark(Ellipsis).thenReturn('wuff')
+
+        assert rex.bark('miau') == 'wuff'
+        with pytest.raises(TypeError):
+            rex.bark('miau', 'miau')
+
+        assert rex.bark(sound='miau') == 'wuff'
+        with pytest.raises(TypeError):
+            rex.bark(wuff='miau')
+
+        assert rex.bark(Ellipsis) == 'wuff'
+        assert rex.bark(args) == 'wuff'
+        assert rex.bark(*args) == 'wuff'
+        assert rex.bark(kwargs) == 'wuff'
+
+        with pytest.raises(TypeError):
+            rex.bark(**kwargs) == 'wuff'
+
+    @pytest.mark.xfail
+    def testExpectingStarArgs(self):
+        rex = Dog()
+        when(rex).bark(*args).thenReturn('wuff')
+
+        assert rex.bark('miau') == 'wuff'
+
+        with pytest.raises(invocation.InvocationError):
+            rex.bark(sound='miau')
+        with pytest.raises(TypeError):
+            rex.bark(wuff='miau')
+
+        assert rex.bark(*args) == 'wuff'
+        assert rex.bark(Ellipsis) == 'wuff'
+
+        with pytest.raises(TypeError):
+            rex.bark(**kwargs)
 
 
 class TestEllipsises:
