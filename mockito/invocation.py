@@ -53,13 +53,6 @@ class Invocation(object):
         params = ", ".join(args + kwargs)
         return "%s(%s)" % (self.method_name, params)
 
-    def ensure_signature_matches(self, method_name, args, kwargs):
-        sig = self.mock.get_signature(method_name)
-        if not sig:
-            return
-
-        signature.match_signature(sig, args, kwargs)
-
 
 class RememberedInvocation(Invocation):
     def __init__(self, mock, method_name):
@@ -72,6 +65,13 @@ class RememberedInvocation(Invocation):
             raise InvocationError(
                 "You tried to call a method '%s' the object (%s) doesn't "
                 "have." % (method_name, self.mock.mocked_obj))
+
+    def ensure_signature_matches(self, method_name, args, kwargs):
+        sig = self.mock.get_signature(method_name)
+        if not sig:
+            return
+
+        signature.match_signature(sig, args, kwargs)
 
     def __call__(self, *params, **named_params):
         if self.strict:
@@ -274,6 +274,13 @@ class StubbedInvocation(MatchingInvocation):
             raise InvocationError(
                 "You tried to stub a method '%s' the object (%s) doesn't "
                 "have." % (method_name, self.mock.mocked_obj))
+
+    def ensure_signature_matches(self, method_name, args, kwargs):
+        sig = self.mock.get_signature(method_name)
+        if not sig:
+            return
+
+        signature.match_signature_allowing_placeholders(sig, args, kwargs)
 
     def __call__(self, *params, **named_params):
         if self.strict:

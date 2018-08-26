@@ -22,7 +22,6 @@ def sig(*args, **kwargs):
 
 
 class TestCallMethodWithSignature:
-    @pytest.mark.xfail
     def testNoArg(self):
         rex = Dog()
         when(rex).waggle().thenReturn('wuff')
@@ -42,7 +41,6 @@ class TestCallMethodWithSignature:
         with pytest.raises(TypeError):
             rex.waggle(**kwargs)
 
-    @pytest.mark.xfail
     def testExpectingSpecificInputAsPositionalArgument(self):
         rex = Dog()
         when(rex).bark(1).thenReturn('wuff')
@@ -67,7 +65,6 @@ class TestCallMethodWithSignature:
         with pytest.raises(TypeError):
             rex.bark(**kwargs)
 
-    @pytest.mark.xfail
     def testExpectingSpecificInputAsKeyword(self):
         rex = Dog()
         when(rex).bark(sound=1).thenReturn('wuff')
@@ -92,7 +89,6 @@ class TestCallMethodWithSignature:
         with pytest.raises(TypeError):
             rex.bark(**kwargs)
 
-    @pytest.mark.xfail
     def testExpectingStarKwargs(self):
         rex = Dog()
         when(rex).bark(**kwargs).thenReturn('wuff')
@@ -113,7 +109,6 @@ class TestCallMethodWithSignature:
         with pytest.raises(TypeError):
             rex.bark(**kwargs)
 
-    @pytest.mark.xfail
     def testExpectingEllipsis(self):
         rex = Dog()
         when(rex).bark(Ellipsis).thenReturn('wuff')
@@ -134,7 +129,6 @@ class TestCallMethodWithSignature:
         with pytest.raises(TypeError):
             rex.bark(**kwargs) == 'wuff'
 
-    @pytest.mark.xfail
     def testExpectingStarArgs(self):
         rex = Dog()
         when(rex).bark(*args).thenReturn('wuff')

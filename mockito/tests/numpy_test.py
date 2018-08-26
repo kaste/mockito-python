@@ -24,7 +24,6 @@ class TestEnsureNumpyWorks:
         when(module).one_arg(array).thenReturn('yep')
         assert module.one_arg(array) == 'yep'
 
-    @pytest.mark.xfail
     def testEnsureNumpyArrayAllowedWhenCalling(self):
         array = np.array([1, 2, 3])
         when(module).one_arg(Ellipsis).thenReturn('yep')

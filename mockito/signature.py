@@ -37,7 +37,12 @@ def get_signature(obj, method_name):
         return None
 
 
-def match_signature(sig, args, kwargs):     # noqa: C901 (too complex)
+def match_signature(sig, args, kwargs):
+    sig.bind(*args, **kwargs)
+    return sig
+
+
+def match_signature_allowing_placeholders(sig, args, kwargs):  # noqa: C901
     # Let's face it. If this doesn't work out, we have to do it the hard
     # way and reimplement something like `sig.bind` with our specific
     # need for `...`, `*args`, and `**kwargs` support.
