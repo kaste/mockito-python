@@ -73,8 +73,10 @@ class TestFancyObjResolver:
         assert time.time() == 'None'
 
     def testWhenSplitOnNextLine(self):
+        # fmt: off
         when2(
             os.path.commonprefix, '/Foo').thenReturn(True)
+        # fmt: on
         assert os.path.commonprefix('/Foo')
 
     def testEnsureWithWhen2SameLine(self):
@@ -82,9 +84,11 @@ class TestFancyObjResolver:
             pass
 
     def testEnsureWithWhen2SplitLine(self):
+        # fmt: off
         with when2(
                 os.path.commonprefix, '/Foo'):
             pass
+        # fmt: on
 
     def testEnsureToResolveMethodOnClass(self):
         class A(object):
