@@ -117,8 +117,9 @@ class MatchingInvocation(Invocation):
                 return False
 
         for key, p1 in sorted(
-                self.named_params.iteritems(),
-                key=lambda (k, v): 1 if k is matchers.KWARGS_SENTINEL else 0):
+            self.named_params.iteritems(),
+            key=lambda k_v: 1 if k_v[0] is matchers.KWARGS_SENTINEL else 0
+        ):
             if key is matchers.KWARGS_SENTINEL:
                 break
 
