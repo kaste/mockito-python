@@ -5,6 +5,8 @@ python:
 - '3.5'
 - '3.6'
 install:
+  # Travis bug on python 3.4 ?
+  - pip install setuptools --upgrade
   - pip install pytest --upgrade
   - pip install numpy
   # We only flake at Py27 because mockito is still developed with that version
