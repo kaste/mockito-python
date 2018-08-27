@@ -140,13 +140,19 @@ class MatchingInvocation(Invocation):
         return True
 
     def _remember_params(self, params, named_params):
-        if contains_strict(params, Ellipsis) and (params[-1] is not Ellipsis or named_params):
+        if (
+            contains_strict(params, Ellipsis)
+            and (params[-1] is not Ellipsis or named_params)
+        ):
             raise TypeError('Ellipsis must be the last argument you specify.')
 
         if contains_strict(params, matchers.args):
             raise TypeError('args must be used as *args')
 
-        if contains_strict(params, matchers.kwargs) or contains_strict(params, matchers.KWARGS_SENTINEL):
+        if (
+            contains_strict(params, matchers.kwargs)
+            or contains_strict(params, matchers.KWARGS_SENTINEL)
+        ):
             raise TypeError('kwargs must be used as **kwargs')
 
         def wrap(p):
