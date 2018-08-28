@@ -1,6 +1,14 @@
 MOCKITO CHANGE LOG
 ==================
 
+Release 1.1.1 (August 28, 2018)
+-------------------------------
+
+- Fix: The context manager (``with``) has now a proper implementation
+- Fix: Calling ``patch`` with two arguments can now be used with ``with``
+- Fix: Do not treat the placeholder arguments (Ellipsis, args, kwargs) as special on call time anymore. (T.i. they only have a meaning when stubbing or verifying.)
+- Enhancement: Changed some truthy or equality tests to identity (``is``) tests. This reduces edge-cases where some user object defines ``__eq__`` or ``__bool__``. (Hello _numpy_!)
+
 
 Release 1.1.0 (May 2, 2018)
 ---------------------------
