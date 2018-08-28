@@ -64,7 +64,7 @@ class _Dict(object):
         self._store.append((key, value))
 
     def remove(self, key):
-        self._store = filter(lambda (k, v): k != key, self._store)
+        self._store = filter(lambda k_v: k_v[0] != key, self._store)
 
     def pop(self, key):
         rv = self.get(key)
