@@ -22,7 +22,6 @@ from . import matchers
 from . import signature
 from . import verification as verificationModule
 from .utils import contains_strict
-from .mock_registry import mock_registry
 
 from collections import deque
 import functools
