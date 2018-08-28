@@ -119,18 +119,37 @@ class Mock(object):
 
             self.replace_method(method_name, original_method)
 
+    def forget_stubbed_invocation(self, invocation):
+        assert invocation in self.stubbed_invocations
+
+        if len(self.stubbed_invocations) == 1:
+            mock_registry.unstub(self.mocked_obj)
+            return
+
+        self.stubbed_invocations.remove(invocation)
+
+        if not any(
+            inv.method_name == invocation.method_name
+            for inv in self.stubbed_invocations
+        ):
+            original_method = self.original_methods.pop(invocation.method_name)
+            self.restore_method(invocation.method_name, original_method)
+
+    def restore_method(self, method_name, original_method):
+        # If original_method is None, we *added* it to mocked_obj, so we
+        # must delete it here.
+        # If we mocked an instance, our mocked function will actually hide
+        # the one on its class, so we delete as well.
+        if (not original_method or not inspect.isclass(self.mocked_obj) and
+                inspect.ismethod(original_method)):
+            delattr(self.mocked_obj, method_name)
+        else:
+            self.set_method(method_name, original_method)
+
     def unstub(self):
         while self.original_methods:
             method_name, original_method = self.original_methods.popitem()
-            # If original_method is None, we *added* it to mocked_obj, so we
-            # must delete it here.
-            # If we mocked an instance, our mocked function will actually hide
-            # the one on its class, so we delete as well.
-            if (not original_method or not inspect.isclass(self.mocked_obj) and
-                    inspect.ismethod(original_method)):
-                delattr(self.mocked_obj, method_name)
-            else:
-                self.set_method(method_name, original_method)
+            self.restore_method(method_name, original_method)
 
     # SPECCING
 

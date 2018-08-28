@@ -1,11 +1,15 @@
 import pytest
 
-from mockito import when, unstub, verify
+from mockito import when, unstub, verify, ArgumentError
 
 
 class Dog(object):
     def waggle(self):
         return 'Unsure'
+
+    def bark(self, sound='Wuff'):
+        return sound
+
 
 class TestUntub:
     def testIndependentUnstubbing(self):
@@ -72,9 +76,43 @@ class TestAutomaticUnstubbing:
         with when(rex).waggle().thenReturn('Yup'), \
              when(mox).waggle().thenReturn('Nope'):  # noqa: E127
             assert rex.waggle() == 'Yup'
+            assert mox.waggle() == 'Nope'
 
         assert rex.waggle() == 'Unsure'
         assert mox.waggle() == 'Unsure'
+
+    def testOnlyUnstubTheExactStub(self):
+        rex = Dog()
+
+        when(rex).bark('Shhh').thenReturn('Nope')
+        with when(rex).bark('Miau').thenReturn('Grrr'):
+            assert rex.bark('Miau') == 'Grrr'
+
+        assert rex.bark('Shhh') == 'Nope'
+        verify(rex, times=2).bark(Ellipsis)
+
+    def testOnlyUnstubTheExcatMethod(self):
+        rex = Dog()
+
+        when(rex).bark('Shhh').thenReturn('Nope')
+        with when(rex).waggle().thenReturn('Yup'):
+            assert rex.waggle() == 'Yup'
+
+        assert rex.bark('Shhh') == 'Nope'
+        verify(rex, times=1).bark(Ellipsis)
+        verify(rex, times=1).waggle()
+
+    def testCleanupRegistryAfterLastStub(self):
+        rex = Dog()
+
+        with when(rex).bark('Shhh').thenReturn('Nope'):
+            with when(rex).bark('Miau').thenReturn('Grrr'):
+                assert rex.bark('Miau') == 'Grrr'
+            assert rex.bark('Shhh') == 'Nope'
+
+        with pytest.raises(ArgumentError):
+            verify(rex).bark(Ellipsis)
+
 
     class TestEnsureCleanUnstubIfMockingAGlobal:
         def testA(self):

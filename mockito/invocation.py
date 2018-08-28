@@ -300,6 +300,9 @@ class StubbedInvocation(MatchingInvocation):
         self.mock.finish_stubbing(self)
         return AnswerSelector(self)
 
+    def forget_self(self):
+        self.mock.forget_stubbed_invocation(self)
+
     def add_answer(self, answer):
         self.answers.add(answer)
 
@@ -386,7 +389,7 @@ class AnswerSelector(object):
         pass
 
     def __exit__(self, *exc_info):
-        mock_registry.unstub(self.invocation.mock.mocked_obj)
+        self.invocation.forget_self()
 
 
 class CompositeAnswer(object):
