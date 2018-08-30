@@ -4,6 +4,7 @@ python:
 - '3.4'
 - '3.5'
 - '3.6'
+- '3.7'
 install:
   - if [[ $TRAVIS_PYTHON_VERSION == 3.6 ]]; then pip install flake8; fi
   - pip install .
