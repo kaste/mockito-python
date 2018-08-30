@@ -55,7 +55,7 @@ class SpyingTest(TestBase):
     def testPassesArgumentsCorrectly(self):
         dummy = spy(Dummy())
         self.assertEqual((('foo', 1), {'bar': 'baz'}),
-                          dummy.return_args('foo', 1, bar='baz'))
+                         dummy.return_args('foo', 1, bar='baz'))
 
     def testIsVerifiable(self):
         dummy = spy(Dummy())
@@ -75,7 +75,7 @@ class SpyingTest(TestBase):
             self.fail("Should fail if no such method.")
         except AttributeError as e:
             self.assertEqual("You tried to call method 'lol' which '%s' "
-                              "instance does not have." % original, str(e))
+                             "instance does not have." % original, str(e))
 
     def testIsInstanceFakesOriginalClass(self):
         dummy = spy(Dummy())
@@ -98,7 +98,8 @@ class SpyingTest(TestBase):
 
     @pytest.mark.xfail(
         sys.version_info >= (3,),
-        reason="python3 allows any value for self")
+        reason="python3 allows any value for self"
+    )
     def testCantCallInstanceMethodWhenSpyingClass(self):
         dummy = spy(Dummy)
         with pytest.raises(TypeError):

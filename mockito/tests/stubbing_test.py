@@ -341,7 +341,7 @@ class StubbingTest(TestBase):
         # then
         self.assertEqual("stubbed name", mockPerson.get_name())
         self.assertEqual("original name", person.get_name(),
-                          'Original method should not be replaced.')
+                         'Original method should not be replaced.')
 
     def testStubsWithThenAnswer(self):
         m = mock()
@@ -373,7 +373,7 @@ class StubbingTest(TestBase):
 
         when(m).with_key_words(testing=any()).thenAnswer(test_key_words)
         self.assertEqual(m.with_key_words(testing="Very Funky"),
-                          "Very Funky Stuff")
+                         "Very Funky Stuff")
 
     def testSubsWithThenAnswerAndMixedArgs(self):
         repo = mock()
