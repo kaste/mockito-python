@@ -32,7 +32,7 @@ class ArgumentError(Exception):
 
 
 def _multiple_arguments_in_use(*args):
-    return len(filter(lambda x: x, args)) > 1
+    return len([x for x in args if x]) > 1
 
 
 def _invalid_argument(value):

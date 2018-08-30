@@ -48,7 +48,7 @@ class ClassMethodsTest(TestBase):
     def testUnstubs(self):
         when(Dog).bark().thenReturn("miau!")
         unstub()
-        self.assertEquals("woof!", Dog.bark())
+        self.assertEqual("woof!", Dog.bark())
 
     # TODO decent test case please :) without testing irrelevant implementation
     # details
@@ -58,18 +58,18 @@ class ClassMethodsTest(TestBase):
         self.assertTrue(isinstance(Dog.__dict__.get("bark"), classmethod))
 
     def testStubs(self):
-        self.assertEquals("woof!", Dog.bark())
+        self.assertEqual("woof!", Dog.bark())
 
         when(Dog).bark().thenReturn("miau!")
 
-        self.assertEquals("miau!", Dog.bark())
+        self.assertEqual("miau!", Dog.bark())
 
     def testStubsClassesDerivedFromTheObjectClass(self):
-        self.assertEquals("Rrrrr!", Lion.roar())
+        self.assertEqual("Rrrrr!", Lion.roar())
 
         when(Lion).roar().thenReturn("miau!")
 
-        self.assertEquals("miau!", Lion.roar())
+        self.assertEqual("miau!", Lion.roar())
 
     def testVerifiesMultipleCallsOnClassmethod(self):
         when(Dog).bark().thenReturn("miau!")
@@ -89,19 +89,19 @@ class ClassMethodsTest(TestBase):
     def testStubsAndVerifiesClassmethod(self):
         when(Dog).bark().thenReturn("miau!")
 
-        self.assertEquals("miau!", Dog.bark())
+        self.assertEqual("miau!", Dog.bark())
 
         verify(Dog).bark()
 
     def testPreservesClassArgumentAfterUnstub(self):
-        self.assertEquals("Cat foo", Cat.meow("foo"))
+        self.assertEqual("Cat foo", Cat.meow("foo"))
 
         when(Cat).meow("foo").thenReturn("bar")
 
-        self.assertEquals("bar", Cat.meow("foo"))
+        self.assertEqual("bar", Cat.meow("foo"))
 
         unstub()
 
-        self.assertEquals("Cat foo", Cat.meow("foo"))
+        self.assertEqual("Cat foo", Cat.meow("foo"))
 
 
