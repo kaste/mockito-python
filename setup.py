@@ -12,10 +12,6 @@ with open('mockito/__init__.py', 'rb') as f:
         f.read().decode('utf-8')).group(1)))
 
 
-extra = {}
-if sys.version_info >= (3,):
-    extra['use_2to3'] = True
-
 install_requires = ['funcsigs'] if sys.version_info < (3,) else []
 
 setup(name='mockito',
@@ -40,5 +36,4 @@ setup(name='mockito',
           'Programming Language :: Python :: 3.4',
           'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
-      ],
-      **extra)
+      ])
