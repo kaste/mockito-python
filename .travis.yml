@@ -5,18 +5,11 @@ python:
 - '3.5'
 - '3.6'
 install:
-  # Travis bug on python 3.4 ?
-  - pip install setuptools --upgrade
-  - pip install pytest --upgrade
-  - pip install numpy
-  # We only flake at Py27 because mockito is still developed with that version
-  - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then pip install flake8; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == 3.6 ]]; then pip install flake8; fi
   - pip install .
-  # build to get 2to3 applied
-  - python setup.py build
 script:
-  - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then flake8 .; fi
-  - py.test build/lib
+  - if [[ $TRAVIS_PYTHON_VERSION == 3.6 ]]; then flake8 .; fi
+  - py.test
 deploy:
   provider: pypi
   user: herrkaste
