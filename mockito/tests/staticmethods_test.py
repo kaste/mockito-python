@@ -46,7 +46,7 @@ class StaticMethodsTest(TestBase):
     def testUnstubs(self):
         when(Dog).bark().thenReturn("miau")
         unstub()
-        self.assertEquals("woof", Dog.bark())
+        self.assertEqual("woof", Dog.bark())
 
     # TODO decent test case please :) without testing irrelevant implementation
     # details
@@ -56,46 +56,46 @@ class StaticMethodsTest(TestBase):
         self.assertTrue(isinstance(Dog.__dict__.get("bark"), staticmethod))
 
     def testStubs(self):
-        self.assertEquals("woof", Dog.bark())
+        self.assertEqual("woof", Dog.bark())
 
         when(Dog).bark().thenReturn("miau")
 
-        self.assertEquals("miau", Dog.bark())
+        self.assertEqual("miau", Dog.bark())
 
     def testStubsConsecutiveCalls(self):
         when(Dog).bark().thenReturn(1).thenReturn(2)
 
-        self.assertEquals(1, Dog.bark())
-        self.assertEquals(2, Dog.bark())
-        self.assertEquals(2, Dog.bark())
+        self.assertEqual(1, Dog.bark())
+        self.assertEqual(2, Dog.bark())
+        self.assertEqual(2, Dog.bark())
 
     def testStubsWithArgs(self):
-        self.assertEquals("woof woof", Dog.barkHardly(1, 2))
+        self.assertEqual("woof woof", Dog.barkHardly(1, 2))
 
         when(Dog).barkHardly(1, 2).thenReturn("miau")
 
-        self.assertEquals("miau", Dog.barkHardly(1, 2))
+        self.assertEqual("miau", Dog.barkHardly(1, 2))
 
     def testStubsButDoesNotMachArguments(self):
-        self.assertEquals("woof woof", Dog.barkHardly(1, "anything"))
+        self.assertEqual("woof woof", Dog.barkHardly(1, "anything"))
 
         when(Dog, strict=False).barkHardly(1, 2).thenReturn("miau")
 
-        self.assertEquals(None, Dog.barkHardly(1))
+        self.assertEqual(None, Dog.barkHardly(1))
 
     def testStubsMultipleClasses(self):
         when(Dog).barkHardly(1, 2).thenReturn(1)
         when(Dog).bark().thenReturn(2)
         when(Cat).meow().thenReturn(3)
 
-        self.assertEquals(1, Dog.barkHardly(1, 2))
-        self.assertEquals(2, Dog.bark())
-        self.assertEquals(3, Cat.meow())
+        self.assertEqual(1, Dog.barkHardly(1, 2))
+        self.assertEqual(2, Dog.bark())
+        self.assertEqual(3, Cat.meow())
 
         unstub()
 
-        self.assertEquals("woof", Dog.bark())
-        self.assertEquals("miau", Cat.meow())
+        self.assertEqual("woof", Dog.bark())
+        self.assertEqual("miau", Cat.meow())
 
     def testVerifiesSuccesfully(self):
         when(Dog).bark().thenReturn("boo")
@@ -135,7 +135,7 @@ class StaticMethodsTest(TestBase):
     def testStubsAndVerifies(self):
         when(Dog).bark().thenReturn("boo")
 
-        self.assertEquals("boo", Dog.bark())
+        self.assertEqual("boo", Dog.bark())
 
         verify(Dog).bark()
 
@@ -143,11 +143,11 @@ class StaticMethodsTest(TestBase):
         when(Dog).bark().thenReturn(1)
         when(Dog).bark().thenReturn(2)
 
-        self.assertEquals(2, Dog.bark())
+        self.assertEqual(2, Dog.bark())
 
         unstub()
 
-        self.assertEquals("woof", Dog.bark())
+        self.assertEqual("woof", Dog.bark())
 
     def testDoesNotVerifyStubbedCalls(self):
         when(Dog).bark().thenReturn(1)

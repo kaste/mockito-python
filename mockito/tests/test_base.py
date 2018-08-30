@@ -30,7 +30,7 @@ class TestBase(unittest.TestCase):
             else:
                 callable()
         except Exception as e:
-            self.assertEquals(message, str(e))
+            self.assertEqual(message, str(e))
         else:
             self.fail('Exception with message "%s" expected, but never raised'
                       % (message))

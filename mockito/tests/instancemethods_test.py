@@ -54,8 +54,8 @@ class InstanceMethodsTest(TestBase):
         unstub()
 
         rex = Dog()
-        self.assertEquals('Wuff!', rex.waggle())
-        self.assertEquals(original_method, Dog.waggle)
+        self.assertEqual('Wuff!', rex.waggle())
+        self.assertEqual(original_method, Dog.waggle)
 
     def testUnstubMockedInstanceMethod(self):
         rex = Dog()
@@ -78,19 +78,19 @@ class InstanceMethodsTest(TestBase):
         when(Dog).waggle().thenReturn('Boing!')
 
         rex = Dog()
-        self.assertEquals('Boing!', rex.waggle())
+        self.assertEqual('Boing!', rex.waggle())
 
     def testStubsAnInstanceMethodWithAnArgument(self):
         when(Dog).bark('Miau').thenReturn('Wuff')
 
         rex = Dog()
-        self.assertEquals('Wuff', rex.bark('Miau'))
+        self.assertEqual('Wuff', rex.bark('Miau'))
 
     def testInvokeAStubbedMethodFromAnotherMethod(self):
         when(Dog).bark('Wau').thenReturn('Wuff')
 
         rex = Dog()
-        self.assertEquals('Wuff', rex.do_default_bark())
+        self.assertEqual('Wuff', rex.do_default_bark())
         verify(Dog).bark('Wau')
 
     def testYouCantStubAnUnknownMethodInStrictMode(self):
@@ -141,17 +141,17 @@ class InstanceMethodsTest(TestBase):
     def testReturnNoneIfCallingWithUnexpectedArgumentsIfNotStrict(self):
         when(Dog, strict=False).bark('Miau').thenReturn('Wuff')
         rex = Dog()
-        self.assertEquals(None, rex.bark('Shhh'))
+        self.assertEqual(None, rex.bark('Shhh'))
 
     def testStubInstancesInsteadOfClasses(self):
         rex = Dog()
         when(rex).bark('Miau').thenReturn('Wuff')
 
-        self.assertEquals('Wuff', rex.bark('Miau'))
+        self.assertEqual('Wuff', rex.bark('Miau'))
         verify(rex, times=1).bark(ANY)
 
         max = Dog()
-        self.assertEquals('Miau!', max.bark('Miau'))
+        self.assertEqual('Miau!', max.bark('Miau'))
 
     def testUnstubInstance(self):
         rex = Dog()
@@ -166,15 +166,15 @@ class InstanceMethodsTest(TestBase):
         when(Dog).bark('Miau').thenReturn()
         rex = Dog()
 
-        self.assertEquals(None, rex.bark('Miau'))
+        self.assertEqual(None, rex.bark('Miau'))
 
     def testForgottenThenReturnMeansReturnNone(self):
         when(Dog).bark('Miau')
         when(Dog).waggle()
         rex = Dog()
 
-        self.assertEquals(None, rex.bark('Miau'))
-        self.assertEquals(None, rex.waggle())
+        self.assertEqual(None, rex.bark('Miau'))
+        self.assertEqual(None, rex.waggle())
 
 class TestVerifyInteractions:
     class TestZeroInteractions:

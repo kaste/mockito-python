@@ -22,7 +22,7 @@
 
 import inspect
 
-from mockito import when2
+from .mockito import when2
 from .invocation import RememberedProxyInvocation
 from .mocking import Mock, _Dummy, mock_registry
 from .utils import get_obj
