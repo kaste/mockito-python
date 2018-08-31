@@ -27,62 +27,78 @@ from mockito.verification import never
 
 class TestVerificationErrors:
 
+    def testPrintsNicelyNothingIfNeverUsed(self):
+        theMock = mock()
+        with pytest.raises(VerificationError) as exc:
+            verify(theMock).foo()
+        assert str(exc.value) == '''
+Wanted but not invoked:
+
+    foo()
+
+Instead got:
+
+    Nothing
+
+'''
+
     def testPrintsNicely(self):
         theMock = mock()
+        theMock.foo('bar')
+        theMock.foo(12, baz='boz')
         with pytest.raises(VerificationError) as exc:
-            verify(theMock).foo()
-        assert str(exc.value) == '\nWanted but not invoked:  foo()' \
-                                 '\nInstead got:             []'
+            verify(theMock).foo(True, None)
+        assert str(exc.value) == '''
+Wanted but not invoked:
 
-    def testPrintsNicelyUnexpectedResultWithOneParameter(self):
-        theMock = mock()
-        theMock.foo("bar")
-        with pytest.raises(VerificationError) as exc:
-            verify(theMock).foo()
-        assert str(exc.value) == '\nWanted but not invoked:  foo()' \
-                                 '\nInstead got:             [foo(\'bar\')]'
+    foo(True, None)
 
-    def testPrintsNicelyUnexpectedResultWithTwoParameters(self):
-        theMock = mock()
-        theMock.foo("bar", 1)
-        with pytest.raises(VerificationError) as exc:
-            verify(theMock).foo()
-        assert str(exc.value) == \
-            '\nWanted but not invoked:  foo()' \
-            '\nInstead got:             [foo(\'bar\', 1)]'
+Instead got:
 
-    def testPrintsNicelyUnexpectedResultWithNamedParameter(self):
-        theMock = mock()
-        theMock.foo("bar", baz=1)
-        with pytest.raises(VerificationError) as exc:
-            verify(theMock).foo()
-        assert str(exc.value) == \
-            '\nWanted but not invoked:  foo()' \
-            '\nInstead got:             [foo(\'bar\', baz=1)]'
+    foo('bar')
+    foo(12, baz='boz')
 
-    def testPrintsNicelyOneArgument(self):
-        theMock = mock()
-        with pytest.raises(VerificationError) as exc:
-            verify(theMock).foo("bar")
-        assert str(exc.value) == \
-            '\nWanted but not invoked:  foo(\'bar\')' \
-            '\nInstead got:             []'
+'''
 
-    def testPrintsNicelyArguments(self):
+    def testPrintOnlySameMethodInvocationsIfAny(self):
         theMock = mock()
-        with pytest.raises(VerificationError) as exc:
-            verify(theMock).foo(1, 2)
-        assert str(exc.value) == \
-            '\nWanted but not invoked:  foo(1, 2)' \
-            '\nInstead got:             []'
+        theMock.foo('bar')
+        theMock.bar('foo')
 
-    def testPrintsNicelyStringArguments(self):
-        theMock = mock()
         with pytest.raises(VerificationError) as exc:
-            verify(theMock).foo(1, 'foo')
-        assert str(exc.value) == \
-            '\nWanted but not invoked:  foo(1, \'foo\')' \
-            '\nInstead got:             []'
+            verify(theMock).bar('fox')
+
+        assert str(exc.value) == '''
+Wanted but not invoked:
+
+    bar('fox')
+
+Instead got:
+
+    bar('foo')
+
+'''
+
+    def testPrintAllInvocationsIfNoInvocationWithSameMethodName(self):
+        theMock = mock()
+        theMock.foo('bar')
+        theMock.bar('foo')
+
+        with pytest.raises(VerificationError) as exc:
+            verify(theMock).box('fox')
+
+        assert str(exc.value) == '''
+Wanted but not invoked:
+
+    box('fox')
+
+Instead got:
+
+    foo('bar')
+    bar('foo')
+
+'''
+
 
     def testPrintKeywordArgumentsNicely(self):
         theMock = mock()
