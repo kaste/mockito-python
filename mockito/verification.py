@@ -85,7 +85,8 @@ class Times(object):
                 invocation.mock.invocations or
                 ['Nothing']
             )
-            raise VerificationError("""
+            raise VerificationError(
+                """
 Wanted but not invoked:
 
     %s
@@ -94,10 +95,14 @@ Instead got:
 
     %s
 
-""" % (
-    invocation,
-    "\n    ".join(str(invoc) for invoc in reversed(invocations))
-))
+"""
+                % (
+                    invocation,
+                    "\n    ".join(
+                        str(invoc) for invoc in reversed(invocations)
+                    )
+                )
+            )
         else:
             if self.wanted_count == 0:
                 raise VerificationError(
