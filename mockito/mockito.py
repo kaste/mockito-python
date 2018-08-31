@@ -41,7 +41,11 @@ def _invalid_argument(value):
 
 def _invalid_between(between):
     if between is not None:
-        start, end = between
+        try:
+            start, end = between
+        except Exception:
+            return True
+
         if start > end or start < 0:
             return True
     return False

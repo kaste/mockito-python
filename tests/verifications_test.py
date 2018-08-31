@@ -212,6 +212,10 @@ class VerificationTestBase(TestBase):
         self.assertRaises(ArgumentError, self.verification_function,
                           self.mock, between=[-1, 1])
         self.assertRaises(ArgumentError, self.verification_function,
+                          self.mock, between=(0, 1, 2))
+        self.assertRaises(ArgumentError, self.verification_function,
+                          self.mock, between=0)
+        self.assertRaises(ArgumentError, self.verification_function,
                           self.mock, atleast=5, atmost=5)
         self.assertRaises(ArgumentError, self.verification_function,
                           self.mock, atleast=5, between=[1, 2])
