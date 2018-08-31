@@ -1,6 +1,12 @@
 MOCKITO CHANGE LOG
 ==================
 
+Next
+----
+
+- Code base now is python 3 compatible. No 2to3 anymore.
+
+
 Release 1.1.1 (August 28, 2018)
 -------------------------------
 
