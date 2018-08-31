@@ -123,14 +123,32 @@ class InstanceMethodsTest(TestBase):
             rex.walk
 
     def testThrowEarlyIfCallingWithUnexpectedArgumentsInStrictMode(self):
-        when(Dog).bark('Miau').thenReturn('Wuff')
         rex = Dog()
-        try:
+        when(rex).bark('Miau').thenReturn('Wuff')
+
+        with pytest.raises(InvocationError):
             rex.bark('Shhh')
-            self.fail('Calling a stubbed method with unexpected arguments '
-                      'should have thrown.')
-        except InvocationError:
-            pass
+
+    def testNiceErrorMessageOnUnexpectedCall(self):
+        theMock = mock(strict=True)
+        when(theMock).foo('bar')
+        when(theMock).foo(12, baz='boz')
+        when(theMock).bar('foo')  # <==== omitted from output!
+
+        with pytest.raises(InvocationError) as exc:
+            theMock.foo(True, None)
+
+        assert str(exc.value) == '''
+Called but not expected:
+
+    foo(True, None)
+
+Stubbed invocations are:
+
+    foo('bar')
+    foo(12, baz='boz')
+
+'''
 
     def testStubCallableObject(self):
         when(Dog).__call__().thenReturn('done')
