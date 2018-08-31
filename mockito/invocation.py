@@ -89,18 +89,24 @@ class RememberedInvocation(Invocation):
                     *params, **named_params)
 
         if self.strict:
-            stubbed_invocations = self.mock.stubbed_invocations or [None]
+            stubbed_invocations = [
+                invoc
+                for invoc in self.mock.stubbed_invocations
+                if invoc.method_name == self.method_name
+            ]
             raise InvocationError("""
-You called
+Called but not expected:
 
-        %s,
+    %s
 
-which is not expected. Stubbed invocations are:
+Stubbed invocations are:
 
-        %s
+    %s
 
-(Set strict to False to bypass this check.)
-""" % (self, "\n    ".join(str(invoc) for invoc in stubbed_invocations)))
+""" % (
+    self,
+    "\n    ".join(str(invoc) for invoc in reversed(stubbed_invocations))
+))
 
         return None
 
