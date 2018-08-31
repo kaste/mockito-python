@@ -94,7 +94,8 @@ class RememberedInvocation(Invocation):
                 for invoc in self.mock.stubbed_invocations
                 if invoc.method_name == self.method_name
             ]
-            raise InvocationError("""
+            raise InvocationError(
+                """
 Called but not expected:
 
     %s
@@ -103,10 +104,14 @@ Stubbed invocations are:
 
     %s
 
-""" % (
-    self,
-    "\n    ".join(str(invoc) for invoc in reversed(stubbed_invocations))
-))
+"""
+                % (
+                    self,
+                    "\n    ".join(
+                        str(invoc) for invoc in reversed(stubbed_invocations)
+                    )
+                )
+            )
 
         return None
 
