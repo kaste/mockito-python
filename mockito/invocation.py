@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 from . import matchers
+import operator
 from . import signature
 from . import verification as verificationModule
 from .utils import contains_strict
@@ -29,6 +30,12 @@ import functools
 
 class InvocationError(AttributeError):
     pass
+
+
+__tracebackhide__ = operator.methodcaller(
+    "errisinstance",
+    (InvocationError, verificationModule.VerificationError)
+)
 
 
 class Invocation(object):

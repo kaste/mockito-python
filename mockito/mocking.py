@@ -21,6 +21,7 @@
 from collections import deque
 import inspect
 import functools
+import operator
 
 from . import invocation
 from . import signature
@@ -29,6 +30,12 @@ from .mock_registry import mock_registry
 
 
 __all__ = ['mock']
+
+__tracebackhide__ = operator.methodcaller(
+    "errisinstance",
+    invocation.InvocationError
+)
+
 
 
 class _Dummy(object):
@@ -251,6 +258,10 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
 
         def __getattr__(self, method_name):
             if strict:
+                __tracebackhide__ = operator.methodcaller(
+                    "errisinstance", AttributeError
+                )
+
                 raise AttributeError(
                     "'Dummy' has no attribute %r configured" % method_name)
             return functools.partial(
