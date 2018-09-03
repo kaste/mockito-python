@@ -18,8 +18,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-__all__ = ['never', 'VerificationError']
+import operator
 
+__all__ = ['never', 'VerificationError']
 
 class VerificationError(AssertionError):
     '''Indicates error during verification of invocations.
@@ -27,6 +28,9 @@ class VerificationError(AssertionError):
     Raised if verification fails. Error message contains the cause.
     '''
     pass
+
+
+__tracebackhide__ = operator.methodcaller("errisinstance", VerificationError)
 
 
 class AtLeast(object):

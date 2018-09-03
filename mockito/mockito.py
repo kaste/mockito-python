@@ -18,6 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import operator
+
 from . import invocation
 from . import verification
 
@@ -29,6 +31,11 @@ from .verification import VerificationError
 
 class ArgumentError(Exception):
     pass
+
+
+__tracebackhide__ = operator.methodcaller(
+    "errisinstance", (ArgumentError, VerificationError)
+)
 
 
 def _multiple_arguments_in_use(*args):
