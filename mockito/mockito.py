@@ -136,7 +136,6 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
     if inorder:
         verification_fn = verification.InOrder(verification_fn)
 
-    # FIXME?: Catch error if obj is neither a Mock nor a known stubbed obj
     theMock = _get_mock_or_raise(obj)
 
     class Verify(object):
