@@ -23,7 +23,7 @@ import sys
 
 from .test_base import TestBase
 from mockito import (
-    spy, spy2, verify, VerificationError, verifyZeroInteractions)
+    when, spy, spy2, verify, VerificationError, verifyZeroInteractions)
 
 import time
 
@@ -136,4 +136,21 @@ class TestSpy2:
         assert time.time() is not None
         verify(time).time()
 
+    def testEnsureStubbedResponseForSpecificInvocation(self):
+        dummy = Dummy()
+        spy2(dummy.return_args)
+        when(dummy).return_args('foo').thenReturn('fox')
+
+        assert dummy.return_args('bar') == (('bar',), {})
+        assert dummy.return_args('box') == (('box',), {})
+        assert dummy.return_args('foo') == 'fox'
+
+    def testEnsureStubOrder(self):
+        dummy = Dummy()
+        when(dummy).return_args(Ellipsis).thenReturn('foo')
+        when(dummy).return_args('fox').thenReturn('fix')
+
+        assert dummy.return_args('bar') == 'foo'
+        assert dummy.return_args('box') == 'foo'
+        assert dummy.return_args('fox') == 'fix'
 
