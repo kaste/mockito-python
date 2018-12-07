@@ -68,8 +68,6 @@ class TestPassAroundStrictness:
         verify(Dog).waggle()
         verify(Dog).weggle()
 
-
-
     def testReconfigureLooseMock(self):
         when(Dog, strict=False).bark()  # important first call, inits theMock
 
@@ -92,8 +90,6 @@ class TestPassAroundStrictness:
 
         verify(Dog).waggle()
         verify(Dog).weggle()
-
-
 
     # Where to put this test?
     def testEnsureAddedAttributesGetRemovedOnUnstub(self):

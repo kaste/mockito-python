@@ -21,15 +21,17 @@ def get_signature(obj, method_name):
 
     # Eat self for unbound methods bc signature doesn't do it
     if PY3:
-        if (inspect.isclass(obj) and
-                not inspect.ismethod(method) and
-                not isinstance(
-                    obj.__dict__.get(method_name),
-                    staticmethod)):
+        if (
+            inspect.isclass(obj)
+            and not inspect.ismethod(method)
+            and not isinstance(obj.__dict__.get(method_name), staticmethod)
+        ):
             method = functools.partial(method, None)
     else:
-        if (isinstance(method, types.UnboundMethodType) and
-                method.__self__ is None):
+        if (
+            isinstance(method, types.UnboundMethodType)
+            and method.__self__ is None
+        ):
             method = functools.partial(method, None)
 
     try:

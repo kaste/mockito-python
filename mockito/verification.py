@@ -81,9 +81,9 @@ class Times(object):
                     invoc
                     for invoc in invocation.mock.invocations
                     if invoc.method_name == invocation.method_name
-                ] or
-                invocation.mock.invocations or
-                ['Nothing']
+                ]
+                or invocation.mock.invocations
+                or ['Nothing']
             )
             raise VerificationError(
                 """

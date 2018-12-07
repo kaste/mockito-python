@@ -173,7 +173,6 @@ class MatchingInvocation(Invocation):
         self.params = tuple(wrap(p) for p in params)
         self.named_params = {k: wrap(v) for k, v in named_params.items()}
 
-
     # Note: matches(a, b) does not imply matches(b, a) because
     # the left side might contain wildcards (like Ellipsis) or matchers.
     # In its current form the right side is a concrete call signature.
@@ -249,12 +248,16 @@ class VerifiableInvocation(MatchingInvocation):
 
 
 def verification_has_lower_bound_of_zero(verification):
-    if (isinstance(verification, verificationModule.Times) and
-            verification.wanted_count == 0):
+    if (
+        isinstance(verification, verificationModule.Times)
+        and verification.wanted_count == 0
+    ):
         return True
 
-    if (isinstance(verification, verificationModule.Between) and
-            verification.wanted_from == 0):
+    if (
+        isinstance(verification, verificationModule.Between)
+        and verification.wanted_from == 0
+    ):
         return True
 
     return False

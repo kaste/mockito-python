@@ -83,9 +83,11 @@ class Mock(object):
 
         def new_mocked_method(*args, **kwargs):
             # we throw away the first argument, if it's either self or cls
-            if (inspect.ismethod(new_mocked_method) or
-                    inspect.isclass(self.mocked_obj) and
-                    not isinstance(new_mocked_method, staticmethod)):
+            if (
+                inspect.ismethod(new_mocked_method)
+                or inspect.isclass(self.mocked_obj)
+                and not isinstance(new_mocked_method, staticmethod)
+            ):
                 args = args[1:]
 
             return remembered_invocation_builder(
@@ -100,15 +102,19 @@ class Mock(object):
             except AttributeError:
                 pass
 
-        if (inspect.ismethod(original_method)):
+        if inspect.ismethod(original_method):
             new_mocked_method = utils.newmethod(
-                new_mocked_method, self.mocked_obj)
+                new_mocked_method, self.mocked_obj
+            )
+
         if isinstance(original_method, staticmethod):
             new_mocked_method = staticmethod(new_mocked_method)
         elif isinstance(original_method, classmethod):
             new_mocked_method = classmethod(new_mocked_method)
-        elif (inspect.isclass(self.mocked_obj) and  # TBC: Inner classes
-                inspect.isclass(original_method)):
+        elif (
+            inspect.isclass(self.mocked_obj)
+            and inspect.isclass(original_method)  # TBC: Inner classes
+        ):
             new_mocked_method = staticmethod(new_mocked_method)
 
         self.set_method(method_name, new_mocked_method)
@@ -143,8 +149,11 @@ class Mock(object):
         # must delete it here.
         # If we mocked an instance, our mocked function will actually hide
         # the one on its class, so we delete as well.
-        if (not original_method or not inspect.isclass(self.mocked_obj) and
-                inspect.ismethod(original_method)):
+        if (
+            not original_method
+            or not inspect.isclass(self.mocked_obj)
+            and inspect.ismethod(original_method)
+        ):
             delattr(self.mocked_obj, method_name)
         else:
             self.set_method(method_name, original_method)
