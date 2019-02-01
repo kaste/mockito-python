@@ -284,7 +284,7 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
         if inspect.isfunction(v):
             invocation.StubbedInvocation(theMock, n)(Ellipsis).thenAnswer(v)
         else:
-            setattr(obj, n, v)
+            setattr(Dummy, n, v)
 
     mock_registry.register(obj, theMock)
     return obj
