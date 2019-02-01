@@ -74,7 +74,8 @@ class Times(object):
 
     def verify(self, invocation, actual_count):
         if actual_count == self.wanted_count:
-                return
+            return
+
         if actual_count == 0:
             invocations = (
                 [

@@ -22,27 +22,50 @@
 
 
 from .mockito import (
-    when, when2, patch, expect, unstub, forget_invocations,
-    verify, verifyNoMoreInteractions, verifyZeroInteractions,
-    verifyNoUnwantedInteractions, verifyStubbedInvocationsAreUsed,
-    ArgumentError)
+    when,
+    when2,
+    patch,
+    expect,
+    unstub,
+    forget_invocations,
+    verify,
+    verifyNoMoreInteractions,
+    verifyZeroInteractions,
+    verifyNoUnwantedInteractions,
+    verifyStubbedInvocationsAreUsed,
+    ArgumentError,
+)
 from . import inorder
 from .spying import spy, spy2
 from .mocking import mock
 from .verification import VerificationError
 
-from .matchers import *  # noqa: F403
+from .matchers import *  # noqa: F401 F403
+from .matchers import any, contains, times
 from .verification import never
 
 __version__ = '1.1.2-dev'
 
-__all__ = ['mock', 'spy', 'spy2', 'when', 'when2', 'patch', 'expect', 'verify',
-           'verifyNoMoreInteractions', 'verifyZeroInteractions',
-           'verifyNoUnwantedInteractions', 'verifyStubbedInvocationsAreUsed',
-           'inorder', 'unstub', 'forget_invocations',
-           'VerificationError', 'ArgumentError',
-           'any',       # compatibility
-           'contains',  # compatibility
-           'never',     # compatibility
-           'times',     # deprecated
-           ]
+__all__ = [
+    'mock',
+    'spy',
+    'spy2',
+    'when',
+    'when2',
+    'patch',
+    'expect',
+    'verify',
+    'verifyNoMoreInteractions',
+    'verifyZeroInteractions',
+    'verifyNoUnwantedInteractions',
+    'verifyStubbedInvocationsAreUsed',
+    'inorder',
+    'unstub',
+    'forget_invocations',
+    'VerificationError',
+    'ArgumentError',
+    'any',  # compatibility
+    'contains',  # compatibility
+    'never',  # compatibility
+    'times',  # deprecated
+]
