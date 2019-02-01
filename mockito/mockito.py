@@ -154,7 +154,7 @@ class _OMITTED(object):
 OMITTED = _OMITTED()
 
 
-def when(obj, strict=None):
+def when(obj, strict=True):
     """Central interface to stub functions on a given `obj`
 
     `obj` should be a module, a class or an instance of a class; it can be
@@ -221,8 +221,6 @@ def when(obj, strict=None):
     if isinstance(obj, str):
         obj = get_obj(obj)
 
-    if strict is None:
-        strict = True
     theMock = _get_mock(obj, strict=strict)
 
     class When(object):
