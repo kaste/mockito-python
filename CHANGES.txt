@@ -1,8 +1,8 @@
 MOCKITO CHANGE LOG
 ==================
 
-Next
-----
+Release 1.2.0 (November 25, 2019)
+---------------------------------
 
 - Code base now is python 3 compatible. No 2to3 anymore.
 - Fine tune error messages on unexpected calls or verifications. E.g. if you expect ``when(dog).bark('Wuff')`` but on call time do ``dog.bark('Wufff')``. Likewise, if you call ``dog.bark('Miau')`` and then ``verify(dog).bark('Maui')``.
