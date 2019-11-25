@@ -73,7 +73,7 @@ def find_invoking_frame_and_try_parse():
     # Actually we just want the first frame in user land; we're open for
     # refactorings here and don't yet decide on which frame exactly we hit
     # that user land.
-    stack = inspect.stack(2)[2:10]
+    stack = inspect.stack(3)[2:10]
     for frame_info in stack:
         # Within `patch` and `spy2` we delegate to `when2` but that's not
         # user land code
