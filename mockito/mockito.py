@@ -18,6 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import operator
+
 from . import invocation
 from . import verification
 
@@ -29,6 +31,11 @@ from .verification import VerificationError
 
 class ArgumentError(Exception):
     pass
+
+
+__tracebackhide__ = operator.methodcaller(
+    "errisinstance", (ArgumentError, VerificationError)
+)
 
 
 def _multiple_arguments_in_use(*args):
@@ -129,7 +136,6 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
     if inorder:
         verification_fn = verification.InOrder(verification_fn)
 
-    # FIXME?: Catch error if obj is neither a Mock nor a known stubbed obj
     theMock = _get_mock_or_raise(obj)
 
     class Verify(object):
@@ -148,7 +154,7 @@ class _OMITTED(object):
 OMITTED = _OMITTED()
 
 
-def when(obj, strict=None):
+def when(obj, strict=True):
     """Central interface to stub functions on a given `obj`
 
     `obj` should be a module, a class or an instance of a class; it can be
@@ -215,8 +221,6 @@ def when(obj, strict=None):
     if isinstance(obj, str):
         obj = get_obj(obj)
 
-    if strict is None:
-        strict = True
     theMock = _get_mock(obj, strict=strict)
 
     class When(object):

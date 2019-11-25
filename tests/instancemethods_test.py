@@ -259,6 +259,22 @@ class TestEnsureStubsAreUsed:
 
             verifyStubbedInvocationsAreUsed(dog)
 
+        @pytest.mark.xfail(reason='Not implemented.')
+        def testPassIfVerifiedZeroInteractions(self):
+            dog = mock()
+            when(dog).waggle(1).thenReturn('Sure')
+            verifyZeroInteractions(dog)
+
+            verifyStubbedInvocationsAreUsed(dog)
+
+        @pytest.mark.xfail(reason='Not implemented.')
+        def testPassIfVerifiedNoMoreInteractions(self):
+            dog = mock()
+            when(dog).waggle(1).thenReturn('Sure')
+            verifyNoMoreInteractions(dog)
+
+            verifyStubbedInvocationsAreUsed(dog)
+
         def testWildacardCallSignatureOnStub(self):
             dog = mock()
             when(dog).waggle(Ellipsis).thenReturn('Sure')
