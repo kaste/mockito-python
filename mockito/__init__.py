@@ -44,7 +44,7 @@ from .matchers import *  # noqa: F401 F403
 from .matchers import any, contains, times
 from .verification import never
 
-__version__ = '1.1.2-dev'
+__version__ = '1.2.0-dev'
 
 __all__ = [
     'mock',
