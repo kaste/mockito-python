@@ -13,15 +13,61 @@ The 90% use case is that want to stub out a side effect. This is also known as (
 
 So in difference to traditional patching, in mockito you always specify concrete arguments (a call signature), and its outcome, usually a return value via `thenReturn` or a raised exception via `thenRaise`. That effectively turns function calls into constants for the time of the test.
 
-Do **not** forget to :func:`unstub` of course!
+There are of course reasons when you don't want to overspecify specific tests. You _just_ want the desired stub answer. Here we go::
+
+    when(os.path).exists(...).thenReturn(True)
+
+    # now, obviously, you get the same answer, regardless of the arguments
+    os.path.exists('FooBar')  # => True
+
+You can combine both stubs. E.g. nothing exists, except one file::
+
+    when(os.path).exists(...).thenReturn(False)
+    when(os.path).exists('.flake8').thenReturn(True)
+
+And because it's a similar pattern, we can introduce :func:`spy2` here. Spies call through the original implementation of a given function. E.g. everything is as it is, except `'.flake8'` is just not there::
+
+    from mockito import spy2
+    spy2(os.path.exists)
+    when(os.path).exists('.flake8').thenReturn(False)
+
+When patching, you **MUST** **not** forget to :func:`unstub` of course! You can do this explicitly
 
 ::
 
     from mockito import unstub
     unstub()  # restore os.path module
 
+Usually you do this unconditionally in your `teardown` function. If you're using `pytest`, you could define a fixture instead
 
-Now we mix global module patching with mocks. We want to test the following function using the fab `requests` library::
+::
+    # conftest.py
+    import pytest
+
+    @pytest.fixture
+    def unstub():
+        from mockito import unstub
+        yield
+        unstub()
+
+    # my_test.py
+    import pytest
+    pytestmark = pytest.mark.usefixtures("unstub")
+
+But very often you just use context managers (aka `with`), and mockito will unstub on 'exit' automatically::
+
+    # E.g. test that `exists` gets never called
+    with expect(os.path, times=0).exists('.flake8'):
+        # within the block `os.path.exists` is patched
+        cached_dir_lookup('.flake8')
+    # at the end of the block `os.path` gets unpatched
+
+    # Which is btw roughly the same as doing
+    with when(os.path).exists('.flake8'):
+        cached_dir_lookup('.flake8')
+        verify(os.path, times=0).exists(...)
+
+Now let's mix global module patching with mocks. We want to test the following function using the fab `requests` library::
 
     import requests
 
