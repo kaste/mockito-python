@@ -232,7 +232,7 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
     `when`::
 
         dummy = mock()
-        when(dummy).__call_(1).thenReturn(2)
+        when(dummy).__call__(1).thenReturn(2)
 
     All other magic methods must be configured this way or they will raise an
     AttributeError.
