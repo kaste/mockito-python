@@ -79,8 +79,8 @@ class Mock(object):
             return None
 
         try:
-            return self.spec.__dict__.get(method_name)
-        except AttributeError:
+            return self.spec.__dict__[method_name]
+        except (AttributeError, KeyError):
             return getattr(self.spec, method_name, None)
 
     def set_method(self, method_name, new_method):
