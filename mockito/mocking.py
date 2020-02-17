@@ -18,16 +18,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from collections import deque
-import inspect
 import functools
+import inspect
 import operator
+from collections import deque
 
-from . import invocation
-from . import signature
-from . import utils
+from . import invocation, signature, utils
 from .mock_registry import mock_registry
-
 
 __all__ = ['mock']
 
@@ -75,13 +72,24 @@ class Mock(object):
     # STUBBING
 
     def get_original_method(self, method_name):
+        """
+        Looks up the original method on the `spec` object and returns it
+        together with an indication of whether the method is found
+        "directly" on the `spec` object.
+
+        This is used to decide whether the method should be stored as an
+        original_method and should therefore be replaced when unstubbing.
+        """
         if self.spec is None:
-            return None
+            return None, False
 
         try:
-            return self.spec.__dict__[method_name]
+            return self.spec.__dict__[method_name], True
         except (AttributeError, KeyError):
-            return getattr(self.spec, method_name, None)
+            # Classes with defined `__slots__` and then no `__dict__` are not
+            # patchable but if we catch the `AttributeError` here, we get
+            # the better error message for the user.
+            return getattr(self.spec, method_name, None), False
 
     def set_method(self, method_name, new_method):
         setattr(self.mocked_obj, method_name, new_method)
@@ -130,8 +138,14 @@ class Mock(object):
         try:
             self.original_methods[method_name]
         except KeyError:
-            original_method = self.get_original_method(method_name)
-            self.original_methods[method_name] = original_method
+            original_method, was_in_spec = self.get_original_method(
+                method_name)
+            if was_in_spec:
+                # This indicates the original method was found directly on
+                # the spec object and should therefore be restored by unstub
+                self.original_methods[method_name] = original_method
+            else:
+                self.original_methods[method_name] = None
 
             self.replace_method(method_name, original_method)
 
