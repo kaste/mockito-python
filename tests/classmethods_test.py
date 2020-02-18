@@ -189,14 +189,40 @@ class InheritedClassMethodsTest(TestBase):
         self.assertEqual("woof!", Dog.bark())
         self.assertEqual("stick", Retriever.retrieve("stick"))
 
-    def testUnStubWorksOnClassAndSuperClass(self):
-        when(Retriever).retrieve("stick").thenReturn("ball")
-        when(TrickDog).retrieve("stick").thenReturn("cat")
-        unstub()
-        self.assertEqual("stick", TrickDog.retrieve("stick"))
-
     def testDoubleStubStubWorksAfterUnstub(self):
         when(TrickDog).retrieve("stick").thenReturn("ball")
         when(TrickDog).retrieve("stick").thenReturn("cat")
         unstub()
+        self.assertEqual("stick", TrickDog.retrieve("stick"))
+
+    def testUnStubWorksOnClassAndSuperClass(self):
+        self.assertEqual("stick", Retriever.retrieve("stick"))
+        self.assertEqual("stick", TrickDog.retrieve("stick"))
+
+        when(Retriever).retrieve("stick").thenReturn("ball")
+        self.assertEqual("ball", Retriever.retrieve("stick"))
+        self.assertEqual("ball", TrickDog.retrieve("stick"))
+
+        when(TrickDog).retrieve("stick").thenReturn("cat")
+        self.assertEqual("ball", Retriever.retrieve("stick"))
+        self.assertEqual("cat", TrickDog.retrieve("stick"))
+
+        unstub(TrickDog)
+        self.assertEqual("ball", Retriever.retrieve("stick"))
+        self.assertEqual("ball", TrickDog.retrieve("stick"))
+
+        unstub(Retriever)
+        self.assertEqual("stick", Retriever.retrieve("stick"))
+        self.assertEqual("stick", TrickDog.retrieve("stick"))
+
+    def testReverseOrderWhenUnstubbing(self):
+        when(Retriever).retrieve("stick").thenReturn("ball")
+        when(TrickDog).retrieve("stick").thenReturn("cat")
+
+        unstub(Retriever)
+        self.assertEqual("stick", Retriever.retrieve("stick"))
+        self.assertEqual("cat", TrickDog.retrieve("stick"))
+
+        unstub(TrickDog)
+        self.assertEqual("stick", Retriever.retrieve("stick"))
         self.assertEqual("stick", TrickDog.retrieve("stick"))
