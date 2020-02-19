@@ -14,10 +14,7 @@ def contains_strict(seq, element):
 
 
 def newmethod(fn, obj):
-    if PY3:
-        return types.MethodType(fn, obj)
-    else:
-        return types.MethodType(fn, obj, obj.__class__)
+    return types.MethodType(fn, obj)
 
 
 def get_function_host(fn):

@@ -18,9 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from .test_base import TestBase
-from mockito import when, unstub, verify
+from mockito import unstub, verify, when
 from mockito.verification import VerificationError
+
+from .test_base import TestBase
+
 
 class Dog:
     @classmethod
@@ -105,3 +107,122 @@ class ClassMethodsTest(TestBase):
         self.assertEqual("Cat foo", Cat.meow("foo"))
 
 
+class Retriever:
+    @classmethod
+    def retrieve(cls, item):
+        return item
+
+
+class TrickDog(Dog, Retriever):
+    pass
+
+
+class InheritedClassMethodsTest(TestBase):
+
+    def tearDown(self):
+        unstub()
+
+    def testUnstubs(self):
+        when(TrickDog).bark().thenReturn("miau!")
+        when(TrickDog).retrieve("stick").thenReturn("ball")
+        unstub()
+        self.assertEqual("woof!", TrickDog.bark())
+        self.assertEqual("stick", TrickDog.retrieve("stick"))
+
+    def testStubs(self):
+        self.assertEqual("woof!", TrickDog.bark())
+        self.assertEqual("stick", TrickDog.retrieve("stick"))
+
+        when(TrickDog).bark().thenReturn("miau!")
+        when(TrickDog).retrieve("stick").thenReturn("ball")
+
+        self.assertEqual("miau!", TrickDog.bark())
+        self.assertEqual("ball", TrickDog.retrieve("stick"))
+
+    def testVerifiesMultipleCallsOnClassmethod(self):
+        when(TrickDog).bark().thenReturn("miau!")
+        when(TrickDog).retrieve("stick").thenReturn("ball")
+
+        TrickDog.bark()
+        TrickDog.bark()
+
+        TrickDog.retrieve("stick")
+        TrickDog.retrieve("stick")
+
+        verify(TrickDog, times=2).bark()
+        verify(TrickDog, times=2).retrieve("stick")
+
+    def testFailsVerificationOfMultipleCallsOnClassmethod(self):
+        when(TrickDog).bark().thenReturn("miau!")
+        when(TrickDog).retrieve("stick").thenReturn("bark")
+
+        TrickDog.bark()
+        TrickDog.retrieve("stick")
+
+        self.assertRaises(VerificationError, verify(TrickDog, times=2).bark)
+        self.assertRaises(VerificationError, verify(TrickDog,
+                                                    times=2).retrieve)
+
+    def testStubsAndVerifiesClassmethod(self):
+        when(TrickDog).bark().thenReturn("miau!")
+        when(TrickDog).retrieve("stick").thenReturn("ball")
+
+        self.assertEqual("miau!", TrickDog.bark())
+        self.assertEqual("ball", TrickDog.retrieve("stick"))
+
+        verify(TrickDog).bark()
+        verify(TrickDog).retrieve("stick")
+
+    def testPreservesSuperClassClassMethodWhenStubbed(self):
+        self.assertEqual("woof!", Dog.bark())
+        self.assertEqual("stick", Retriever.retrieve("stick"))
+
+        self.assertEqual("woof!", TrickDog.bark())
+        self.assertEqual("stick", TrickDog.retrieve("stick"))
+
+        when(TrickDog).bark().thenReturn("miau!")
+        when(TrickDog).retrieve("stick").thenReturn("ball")
+
+        self.assertEqual("miau!", TrickDog.bark())
+        self.assertEqual("ball", TrickDog.retrieve("stick"))
+
+        self.assertEqual("woof!", Dog.bark())
+        self.assertEqual("stick", Retriever.retrieve("stick"))
+
+    def testDoubleStubStubWorksAfterUnstub(self):
+        when(TrickDog).retrieve("stick").thenReturn("ball")
+        when(TrickDog).retrieve("stick").thenReturn("cat")
+        unstub()
+        self.assertEqual("stick", TrickDog.retrieve("stick"))
+
+    def testUnStubWorksOnClassAndSuperClass(self):
+        self.assertEqual("stick", Retriever.retrieve("stick"))
+        self.assertEqual("stick", TrickDog.retrieve("stick"))
+
+        when(Retriever).retrieve("stick").thenReturn("ball")
+        self.assertEqual("ball", Retriever.retrieve("stick"))
+        self.assertEqual("ball", TrickDog.retrieve("stick"))
+
+        when(TrickDog).retrieve("stick").thenReturn("cat")
+        self.assertEqual("ball", Retriever.retrieve("stick"))
+        self.assertEqual("cat", TrickDog.retrieve("stick"))
+
+        unstub(TrickDog)
+        self.assertEqual("ball", Retriever.retrieve("stick"))
+        self.assertEqual("ball", TrickDog.retrieve("stick"))
+
+        unstub(Retriever)
+        self.assertEqual("stick", Retriever.retrieve("stick"))
+        self.assertEqual("stick", TrickDog.retrieve("stick"))
+
+    def testReverseOrderWhenUnstubbing(self):
+        when(Retriever).retrieve("stick").thenReturn("ball")
+        when(TrickDog).retrieve("stick").thenReturn("cat")
+
+        unstub(Retriever)
+        self.assertEqual("stick", Retriever.retrieve("stick"))
+        self.assertEqual("cat", TrickDog.retrieve("stick"))
+
+        unstub(TrickDog)
+        self.assertEqual("stick", Retriever.retrieve("stick"))
+        self.assertEqual("stick", TrickDog.retrieve("stick"))
