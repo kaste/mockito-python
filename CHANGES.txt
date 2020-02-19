@@ -1,6 +1,12 @@
 MOCKITO CHANGE LOG
 ==================
 
+Release 1.2.1 (February 19, 2020)
+---------------------------------
+
+- @nielsvaneck fixed how we can lookup inherited classmethods.
+
+
 Release 1.2.0 (November 25, 2019)
 ---------------------------------
 
