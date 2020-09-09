@@ -1,6 +1,12 @@
 MOCKITO CHANGE LOG
 ==================
 
+Release 1.2.2 (September 9, 2020)
+---------------------------------
+
+- Fix typo in ``spy2`` doc
+
+
 Release 1.2.1 (February 19, 2020)
 ---------------------------------
 
@@ -14,11 +20,11 @@ Release 1.2.0 (November 25, 2019)
 - Fine tune error messages on unexpected calls or verifications. E.g. if you expect ``when(dog).bark('Wuff')`` but on call time do ``dog.bark('Wufff')``. Likewise, if you call ``dog.bark('Miau')`` and then ``verify(dog).bark('Maui')``.
 - @felixonmars fixed a small compatibility issue with python 3.8
 - Mocking properties has become a bit easier. (#26) E.g.
-    
+
     prop = mock()
     when(m).__get__(...).thenReturn(23)
     m = mock({'name': prop})
-    
+
 
 Release 1.1.1 (August 28, 2018)
 -------------------------------
@@ -35,7 +41,7 @@ Release 1.1.0 (May 2, 2018)
 - Added ``forget_invocations`` function. Thanks to @maximkulkin
 
 This is generally useful if you already call mocks during your setup routine.
-Now you could call ``forget_invocations`` at the end of your setup, and 
+Now you could call ``forget_invocations`` at the end of your setup, and
 have a clean 'recording' for your actual test code. T.i. you don't have
 to count the invocations from your setup code anymore.
 
