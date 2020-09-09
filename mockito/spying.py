@@ -88,7 +88,7 @@ def spy2(fn):  # type: (...) -> None
     E.g.::
 
         import time
-        spy(time.time)
+        spy2(time.time)
         do_work(...)  # nothing injected, uses global patched `time` module
         verify(time).time()
 
