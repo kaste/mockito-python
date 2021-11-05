@@ -22,6 +22,7 @@ import operator
 
 __all__ = ['never', 'VerificationError']
 
+
 class VerificationError(AssertionError):
     '''Indicates error during verification of invocations.
 
