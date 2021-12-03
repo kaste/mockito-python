@@ -33,6 +33,13 @@ __tracebackhide__ = operator.methodcaller(
     invocation.InvocationError
 )
 
+MYPY = False
+if MYPY:
+    from typing import Deque, Union
+    RealInvocation = Union[
+        invocation.RememberedInvocation,
+        invocation.RememberedProxyInvocation
+    ]
 
 
 class _Dummy(object):
@@ -40,7 +47,7 @@ class _Dummy(object):
     # must be configured before use, but we want `mock`s to be callable by
     # default.
     def __call__(self, *args, **kwargs):
-        return self.__getattr__('__call__')(*args, **kwargs)
+        return self.__getattr__('__call__')(*args, **kwargs)  # type: ignore[attr-defined]
 
 
 def remembered_invocation_builder(mock, method_name, *args, **kwargs):
@@ -54,8 +61,8 @@ class Mock(object):
         self.strict = strict
         self.spec = spec
 
-        self.invocations = deque()
-        self.stubbed_invocations = deque()
+        self.invocations = deque()  # type: Deque[RealInvocation]
+        self.stubbed_invocations = deque()  # type: Deque[invocation.StubbedInvocation]
 
         self.original_methods = {}
         self._signatures_store = {}
@@ -111,7 +118,7 @@ class Mock(object):
         new_mocked_method.__name__ = method_name
         if original_method:
             new_mocked_method.__doc__ = original_method.__doc__
-            new_mocked_method.__wrapped__ = original_method
+            new_mocked_method.__wrapped__ = original_method  # type: ignore[attr-defined]
             try:
                 new_mocked_method.__module__ = original_method.__module__
             except AttributeError:
@@ -123,14 +130,14 @@ class Mock(object):
             )
 
         if isinstance(original_method, staticmethod):
-            new_mocked_method = staticmethod(new_mocked_method)
+            new_mocked_method = staticmethod(new_mocked_method)  # type: ignore[assignment]
         elif isinstance(original_method, classmethod):
-            new_mocked_method = classmethod(new_mocked_method)
+            new_mocked_method = classmethod(new_mocked_method)  # type: ignore[assignment]
         elif (
             inspect.isclass(self.mocked_obj)
             and inspect.isclass(original_method)  # TBC: Inner classes
         ):
-            new_mocked_method = staticmethod(new_mocked_method)
+            new_mocked_method = staticmethod(new_mocked_method)  # type: ignore[assignment]
 
         self.set_method(method_name, new_mocked_method)
 

@@ -60,6 +60,7 @@ The one usage you should not care about is a loose signature when using
 """
 
 import re
+builtin_any = any
 
 __all__ = [
     'and_', 'or_', 'not_',
@@ -190,9 +191,7 @@ class Or(Matcher):
             for matcher in matchers]
 
     def matches(self, arg):
-        return __builtins__['any'](
-            [matcher.matches(arg) for matcher in self.matchers]
-        )
+        return builtin_any([matcher.matches(arg) for matcher in self.matchers])
 
     def __repr__(self):
         return "<Or: %s>" % self.matchers

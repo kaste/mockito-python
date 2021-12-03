@@ -28,6 +28,11 @@ from collections import deque
 import functools
 
 
+MYPY = False
+if MYPY:
+    from typing import Any, Callable, Deque, Dict, Tuple
+
+
 class InvocationError(AttributeError):
     pass
 
@@ -44,8 +49,8 @@ class Invocation(object):
         self.method_name = method_name
         self.strict = mock.strict
 
-        self.params = ()
-        self.named_params = {}
+        self.params = ()  # type: Tuple[Any, ...]
+        self.named_params = {}  # type: Dict[str, Any]
 
     def _remember_params(self, params, named_params):
         self.params = params
@@ -415,7 +420,7 @@ class AnswerSelector(object):
 class CompositeAnswer(object):
     def __init__(self):
         #: Container for answers, which are just ordinary callables
-        self.answers = deque()
+        self.answers = deque()  # type: Deque[Callable]
 
         #: Counter for the maximum answers we ever had
         self.answer_count = 0

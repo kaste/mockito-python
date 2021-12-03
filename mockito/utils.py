@@ -77,7 +77,7 @@ def find_invoking_frame_and_try_parse():
         if frame_info[3] in ('patch', 'spy2'):
             continue
 
-        source = ''.join(frame_info[4])
+        source = ''.join(frame_info[4] or [])
         m = FIND_ID.match(source)
         if m:
             # id should be something like `os.path.exists` etc.

@@ -10,7 +10,7 @@ import types
 try:
     from inspect import signature, Parameter
 except ImportError:
-    from funcsigs import signature, Parameter
+    from funcsigs import signature, Parameter  # type: ignore[import, no-redef]
 
 
 PY3 = sys.version_info >= (3,)
