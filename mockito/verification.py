@@ -131,7 +131,7 @@ class InOrder(object):
     def __init__(self, original_verification):
         '''
 
-        @param original_verification: Original verifiaction to degrade to if
+        @param original_verification: Original verification to degrade to if
                                       order of invocation was ok.
         '''
         self.original_verification = original_verification
