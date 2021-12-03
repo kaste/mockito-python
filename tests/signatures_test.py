@@ -8,7 +8,7 @@ from collections import namedtuple
 
 class CallSignature(namedtuple('CallSignature', 'args kwargs')):
     def raises(self, reason):
-        return pytest.mark.xfail(self, raises=reason, strict=True)
+        return pytest.mark.xfail(str(self), raises=reason, strict=True)
 
 def sig(*a, **kw):
     return CallSignature(a, kw)
@@ -450,7 +450,7 @@ class TestSignatures:
             try:
                 import builtins
             except ImportError:
-                import __builtin__ as builtins
+                import __builtin__ as builtins  # type: ignore[import, no-redef]  # noqa: E501
 
             try:
                 when(builtins).open('foo')
