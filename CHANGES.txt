@@ -22,7 +22,7 @@ Release 1.2.0 (November 25, 2019)
 - Mocking properties has become a bit easier. (#26) E.g.
 
     prop = mock()
-    when(m).__get__(...).thenReturn(23)
+    when(prop).__get__(...).thenReturn(23)
     m = mock({'name': prop})
 
 
