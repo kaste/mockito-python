@@ -1,5 +1,6 @@
 *.pyc
-build
+build/
+dist/
 docs/_build
 .eggs/
 .pytest_cache
