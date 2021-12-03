@@ -383,14 +383,22 @@ def matches(regex, flags=0):
 
 
 def captor(matcher=None):
-    """Returns argument captor that captures value for further assertions
+    """Returns argument captor that captures values for further assertions
 
     Example::
 
-        arg_captor = captor(any(int))
-        when(mock).do_something(arg_captor)
+        arg = captor()
         mock.do_something(123)
-        assert arg_captor.value == 123
+        mock.do_something(456)
+        verify(mock).do_something(arg)
+        assert arg.value == 456
+        assert arg.all_values == [123, 456]
+
+    You can restrict what the captor captures using the other matchers
+    shown herein::
+
+        arg = captor(any(str))
+        arg = captor(contains("foo"))
 
     """
     return ArgumentCaptor(matcher)
