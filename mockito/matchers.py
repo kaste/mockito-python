@@ -61,7 +61,6 @@ The one usage you should not care about is a loose signature when using
 
 import re
 
-
 __all__ = [
     'and_', 'or_', 'not_',
     'eq', 'neq',
@@ -76,6 +75,7 @@ __all__ = [
     'args', 'ARGS',
     'kwargs', 'KWARGS'
 ]
+
 
 class _ArgsSentinel(object):
     def __repr__(self):
@@ -105,6 +105,13 @@ KWARGS = kwargs = {KWARGS_SENTINEL: '_'}
 #     when(requests).get('http://myapi/', **KWARGS)
 
 # """
+
+
+class MatcherError(RuntimeError):
+    '''Indicates generic runtime error raised by mockito-python matchers
+    '''
+    pass
+
 
 class Matcher:
     def matches(self, arg):
@@ -246,18 +253,24 @@ class Matches(Matcher):
 class ArgumentCaptor(Matcher):
     def __init__(self, matcher=None):
         self.matcher = matcher or Any()
-        self.value = None
+        self.all_values = []
 
     def matches(self, arg):
         result = self.matcher.matches(arg)
         if not result:
             return
-        self.value = arg
+        self.all_values.append(arg)
         return True
 
+    @property
+    def value(self):
+        if not self.all_values:
+            raise MatcherError("No argument value was captured!")
+        return self.all_values[-1]
+
     def __repr__(self):
-        return "<ArgumentCaptor: matcher=%s value=%s>" % (
-            repr(self.matcher), self.value,
+        return "<ArgumentCaptor: matcher=%s values=%s>" % (
+            repr(self.matcher), self.all_values,
         )
 
 

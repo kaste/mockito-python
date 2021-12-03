@@ -17,7 +17,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-
+from mockito.matchers import MatcherError
 from .test_base import TestBase
 from mockito import mock, verify
 from mockito.matchers import and_, or_, not_, eq, neq, lt, lte, gt, gte, \
@@ -211,30 +211,38 @@ class ArgumentCaptorTest(TestBase):
     def testShouldSatisfyIfInnerMatcherIsSatisfied(self):
         c = captor(contains("foo"))
         self.assertTrue(c.matches("foobar"))
+        self.assertListEqual(["foobar", ], c.all_values)
 
     def testShouldNotSatisfyIfInnerMatcherIsNotSatisfied(self):
         c = captor(contains("foo"))
         self.assertFalse(c.matches("barbam"))
+        self.assertListEqual([], c.all_values)
 
     def testShouldReturnNoneValueByDefault(self):
         c = captor(contains("foo"))
-        self.assertEqual(None, c.value)
+        self.assertListEqual([], c.all_values)
+        with self.assertRaises(MatcherError):
+            _ = c.value
 
     def testShouldReturnNoneValueIfDidntMatch(self):
         c = captor(contains("foo"))
         c.matches("bar")
-        self.assertEqual(None, c.value)
+        self.assertListEqual([], c.all_values)
+        with self.assertRaises(MatcherError):
+            _ = c.value
 
     def testShouldReturnLastMatchedValue(self):
         c = captor(contains("foo"))
         c.matches("foobar")
         c.matches("foobam")
         c.matches("bambaz")
+        self.assertListEqual(["foobar", "foobam"], c.all_values)
         self.assertEqual("foobam", c.value)
 
     def testShouldDefaultMatcherToAny(self):
         c = captor()
         c.matches("foo")
         c.matches(123)
+        self.assertListEqual(["foo", 123], c.all_values)
         self.assertEqual(123, c.value)
 
