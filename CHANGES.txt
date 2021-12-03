@@ -1,6 +1,18 @@
 MOCKITO CHANGE LOG
 ==================
 
+Release 1.3.0 (December 3, 2021)
+--------------------------------
+
+- Teach `captor` to remember all used values (@shashankrnr32). E.g.
+
+    arg = captor()
+    mock.do_something(123)
+    mock.do_something(456)
+    verify(mock).do_something(arg)
+    assert arg.all_values == [123, 456]
+
+
 Release 1.2.2 (September 9, 2020)
 ---------------------------------
 
