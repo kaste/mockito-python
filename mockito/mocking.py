@@ -35,7 +35,7 @@ __tracebackhide__ = operator.methodcaller(
 
 MYPY = False
 if MYPY:
-    from typing import Deque, Union
+    from typing import Deque, List, Union
     RealInvocation = Union[
         invocation.RememberedInvocation,
         invocation.RememberedProxyInvocation
@@ -61,7 +61,7 @@ class Mock(object):
         self.strict = strict
         self.spec = spec
 
-        self.invocations = deque()  # type: Deque[RealInvocation]
+        self.invocations = []  # type: List[RealInvocation]
         self.stubbed_invocations = deque()  \
             # type: Deque[invocation.StubbedInvocation]
 
@@ -69,13 +69,13 @@ class Mock(object):
         self._signatures_store = {}
 
     def remember(self, invocation):
-        self.invocations.appendleft(invocation)
+        self.invocations.append(invocation)
 
     def finish_stubbing(self, stubbed_invocation):
         self.stubbed_invocations.appendleft(stubbed_invocation)
 
     def clear_invocations(self):
-        self.invocations = deque()
+        self.invocations = []
 
     # STUBBING
 

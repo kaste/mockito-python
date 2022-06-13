@@ -105,7 +105,7 @@ Instead got:
                 % (
                     invocation,
                     "\n    ".join(
-                        str(invoc) for invoc in reversed(invocations)
+                        str(invoc) for invoc in invocations
                     )
                 )
             )
@@ -137,7 +137,7 @@ class InOrder(object):
         self.original_verification = original_verification
 
     def verify(self, wanted_invocation, count):
-        for invocation in reversed(wanted_invocation.mock.invocations):
+        for invocation in wanted_invocation.mock.invocations:
             if not invocation.verified_inorder:
                 if not wanted_invocation.matches(invocation):
                     raise VerificationError(
