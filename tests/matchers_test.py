@@ -277,3 +277,22 @@ class ArgumentCaptorTest(TestBase):
         with self.assertRaises(MatcherError):
             _ = c.value
 
+    def test_expose_issue_49_using_when(self):
+        m = mock()
+        c = captor()
+
+        when(m).do(c, 10)
+        when(m).do(c, 11)
+        m.do("anything", 10)
+
+        assert c.all_values == ["anything"]
+
+    def test_expose_issue_49_using_verify(self):
+        m = mock()
+        c = captor()
+
+        m.do("anything", 10)
+        verify(m).do(c, 10)
+        verify(m, times=0).do(c, 11)
+
+        assert c.all_values == ["anything"]

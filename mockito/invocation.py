@@ -97,6 +97,7 @@ class RememberedInvocation(Invocation):
         for matching_invocation in self.mock.stubbed_invocations:
             if matching_invocation.matches(self):
                 matching_invocation.should_answer(self)
+                matching_invocation.capture_arguments(self)
                 return matching_invocation.answer_first(
                     *params, **named_params)
 
@@ -160,6 +161,26 @@ class MatchingInvocation(Invocation):
         elif p1 != p2:
             return False
         return True
+
+    def capture_arguments(self, invocation):
+        for x, p1 in enumerate(self.params):
+            if isinstance(p1, matchers.Capturing):
+                try:
+                    p2 = invocation.params[x]
+                except IndexError:
+                    continue
+
+                p1.capture_value(p2)
+
+        for key, p1 in self.named_params.items():
+            if isinstance(p1, matchers.Capturing):
+                try:
+                    p2 = invocation.named_params[key]
+                except KeyError:
+                    continue
+
+                p1.capture_value(p2)
+
 
     def _remember_params(self, params, named_params):
         if (
@@ -242,6 +263,7 @@ class VerifiableInvocation(MatchingInvocation):
         matched_invocations = []
         for invocation in self.mock.invocations:
             if self.matches(invocation):
+                self.capture_arguments(invocation)
                 matched_invocations.append(invocation)
 
         self.verification.verify(self, len(matched_invocations))
