@@ -102,6 +102,21 @@ class TestSpeccing:
 
         assert isinstance(action, Action)
 
+    def testShouldPassIsInstanceChecks_2(self):
+        action = mock(spec=Action)
+
+        assert isinstance(action, Action)
+
+    def testShouldPassIsInstanceChecks_3(self):
+        action = mock({}, Action)
+
+        assert isinstance(action, Action)
+
+    def testShouldPassIsInstanceChecks_4(self):
+        action = mock({}, spec=Action)
+
+        assert isinstance(action, Action)
+
     def testHasANiceName(self):
         action = mock(Action)
 

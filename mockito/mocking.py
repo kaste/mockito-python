@@ -265,10 +265,9 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
     """
 
     if type(config_or_spec) is dict:
-        config = config_or_spec
+        config, spec = config_or_spec, spec
     else:
-        config = {}
-        spec = config_or_spec
+        config, spec = {}, spec or config_or_spec
 
     if strict is OMITTED:
         strict = False if spec is None else True
