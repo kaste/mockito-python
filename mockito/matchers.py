@@ -59,6 +59,7 @@ The one usage you should not care about is a loose signature when using
 
 """
 
+from abc import ABC, abstractmethod
 import re
 builtin_any = any
 
@@ -116,6 +117,11 @@ class MatcherError(RuntimeError):
 
 class Matcher:
     def matches(self, arg):
+        pass
+
+class Capturing(ABC):
+    @abstractmethod
+    def capture_value(self, value):
         pass
 
 
@@ -249,7 +255,7 @@ class Matches(Matcher):
             return "<Matches: %s>" % self.regex.pattern
 
 
-class ArgumentCaptor(Matcher):
+class ArgumentCaptor(Matcher, Capturing):
     def __init__(self, matcher=None):
         self.matcher = matcher or Any()
         self.all_values = []
@@ -258,7 +264,6 @@ class ArgumentCaptor(Matcher):
         result = self.matcher.matches(arg)
         if not result:
             return
-        self.all_values.append(arg)
         return True
 
     @property
@@ -266,6 +271,9 @@ class ArgumentCaptor(Matcher):
         if not self.all_values:
             raise MatcherError("No argument value was captured!")
         return self.all_values[-1]
+
+    def capture_value(self, value):
+        self.all_values.append(value)
 
     def __repr__(self):
         return "<ArgumentCaptor: matcher=%s values=%s>" % (

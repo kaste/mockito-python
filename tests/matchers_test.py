@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 from mockito.matchers import MatcherError
 from .test_base import TestBase
-from mockito import mock, verify
+from mockito import mock, verify, when
 from mockito.matchers import and_, or_, not_, eq, neq, lt, lte, gt, gte, \
     any_, arg_that, contains, matches, captor, ANY, ARGS, KWARGS
 import re
@@ -208,41 +208,91 @@ class MatchesMatcherTest(TestBase):
 
 
 class ArgumentCaptorTest(TestBase):
-    def testShouldSatisfyIfInnerMatcherIsSatisfied(self):
-        c = captor(contains("foo"))
-        self.assertTrue(c.matches("foobar"))
-        self.assertListEqual(["foobar", ], c.all_values)
+    def test_matches_anything_by_default(self):
+        assert captor().matches(12)
+        assert captor().matches("anything")
+        assert captor().matches(int)
 
-    def testShouldNotSatisfyIfInnerMatcherIsNotSatisfied(self):
-        c = captor(contains("foo"))
-        self.assertFalse(c.matches("barbam"))
-        self.assertListEqual([], c.all_values)
+    def test_matches_is_constrained_by_inner_matcher(self):
+        assert captor(any_(int)).matches(12)
+        assert not captor(any_(int)).matches("12")
 
-    def testShouldReturnNoneValueByDefault(self):
-        c = captor(contains("foo"))
-        self.assertListEqual([], c.all_values)
-        with self.assertRaises(MatcherError):
-            _ = c.value
-
-    def testShouldReturnNoneValueIfDidntMatch(self):
-        c = captor(contains("foo"))
-        c.matches("bar")
-        self.assertListEqual([], c.all_values)
-        with self.assertRaises(MatcherError):
-            _ = c.value
-
-    def testShouldReturnLastMatchedValue(self):
-        c = captor(contains("foo"))
-        c.matches("foobar")
-        c.matches("foobam")
-        c.matches("bambaz")
-        self.assertListEqual(["foobar", "foobam"], c.all_values)
-        self.assertEqual("foobam", c.value)
-
-    def testShouldDefaultMatcherToAny(self):
+    def test_all_values_initially_is_empty(self):
         c = captor()
-        c.matches("foo")
-        c.matches(123)
-        self.assertListEqual(["foo", 123], c.all_values)
-        self.assertEqual(123, c.value)
+        assert c.all_values == []
 
+    def test_captures_all_values(self):
+        m = mock()
+        c = captor()
+
+        when(m).do(c)
+        m.do("any")
+        m.do("thing")
+
+        assert c.all_values == ["any", "thing"]
+
+    def test_captures_only_matching_values(self):
+        m = mock()
+        c = captor(any_(int))
+
+        when(m).do(c)
+        m.do("any")
+        m.do("thing")
+        m.do(21)
+
+        assert c.all_values == [21]
+
+    def test_captures_all_values_while_verifying(self):
+        m = mock()
+        c = captor()
+
+        m.do("any")
+        m.do("thing")
+        verify(m, times=2).do(c)
+
+        assert c.all_values == ["any", "thing"]
+
+    def test_remember_last_value(self):
+        m = mock()
+        c = captor()
+
+        when(m).do(c)
+        m.do("any")
+        m.do("thing")
+
+        assert c.value == "thing"
+
+    def test_remember_last_value_while_verifying(self):
+        m = mock()
+        c = captor()
+
+        m.do("any")
+        m.do("thing")
+        verify(m, times=2).do(c)
+
+        assert c.value == "thing"
+
+    def test_accessing_value_throws_if_nothing_captured_yet(self):
+        c = captor()
+        with self.assertRaises(MatcherError):
+            _ = c.value
+
+    def test_expose_issue_49_using_when(self):
+        m = mock()
+        c = captor()
+
+        when(m).do(c, 10)
+        when(m).do(c, 11)
+        m.do("anything", 10)
+
+        assert c.all_values == ["anything"]
+
+    def test_expose_issue_49_using_verify(self):
+        m = mock()
+        c = captor()
+
+        m.do("anything", 10)
+        verify(m).do(c, 10)
+        verify(m, times=0).do(c, 11)
+
+        assert c.all_values == ["anything"]
