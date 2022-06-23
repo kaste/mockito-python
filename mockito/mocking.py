@@ -180,8 +180,11 @@ class Mock(object):
         # the one on its class, so we delete as well.
         if (
             not original_method
-            or not inspect.isclass(self.mocked_obj)
-            and inspect.ismethod(original_method)
+            or (
+                inspect.ismethod(original_method)
+                and not inspect.isclass(self.mocked_obj)
+                and not inspect.ismodule(self.mocked_obj)
+            )
         ):
             delattr(self.mocked_obj, method_name)
         else:
