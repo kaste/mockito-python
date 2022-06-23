@@ -1,6 +1,12 @@
 MOCKITO CHANGE LOG
 ==================
 
+Release 1.3.3 (June 23, 2022)
+-----------------------------
+
+- Hotfix: Correctly unstub methods extracted to the module level, for example ``random.randint()`` et.al. from the standard library.  See #53
+
+
 Release 1.3.2 (June 23, 2022)
 -----------------------------
 
