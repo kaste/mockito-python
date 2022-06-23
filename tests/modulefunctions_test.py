@@ -98,3 +98,10 @@ class ModuleFunctionsTest(TestBase):
         from . import module
         when(module).Foo().thenReturn('mocked')
         assert module.Foo() == 'mocked'
+
+    def testUnstubFunctionOnModuleWhichIsActuallyAMethod_issue_53(self):
+        import random
+        when(random).randint(...).thenReturn("mocked")
+        assert random.randint(1, 10) == "mocked"
+        unstub(random)
+        assert random.randint(1, 10) != "mocked"
