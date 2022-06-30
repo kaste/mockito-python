@@ -73,6 +73,14 @@ class InstanceMethodsTest(TestBase):
         unstub()
         assert rex.waggle() == 'Wuff!'
 
+    def testPartialUnstubShowsTheMockedClass(self):
+        when(Dog).waggle().thenReturn('Nope!')
+
+        rex = Dog()
+        when(rex).waggle().thenReturn('Sure!')
+        unstub(rex)
+
+        assert rex.waggle() == 'Nope!'
 
     def testStubAnInstanceMethod(self):
         when(Dog).waggle().thenReturn('Boing!')
