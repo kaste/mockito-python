@@ -185,6 +185,8 @@ class Mock(object):
         while self.original_methods:
             method_name, original_method = self.original_methods.popitem()
             self.restore_method(method_name, original_method)
+        self.stubbed_invocations = deque()
+        self.invocations = []
 
     # SPECCING
 
