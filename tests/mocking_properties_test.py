@@ -72,3 +72,51 @@ def test_recommended_approach_4(unstub):
     # which makes it moot -- why not just set `m.tx = 42` then?
     m = mock({'tx': property(return_(42))})
     assert m.tx == 42
+
+
+class _QueryProperty:
+    def __get__(self, obj, type):
+        assert obj is None, "query is a class property"
+        return 42
+
+class Base():
+    query = _QueryProperty()
+
+class User(Base):
+    pass
+
+def test_sqlalchemy_1(monkeypatch):
+    assert User.query == 42
+    query_prop = mock()
+    when(query_prop).filter_by(...).thenReturn(
+        mock({"first": lambda: "A user"})
+    )
+
+    monkeypatch.setattr(User, "query", query_prop)
+    assert User.query.filter_by(username='admin').first() == "A user"
+
+def test_sqlalchemy_2():
+    assert User.query == 42
+    query_prop = mock()
+    when(query_prop).filter_by(...).thenReturn(
+        mock({"first": lambda: "A user"})
+    )
+    with when(_QueryProperty).__get__(...).thenReturn(query_prop):
+        assert User.query.filter_by(username='admin').first() == "A user"
+
+@pytest.mark.xfail(reason='Not implemented.')
+def test_sqlalchemy_3a():
+    assert User.query == 42
+    query_prop = mock()
+    when(query_prop).filter_by(...).first().thenReturn("A user")
+    with when(_QueryProperty).__get__(...).thenReturn(query_prop):
+        assert User.query.filter_by(username='admin').first() == "A user"
+
+@pytest.mark.xfail(reason='Not implemented.')
+def test_sqlalchemy_3b(unstub):  # atm throws badly, ensure unstub manually
+    assert User.query == 42
+    with when(User).query.filter_by(...).first().thenReturn("A user"):
+        assert User.query.filter_by(username='admin').first() == "A user"
+
+def test_sqlalchemy_4_ensure_unstubbed():
+    assert User.query == 42
