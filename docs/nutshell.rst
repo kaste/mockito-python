@@ -41,15 +41,14 @@ No difference whatsoever when you mock modules
     >>> when(os.path).exist('./somewhat').thenReturn(True)
     Traceback (most recent call last):
     <...>
-    mockito.invocation.InvocationError: You tried to stub a method 'exist' the objec
-    t (<module 'ntpath' from ...>) doesn't have.
+    mockito.invocation.InvocationError: You tried to stub a method 'exist'
+    the object (<module 'ntpath' from ...>) doesn't have.
 
 If that's too strict, you can change it
 
 ::
 
-    >>> when(os.path, strict=False).exist('another_place').thenReturn('well, nice he
-    re')
+    >>> when(os.path, strict=False).exist('another_place').thenReturn('well, nice here')
     <mockito.invocation.AnswerSelector object at 0x00D429B0>
     >>> os.path.exist('another_place')
     'well, nice here'

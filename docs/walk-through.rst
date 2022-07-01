@@ -41,6 +41,7 @@ When patching, you **MUST** **not** forget to :func:`unstub` of course! You can 
 Usually you do this unconditionally in your `teardown` function. If you're using `pytest`, you could define a fixture instead
 
 ::
+
     # conftest.py
     import pytest
 
@@ -193,7 +194,7 @@ To start with an empty stub use :func:`mock`::
     verify(obj).say('Hi')
 
     # by default all invoked methods take any arguments and return None
-    # you can configure your expected method calls with the ususal `when`
+    # you can configure your expected method calls with the usual `when`
     when(obj).say('Hi').thenReturn('Ho')
 
     # There is also a shortcut to set some attributes
