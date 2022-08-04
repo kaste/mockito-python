@@ -144,6 +144,14 @@ Stubbed invocations are:
         return None
 
 
+class RememberedPropertyAccess(RememberedInvocation):
+    def ensure_mocked_object_has_method(self, method_name):
+        return True
+
+    def ensure_signature_matches(self, method_name, args, kwargs):
+        return True
+
+
 class RememberedProxyInvocation(RealInvocation):
     """Remember params and proxy to method of original object.
 
@@ -510,6 +518,22 @@ class StubbedInvocation(MatchingInvocation):
         if not self.allow_zero_invocations and self.used < len(self.answers):
             raise verificationModule.VerificationError(
                 "\nUnused stub: %s" % self)
+
+class StubbedPropertyAccess(StubbedInvocation):
+    def ensure_signature_matches(self, method_name, args, kwargs):
+        return True
+
+    def __call__(self, *params, **named_params):
+        if self.strict:
+            self.ensure_mocked_object_has_method(self.method_name)
+            self.ensure_signature_matches(
+                self.method_name, params, named_params)
+        self._remember_params(params, named_params)
+
+        self.mock.stub_property(self.method_name)
+        self.mock.finish_stubbing(self)
+        return AnswerSelector(self)
+
 
 
 def return_(value: T) -> Callable[..., T]:

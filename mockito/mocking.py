@@ -51,6 +51,32 @@ def remembered_invocation_builder(
     return invoc(*args, **kwargs)
 
 
+class wait_for_invocation:
+    def __init__(self, theMock, method_name, **kwargs):
+        self.theMock = theMock
+        self.method_name = method_name
+        self.kwargs = kwargs
+
+    def __call__(self, *args, **kwargs):
+        return invocation.StubbedInvocation(
+            self.theMock, self.method_name, **self.kwargs)(*args, **kwargs)
+
+    def __getattr__(self, attr_name):
+        invoc = invocation.StubbedPropertyAccess(
+            self.theMock, self.method_name, **self.kwargs)()
+        return getattr(invoc, attr_name)
+        raise RuntimeError(f"expected an invocation of '{self.method_name}'")
+
+class _mocked_property:
+    def __init__(self, mock, method_name):
+        self.mock = mock
+        self.method_name = method_name
+
+    def __get__(self, obj, type):
+        return invocation.RememberedPropertyAccess(
+            self.mock, self.method_name)()
+
+
 class Mock:
     def __init__(
         self,
@@ -175,6 +201,24 @@ class Mock:
 
             self._original_methods[method_name] = original_method
             self.replace_method(method_name, original_method)
+
+    def stub_property(self, method_name):
+        try:
+            self._methods_to_unstub[method_name]
+        except KeyError:
+            (
+                original_method,
+                was_in_spec
+            ) = self._get_original_method_before_stub(method_name)
+            if was_in_spec:
+                # This indicates the original method was found directly on
+                # the spec object and should therefore be restored by unstub
+                self._methods_to_unstub[method_name] = original_method
+            else:
+                self._methods_to_unstub[method_name] = None
+
+            self.set_method(method_name, _mocked_property(self, method_name))
+
 
     def forget_stubbed_invocation(
         self, invocation: invocation.StubbedInvocation

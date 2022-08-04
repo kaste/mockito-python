@@ -1,6 +1,7 @@
 import pytest
-from mockito import mock, verify, when
+from mockito import mock, verify, when, invocation
 from mockito.invocation import return_
+
 
 def test_deprecated_a(unstub):
     # Setting on `__class__` is confusing for users
@@ -120,3 +121,28 @@ def test_sqlalchemy_3b(unstub):  # atm throws badly, ensure unstub manually
 
 def test_sqlalchemy_4_ensure_unstubbed():
     assert User.query == 42
+
+
+class F:
+    query = _QueryProperty()
+
+    @property
+    def p(self):
+        return 42
+
+def test_property_access():
+    assert F().p == 42
+    with when(F).p.thenReturn(23):
+        assert F().p == 23
+    assert F().p == 42
+
+    with pytest.raises(invocation.InvocationError):
+        when(F).fool.thenReturn(23)
+    with pytest.raises(AttributeError):
+        assert F().fool == 23  # type: ignore[attr-defined]
+
+def test_descriptor_access():
+    assert F.query == 42
+    with when(F).query.thenReturn(23):
+        assert F.query == 23
+    assert F.query == 42
