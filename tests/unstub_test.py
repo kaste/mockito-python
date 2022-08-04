@@ -1,6 +1,6 @@
 import pytest
 
-from mockito import when, unstub, verify, ArgumentError
+from mockito import mock, when, unstub, verify, ArgumentError
 
 
 class Dog(object):
@@ -30,6 +30,13 @@ class TestUntub:
         unstub(mox)
 
         assert mox.waggle() == 'Unsure'
+
+    def testUnconfigureMock(self):
+        m = mock()
+        when(m).foo().thenReturn(42)
+        assert m.foo() == 42
+        unstub(m)
+        assert m.foo() is None
 
 class TestAutomaticUnstubbing:
 
@@ -128,3 +135,4 @@ class TestAutomaticUnstubbing:
                 assert rex.waggle() == 'Sure'
 
                 verify(Dog).waggle()
+
