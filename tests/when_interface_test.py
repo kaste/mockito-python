@@ -59,7 +59,7 @@ class TestPassAroundStrictness:
         assert rex.waggle() == 'Sure'
         assert rex.weggle() == 'Sure'
 
-        # For documentation; the inital strict value of the mock will be used
+        # For documentation; the initial strict value of the mock will be used
         # here. So the above when(..., strict=False) just assures we can
         # actually *add* an attribute to the mocked object
         with pytest.raises(InvocationError):

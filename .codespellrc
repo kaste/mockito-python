@@ -1,0 +1,3 @@
+[codespell]
+skip=./docs/_build,./.mypy_cache,*.sublime-workspace,.git
+ignore-words-list=atleast

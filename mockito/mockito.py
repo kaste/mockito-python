@@ -164,7 +164,7 @@ def when(obj, strict=True):
         when(<obj>).<method_name>(<args>).thenReturn(<value>)
 
     Compared to simple *patching*, stubbing in mockito requires you to specify
-    conrete `args` for which the stub will answer with a concrete `<value>`.
+    concrete `args` for which the stub will answer with a concrete `<value>`.
     All invocations that do not match this specific call signature will be
     rejected. They usually throw at call time.
 
