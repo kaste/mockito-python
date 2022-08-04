@@ -176,19 +176,10 @@ class Mock(object):
     def restore_method(self, method_name, original_method):
         # If original_method is None, we *added* it to mocked_obj, so we
         # must delete it here.
-        # If we mocked an instance, our mocked function will actually hide
-        # the one on its class, so we delete as well.
-        if (
-            not original_method
-            or (
-                inspect.ismethod(original_method)
-                and not inspect.isclass(self.mocked_obj)
-                and not inspect.ismodule(self.mocked_obj)
-            )
-        ):
-            delattr(self.mocked_obj, method_name)
-        else:
+        if original_method:
             self.set_method(method_name, original_method)
+        else:
+            delattr(self.mocked_obj, method_name)
 
     def unstub(self):
         while self.original_methods:
