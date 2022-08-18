@@ -24,7 +24,7 @@ setup(name='mockito',
       description='Spying framework',
       long_description=open('README.rst').read(),
       install_requires=install_requires,
-      python_requires='>=2.7',
+      python_requires='>=3.5',
       classifiers=[
           'Development Status :: 4 - Beta',
           'Intended Audience :: Developers',
