@@ -66,7 +66,7 @@ class CallOriginalImplementationTest(TestBase):
         assert module.one_arg("woof") == "wif"
         assert module.one_arg("woof") == "woof"
 
-    def testNoOriginal(self):
+    def testDumbMockHasNoOriginalImplementations(self):
         dog = mock()
         answer_selector = when(dog).bark()
         with pytest.raises(AnswerError) as exc:
