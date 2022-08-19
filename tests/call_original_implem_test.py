@@ -62,9 +62,11 @@ class CallOriginalImplementationTest(TestBase):
     def testChain(self):
         when(module).one_arg(Ellipsis) \
                     .thenReturn("wif") \
-                    .thenCallOriginalImplementation()
+                    .thenCallOriginalImplementation() \
+                    .thenReturn("waf")
         assert module.one_arg("woof") == "wif"
         assert module.one_arg("woof") == "woof"
+        assert module.one_arg("woof") == "waf"
 
     def testDumbMockHasNoOriginalImplementations(self):
         dog = mock()
