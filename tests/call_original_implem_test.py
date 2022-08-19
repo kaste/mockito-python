@@ -80,3 +80,8 @@ class CallOriginalImplementationTest(TestBase):
             "'<class '%s'>' "
             "has no original implementation for 'bark'."
         ) % class_str_value
+
+    def testSpeccedMockHasOriginalImplementations(self):
+        dog = mock({"huge": True}, spec=Dog)
+        when(dog).bark().thenCallOriginalImplementation()
+        assert dog.bark() == "woof"
