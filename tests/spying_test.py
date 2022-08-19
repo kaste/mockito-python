@@ -154,3 +154,7 @@ class TestSpy2:
         assert dummy.return_args('box') == 'foo'
         assert dummy.return_args('fox') == 'fix'
 
+    def testSpyOnClass(self):
+        spy2(Dummy.foo)
+        assert Dummy().foo() == 'foo'
+
