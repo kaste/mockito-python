@@ -106,3 +106,8 @@ class ModuleFunctionsTest(TestBase):
         assert random.randint(1, 10) == "mocked"
         unstub(random)
         assert random.randint(1, 10) != "mocked"
+
+    def testAddFakeMethodInNotStrictMode(self):
+        when(os.path, strict=False).new_exists("test").thenReturn(True)
+
+        self.assertEqual(True, os.path.new_exists("test"))
