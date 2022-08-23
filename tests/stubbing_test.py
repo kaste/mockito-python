@@ -375,7 +375,7 @@ class StubbingTest(TestBase):
         self.assertEqual(m.with_key_words(testing="Very Funky"),
                          "Very Funky Stuff")
 
-    def testSubsWithThenAnswerAndMixedArgs(self):
+    def testStubsWithThenAnswerAndMixedArgs(self):
         repo = mock()
 
         def method_one(value, active_only=False):
