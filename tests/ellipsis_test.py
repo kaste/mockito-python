@@ -1,9 +1,8 @@
 
-import pytest
-
 from collections import namedtuple
 
-from mockito import when, args, kwargs, invocation, mock
+import pytest
+from mockito import args, invocation, kwargs, mock, when
 
 
 class Dog(object):

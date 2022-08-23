@@ -19,9 +19,9 @@
 # THE SOFTWARE.
 
 import pytest
+from mockito import any, mock, times, verify, when
 
 from .test_base import TestBase
-from mockito import mock, when, verify, times, any
 
 
 class TestEmptyMocks:

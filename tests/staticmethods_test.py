@@ -18,9 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from .test_base import TestBase
-from mockito import when, verify, unstub, any
+from mockito import any, unstub, verify, when
 from mockito.verification import VerificationError
+
+from .test_base import TestBase
+
 
 class Dog:
     @staticmethod

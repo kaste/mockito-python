@@ -18,15 +18,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from . import matchers
+import functools
 import operator
-from . import signature
+from collections import deque
+
+from . import matchers, signature
 from . import verification as verificationModule
 from .utils import contains_strict
-
-from collections import deque
-import functools
-
 
 MYPY = False
 if MYPY:
