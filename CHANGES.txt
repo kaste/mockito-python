@@ -1,6 +1,21 @@
 MOCKITO CHANGE LOG
 ==================
 
+Release 1.4.0
+-------------
+
+- @avandierast implemented `thenCallOriginalImplementation`.  See #60
+
+::
+
+    # Let `os.path.exists` use the real filesystem (often needed when
+    # the testing framework needs itself a working `os.path.exists`
+    # implementation) *but* fake a `.flake8` file.
+    when(os.path).exists(...).thenCallOriginalImplementation()
+    when(os.path).exists('.flake8').thenReturn(True)
+
+
+
 Release 1.3.5 (August 18, 2022)
 -------------------------------
 
