@@ -109,14 +109,6 @@ class Mock(object):
     def replace_method(self, method_name, original_method):
 
         def new_mocked_method(*args, **kwargs):
-            # we throw away the first argument, if it's either self or cls
-            if (
-                inspect.ismethod(new_mocked_method)
-                or inspect.isclass(self.mocked_obj)
-                and not isinstance(new_mocked_method, staticmethod)
-            ):
-                args = args[1:]
-
             return remembered_invocation_builder(
                 self, method_name, *args, **kwargs)
 
@@ -215,6 +207,25 @@ class Mock(object):
             sig = signature.get_signature(self.spec, method_name)
             self._signatures_store[method_name] = sig
             return sig
+
+    def eat_self(self, method_name):
+        """Returns if the method will have a prepended self/class arg on call
+        """
+        try:
+            original_method = self._original_methods[method_name]
+        except KeyError:
+            return False
+        else:
+            # If original_method is None, we *added* it to mocked_obj
+            # and thus, it will eat self iff mocked_obj is a class.
+            return (
+                inspect.ismethod(original_method)
+                or (
+                    inspect.isclass(self.mocked_obj)
+                    and not isinstance(original_method, staticmethod)
+                    and not inspect.isclass(original_method)
+                )
+            )
 
 
 class _OMITTED(object):
