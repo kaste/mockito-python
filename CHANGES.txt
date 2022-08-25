@@ -1,8 +1,8 @@
 MOCKITO CHANGE LOG
 ==================
 
-Release 1.4.0
--------------
+Release 1.4.0 (August 25, 2022)
+-------------------------------
 
 - @avandierast implemented `thenCallOriginalImplementation`.  See #60
 
