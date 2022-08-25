@@ -408,6 +408,11 @@ class StubbedInvocation(MatchingInvocation):
         self.verification.verify(self, actual_count)
 
 
+    def check_used(self):
+        if not self.allow_zero_invocations and self.used < len(self.answers):
+            raise verificationModule.VerificationError(
+                "\nUnused stub: %s" % self)
+
 
 def return_(value, *a, **kw):
     return value
