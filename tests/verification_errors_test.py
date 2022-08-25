@@ -36,10 +36,6 @@ Wanted but not invoked:
 
     foo()
 
-Instead got:
-
-    Nothing
-
 '''
 
     def testPrintsNicely(self):

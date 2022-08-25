@@ -89,26 +89,18 @@ class Times(object):
                     if invoc.method_name == invocation.method_name
                 ]
                 or invocation.mock.invocations
-                or ['Nothing']
             )
+            wanted_section = (
+                "\nWanted but not invoked:\n\n    %s\n" % invocation
+            )
+            instead_section = (
+                "\nInstead got:\n\n    %s\n"
+                % "\n    ".join(map(str, invocations))
+            ) if invocations else ""
+
             raise VerificationError(
-                """
-Wanted but not invoked:
+                "%s%s\n" % (wanted_section, instead_section))
 
-    %s
-
-Instead got:
-
-    %s
-
-"""
-                % (
-                    invocation,
-                    "\n    ".join(
-                        str(invoc) for invoc in invocations
-                    )
-                )
-            )
         else:
             if self.wanted_count == 0:
                 raise VerificationError(
