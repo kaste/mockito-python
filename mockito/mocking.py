@@ -65,7 +65,8 @@ class Mock(object):
         self.stubbed_invocations = deque()  \
             # type: Deque[invocation.StubbedInvocation]
 
-        self.original_methods = {}
+        self._original_methods = {}
+        self._methods_to_unstub = {}
         self._signatures_store = {}
 
     def remember(self, invocation):
@@ -77,9 +78,12 @@ class Mock(object):
     def clear_invocations(self):
         self.invocations = []
 
+    def get_original_method(self, method_name):
+        return self._original_methods.get(method_name, None)
+
     # STUBBING
 
-    def get_original_method(self, method_name):
+    def _get_original_method_before_stub(self, method_name):
         """
         Looks up the original method on the `spec` object and returns it
         together with an indication of whether the method is found
@@ -105,14 +109,6 @@ class Mock(object):
     def replace_method(self, method_name, original_method):
 
         def new_mocked_method(*args, **kwargs):
-            # we throw away the first argument, if it's either self or cls
-            if (
-                inspect.ismethod(new_mocked_method)
-                or inspect.isclass(self.mocked_obj)
-                and not isinstance(new_mocked_method, staticmethod)
-            ):
-                args = args[1:]
-
             return remembered_invocation_builder(
                 self, method_name, *args, **kwargs)
 
@@ -144,17 +140,20 @@ class Mock(object):
 
     def stub(self, method_name):
         try:
-            self.original_methods[method_name]
+            self._methods_to_unstub[method_name]
         except KeyError:
-            original_method, was_in_spec = self.get_original_method(
-                method_name)
+            (
+                original_method,
+                was_in_spec
+            ) = self._get_original_method_before_stub(method_name)
             if was_in_spec:
                 # This indicates the original method was found directly on
                 # the spec object and should therefore be restored by unstub
-                self.original_methods[method_name] = original_method
+                self._methods_to_unstub[method_name] = original_method
             else:
-                self.original_methods[method_name] = None
+                self._methods_to_unstub[method_name] = None
 
+            self._original_methods[method_name] = original_method
             self.replace_method(method_name, original_method)
 
     def forget_stubbed_invocation(self, invocation):
@@ -170,7 +169,9 @@ class Mock(object):
             inv.method_name == invocation.method_name
             for inv in self.stubbed_invocations
         ):
-            original_method = self.original_methods.pop(invocation.method_name)
+            original_method = self._methods_to_unstub.pop(
+                invocation.method_name
+            )
             self.restore_method(invocation.method_name, original_method)
 
     def restore_method(self, method_name, original_method):
@@ -182,8 +183,8 @@ class Mock(object):
             delattr(self.mocked_obj, method_name)
 
     def unstub(self):
-        while self.original_methods:
-            method_name, original_method = self.original_methods.popitem()
+        while self._methods_to_unstub:
+            method_name, original_method = self._methods_to_unstub.popitem()
             self.restore_method(method_name, original_method)
         self.stubbed_invocations = deque()
         self.invocations = []
@@ -206,6 +207,25 @@ class Mock(object):
             sig = signature.get_signature(self.spec, method_name)
             self._signatures_store[method_name] = sig
             return sig
+
+    def eat_self(self, method_name):
+        """Returns if the method will have a prepended self/class arg on call
+        """
+        try:
+            original_method = self._original_methods[method_name]
+        except KeyError:
+            return False
+        else:
+            # If original_method is None, we *added* it to mocked_obj
+            # and thus, it will eat self iff mocked_obj is a class.
+            return (
+                inspect.ismethod(original_method)
+                or (
+                    inspect.isclass(self.mocked_obj)
+                    and not isinstance(original_method, staticmethod)
+                    and not inspect.isclass(original_method)
+                )
+            )
 
 
 class _OMITTED(object):

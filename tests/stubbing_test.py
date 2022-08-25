@@ -19,9 +19,9 @@
 # THE SOFTWARE.
 
 import pytest
+from mockito import any, mock, times, verify, when
 
 from .test_base import TestBase
-from mockito import mock, when, verify, times, any
 
 
 class TestEmptyMocks:
@@ -375,7 +375,7 @@ class StubbingTest(TestBase):
         self.assertEqual(m.with_key_words(testing="Very Funky"),
                          "Very Funky Stuff")
 
-    def testSubsWithThenAnswerAndMixedArgs(self):
+    def testStubsWithThenAnswerAndMixedArgs(self):
         repo = mock()
 
         def method_one(value, active_only=False):

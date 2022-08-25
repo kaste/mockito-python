@@ -18,15 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from . import matchers
+import functools
+import inspect
 import operator
-from . import signature
+from collections import deque
+
+from . import matchers, signature
 from . import verification as verificationModule
 from .utils import contains_strict
-
-from collections import deque
-import functools
-
 
 MYPY = False
 if MYPY:
@@ -34,6 +33,9 @@ if MYPY:
 
 
 class InvocationError(AttributeError):
+    pass
+
+class AnswerError(AttributeError):
     pass
 
 
@@ -86,12 +88,16 @@ class RememberedInvocation(Invocation):
         signature.match_signature(sig, args, kwargs)
 
     def __call__(self, *params, **named_params):
+        if self.mock.eat_self(self.method_name):
+            params_without_first_arg = params[1:]
+        else:
+            params_without_first_arg = params
         if self.strict:
             self.ensure_mocked_object_has_method(self.method_name)
             self.ensure_signature_matches(
-                self.method_name, params, named_params)
+                self.method_name, params_without_first_arg, named_params)
 
-        self._remember_params(params, named_params)
+        self._remember_params(params_without_first_arg, named_params)
         self.mock.remember(self)
 
         for matching_invocation in self.mock.stubbed_invocations:
@@ -410,23 +416,60 @@ def raise_(exception, *a, **kw):
     raise exception
 
 
+def discard_self(function):
+    def function_without_self(*args, **kwargs):
+        args = args[1:]
+        return function(*args, **kwargs)
+
+    return function_without_self
+
+
 class AnswerSelector(object):
     def __init__(self, invocation):
         self.invocation = invocation
+        self.discard_first_arg = \
+            invocation.mock.eat_self(invocation.method_name)
 
     def thenReturn(self, *return_values):
         for return_value in return_values:
-            self.__then(functools.partial(return_, return_value))
+            answer = functools.partial(return_, return_value)
+            self.__then(answer)
         return self
 
     def thenRaise(self, *exceptions):
         for exception in exceptions:
-            self.__then(functools.partial(raise_, exception))
+            answer = functools.partial(raise_, exception)
+            self.__then(answer)
         return self
 
     def thenAnswer(self, *callables):
         for callable in callables:
-            self.__then(callable)
+            answer = callable
+            if self.discard_first_arg:
+                answer = discard_self(answer)
+            self.__then(answer)
+        return self
+
+    def thenCallOriginalImplementation(self):
+        answer = self.invocation.mock.get_original_method(
+            self.invocation.method_name
+        )
+        if not answer:
+            raise AnswerError(
+                "'%s' has no original implementation for '%s'." %
+                (self.invocation.mock.mocked_obj, self.invocation.method_name)
+            )
+        if (
+            # A classmethod is not callable
+            # and a staticmethod is not callable in old version of python,
+            # so we get the underlying function.
+            isinstance(answer, classmethod) or isinstance(answer, staticmethod)
+            # If the method is bound, we unbind it.
+            or inspect.ismethod(answer)
+        ):
+            answer = answer.__func__
+
+        self.__then(answer)
         return self
 
     def __then(self, answer):

@@ -238,7 +238,8 @@ def when2(fn, *args, **kwargs):
     more documentation.
 
     Returns `AnswerSelector` interface which exposes `thenReturn`,
-    `thenRaise`, and `thenAnswer` as usual. Always `strict`.
+    `thenRaise`, `thenAnswer`, and `thenCallOriginalImplementation` as usual.
+    Always `strict`.
 
     Usage::
 

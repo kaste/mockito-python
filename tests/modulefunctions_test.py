@@ -20,10 +20,11 @@
 
 import os
 
-from .test_base import TestBase
-from mockito import when, unstub, verify, any
+from mockito import any, unstub, verify, when
 from mockito.invocation import InvocationError
 from mockito.verification import VerificationError
+
+from .test_base import TestBase
 
 
 class ModuleFunctionsTest(TestBase):
@@ -105,3 +106,8 @@ class ModuleFunctionsTest(TestBase):
         assert random.randint(1, 10) == "mocked"
         unstub(random)
         assert random.randint(1, 10) != "mocked"
+
+    def testAddFakeMethodInNotStrictMode(self):
+        when(os.path, strict=False).new_exists("test").thenReturn(True)
+
+        self.assertEqual(True, os.path.new_exists("test"))

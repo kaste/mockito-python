@@ -19,6 +19,7 @@ There are of course reasons when you don't want to overspecify specific tests. Y
 
     # now, obviously, you get the same answer, regardless of the arguments
     os.path.exists('FooBar')  # => True
+    os.path.exists('BarFoo')  # => True
 
 You can combine both stubs. E.g. nothing exists, except one file::
 
@@ -30,6 +31,21 @@ And because it's a similar pattern, we can introduce :func:`spy2` here. Spies ca
     from mockito import spy2
     spy2(os.path.exists)
     when(os.path).exists('.flake8').thenReturn(False)
+
+Another way to write the same thing is::
+
+    when(os.path).exists(...).thenCallOriginalImplementation()
+    when(os.path).exists('.flake8').thenReturn(False)
+
+And actually `spy2` uses `thenCallOriginalImplementation` under the hood.  Why spying at all: either you want the implementation *almost* intact as above or you
+need the implementation to stay intact but want to `verify` its usage.  E.g.::
+
+    spy2(os.path.exists)
+    # now do some stuff
+    do_stuff()
+    # then verify the we asked for the cache exactly once
+    verify(os.path, times=1).exists("cache/.foo")
+
 
 When patching, you **MUST** **not** forget to :func:`unstub` of course! You can do this explicitly
 

@@ -18,9 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from .test_base import TestBase
-from mockito import when, verify, unstub, any
+from mockito import any, unstub, verify, when
 from mockito.verification import VerificationError
+
+from .test_base import TestBase
+
 
 class Dog:
     @staticmethod
@@ -75,6 +77,14 @@ class StaticMethodsTest(TestBase):
         when(Dog).barkHardly(1, 2).thenReturn("miau")
 
         self.assertEqual("miau", Dog.barkHardly(1, 2))
+
+    def testStubsWithArgsOnInstance(self):
+        dog = Dog()
+        self.assertEqual("woof woof", dog.barkHardly(1, 2))
+
+        when(Dog).barkHardly(1, 2).thenReturn("miau")
+
+        self.assertEqual("miau", dog.barkHardly(1, 2))
 
     def testStubsButDoesNotMachArguments(self):
         self.assertEqual("woof woof", Dog.barkHardly(1, "anything"))
