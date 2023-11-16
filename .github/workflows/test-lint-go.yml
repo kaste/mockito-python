@@ -15,6 +15,7 @@ jobs:
           - '3.9'
           - '3.10'
           - '3.11'
+          - '3.12'
     name: Run tests on Python ${{ matrix.python-version }} (${{ matrix.os }})
     steps:
       - uses: actions/checkout@v2
