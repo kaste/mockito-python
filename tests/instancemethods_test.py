@@ -245,8 +245,10 @@ class TestVerifyInteractions:
 class TestEnsureStubsAreUsed:
     def testBarkOnUnusedStub(self):
         when(Dog).bark('Miau')
-        with pytest.raises(VerificationError):
+        with pytest.raises(VerificationError) as exc:
             verifyStubbedInvocationsAreUsed(Dog)
+
+        assert str(exc.value) == "\nUnused stub: bark('Miau')"
 
     class TestPassIfExplicitlyVerified:
         @pytest.mark.parametrize('verification', [

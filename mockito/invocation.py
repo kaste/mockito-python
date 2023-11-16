@@ -399,14 +399,14 @@ class StubbedInvocation(MatchingInvocation):
         # to get verified 'implicitly', on-the-go, so we set this flag here.
         invocation.verified = True
 
-
     def verify(self):
-        if not self.verification:
-            return
+        if self.verification:
+            self.verification.verify(self, self.used)
 
-        actual_count = self.used
-        self.verification.verify(self, actual_count)
-
+    def check_used(self):
+        if not self.allow_zero_invocations and self.used < len(self.answers):
+            raise verificationModule.VerificationError(
+                "\nUnused stub: %s" % self)
 
 
 def return_(value, *a, **kw):
