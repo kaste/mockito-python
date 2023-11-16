@@ -7,6 +7,8 @@ import re
 
 
 PY3 = sys.version_info >= (3,)
+NEEDS_OS_PATH_HACK = (
+    sys.platform == "win32" and (3, 12) <= sys.version_info < (3, 13))
 
 
 def contains_strict(seq, element):
@@ -34,6 +36,12 @@ def get_function_host(fn):
     try:
         name = fn.__name__
         obj = fn.__self__
+        if (
+            NEEDS_OS_PATH_HACK
+            and obj.__name__ == "nt"
+            and name.startswith('_path_')
+        ):
+            obj = None
     except AttributeError:
         pass
 
