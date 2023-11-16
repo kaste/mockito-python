@@ -1,0 +1,26 @@
+[project]
+name = "mockito"
+version = "1.5.1-dev"
+description = "Spying framework"
+authors = [
+    { name = "herr kaste", email = "herr.kaste@gmail.com" }
+]
+dependencies = []
+readme = "README.rst"
+requires-python = ">=3.7"
+license = { text = "MIT" }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "pytest>=4.6.11",
+    "numpy>=1.16.6",
+    "bump2version>=0.5.11",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true

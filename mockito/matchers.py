@@ -59,6 +59,7 @@ The one usage you should not care about is a loose signature when using
 
 """
 
+from abc import ABC, abstractmethod
 import re
 builtin_any = any
 
@@ -118,7 +119,8 @@ class Matcher:
     def matches(self, arg):
         pass
 
-class Capturing:
+class Capturing(ABC):
+    @abstractmethod
     def capture_value(self, value):
         pass
 

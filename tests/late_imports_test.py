@@ -3,10 +3,6 @@ import pytest
 
 from mockito.utils import get_obj, get_obj_attr_tuple
 
-import sys
-
-
-PY3 = sys.version_info >= (3,)
 
 
 def foo():
@@ -49,18 +45,12 @@ class TestLateImports:
     def testUnknownMum(self):
         with pytest.raises(ImportError) as exc:
             assert get_obj('mum') is foo
-        if PY3:
-            assert str(exc.value) == "No module named 'mum'"
-        else:
-            assert str(exc.value) == "No module named mum"
+        assert str(exc.value) == "No module named 'mum'"
 
     def testUnknownMumFoo(self):
         with pytest.raises(ImportError) as exc:
             assert get_obj('mum.foo') is foo
-        if PY3:
-            assert str(exc.value) == "No module named 'mum'"
-        else:
-            assert str(exc.value) == "No module named mum"
+        assert str(exc.value) == "No module named 'mum'"
 
     def testReturnGivenObject(self):
         import os
