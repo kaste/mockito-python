@@ -18,7 +18,7 @@ jobs:
           - '3.12'
     name: Run tests on Python ${{ matrix.python-version }} (${{ matrix.os }})
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Setup python
         uses: actions/setup-python@v2
         with:
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Lint with flake8
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Setup python
         uses: actions/setup-python@v2
         with:
@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Spellcheck with codespell
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Setup python
         uses: actions/setup-python@v2
         with:
@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Check with mypy
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Setup python
         uses: actions/setup-python@v2
         with:
@@ -84,7 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Deploy to pypi
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
