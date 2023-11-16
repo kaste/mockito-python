@@ -2,8 +2,8 @@ Mockito is a spying framework originally based on `the Java library with the sam
 <https://github.com/mockito/mockito>`_.  (Actually *we* invented the strict stubbing mode
 back in 2009.)  
 
-.. image:: https://travis-ci.org/kaste/mockito-python.svg?branch=master
-    :target: https://travis-ci.org/kaste/mockito-python
+.. image:: https://github.com/kaste/mockito-python/actions/workflows/test-lint-go.yml/badge.svg
+    :target: https://github.com/kaste/mockito-python/actions/workflows/test-lint-go.yml
 
 
 Install
