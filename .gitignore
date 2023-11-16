@@ -5,3 +5,6 @@ docs/_build
 .eggs/
 .pytest_cache
 __pycache__
+/.python-version
+/requirements-dev.lock
+/requirements.lock
