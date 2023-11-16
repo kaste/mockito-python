@@ -33,13 +33,11 @@ __tracebackhide__ = operator.methodcaller(
     invocation.InvocationError
 )
 
-MYPY = False
-if MYPY:
-    from typing import Deque, List, Union
-    RealInvocation = Union[
-        invocation.RememberedInvocation,
-        invocation.RememberedProxyInvocation
-    ]
+from typing import Deque, List, Union
+RealInvocation = Union[
+    invocation.RememberedInvocation,
+    invocation.RememberedProxyInvocation
+]
 
 
 class _Dummy(object):
@@ -61,9 +59,8 @@ class Mock(object):
         self.strict = strict
         self.spec = spec
 
-        self.invocations = []  # type: List[RealInvocation]
-        self.stubbed_invocations = deque()  \
-            # type: Deque[invocation.StubbedInvocation]
+        self.invocations: List[RealInvocation] = []
+        self.stubbed_invocations: Deque[invocation.StubbedInvocation] = deque()
 
         self._original_methods = {}
         self._methods_to_unstub = {}
