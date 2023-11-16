@@ -6,7 +6,6 @@ import types
 import re
 
 
-PY3 = sys.version_info >= (3,)
 NEEDS_OS_PATH_HACK = (
     sys.platform == "win32" and (3, 12) <= sys.version_info < (3, 13))
 

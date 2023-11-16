@@ -4,8 +4,6 @@ from .utils import contains_strict
 
 import functools
 import inspect
-import sys
-import types
 
 try:
     from inspect import signature, Parameter
@@ -13,26 +11,17 @@ except ImportError:
     from funcsigs import signature, Parameter  # type: ignore[import, no-redef]
 
 
-PY3 = sys.version_info >= (3,)
-
 
 def get_signature(obj, method_name):
     method = getattr(obj, method_name)
 
     # Eat self for unbound methods bc signature doesn't do it
-    if PY3:
-        if (
-            inspect.isclass(obj)
-            and not inspect.ismethod(method)
-            and not isinstance(obj.__dict__.get(method_name), staticmethod)
-        ):
-            method = functools.partial(method, None)
-    else:
-        if (
-            isinstance(method, types.UnboundMethodType)
-            and method.__self__ is None
-        ):
-            method = functools.partial(method, None)
+    if (
+        inspect.isclass(obj)
+        and not inspect.ismethod(method)
+        and not isinstance(obj.__dict__.get(method_name), staticmethod)
+    ):
+        method = functools.partial(method, None)
 
     try:
         return signature(method)
