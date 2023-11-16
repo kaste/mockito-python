@@ -27,9 +27,7 @@ from . import matchers, signature
 from . import verification as verificationModule
 from .utils import contains_strict
 
-MYPY = False
-if MYPY:
-    from typing import Any, Callable, Deque, Dict, Tuple
+from typing import Any, Callable, Deque, Dict, Tuple
 
 
 class InvocationError(AttributeError):
@@ -51,8 +49,8 @@ class Invocation(object):
         self.method_name = method_name
         self.strict = mock.strict
 
-        self.params = ()  # type: Tuple[Any, ...]
-        self.named_params = {}  # type: Dict[str, Any]
+        self.params: Tuple[Any, ...] = ()
+        self.named_params: Dict[str, Any] = {}
 
     def _remember_params(self, params, named_params):
         self.params = params
@@ -363,8 +361,7 @@ class StubbedInvocation(MatchingInvocation):
         self.used += 1
         return self.answers.answer(*args, **kwargs)
 
-    def should_answer(self, invocation):
-        # type: (RememberedInvocation) -> None
+    def should_answer(self, invocation: RememberedInvocation) -> None:
         verification = self.verification
         if not verification:
             return
@@ -485,7 +482,7 @@ class AnswerSelector(object):
 class CompositeAnswer(object):
     def __init__(self):
         #: Container for answers, which are just ordinary callables
-        self.answers = deque()  # type: Deque[Callable]
+        self.answers: Deque[Callable] = deque()
 
         #: Counter for the maximum answers we ever had
         self.answer_count = 0

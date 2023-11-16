@@ -77,7 +77,7 @@ def spy(object):
     return obj
 
 
-def spy2(fn):  # type: (...) -> None
+def spy2(fn) -> None:
     """Spy usage of given `fn`.
 
     Patches the module, class or object `fn` lives in, so that all
