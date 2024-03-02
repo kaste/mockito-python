@@ -306,6 +306,10 @@ def expect(obj, strict=None,
     See :func:`when`, :func:`when2`, :func:`verifyNoUnwantedInteractions`
 
     """
+
+    if isinstance(obj, str):
+        obj = get_obj(obj)
+
     if strict is None:
         strict = True
     theMock = _get_mock(obj, strict=strict)
