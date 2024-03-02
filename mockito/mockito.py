@@ -300,6 +300,10 @@ def expect(obj, strict=None,
         # maybe if you need to ensure that `dog.bark()` was called at all
         verifyNoUnwantedInteractions()
 
+        # If the lower bound of between is set to 0, expect behaves similar
+        to lenient from Java mockito. I.e. verifyStubbedInvocationsAreUsed
+        passes even if stubbed function is not called in test.
+
     .. note:: You must :func:`unstub` after stubbing, or use `with`
         statement.
 
