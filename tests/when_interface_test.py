@@ -1,7 +1,8 @@
 
 import pytest
 
-from mockito import when, when2, expect, verify, patch, mock, spy2, verifyNoUnwantedInteractions
+from mockito import (when, when2, expect, verify, patch, mock, spy2,
+                     verifyNoUnwantedInteractions)
 from mockito.invocation import InvocationError
 
 class Dog(object):
