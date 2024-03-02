@@ -301,7 +301,7 @@ def expect(obj, strict=None,
         verifyNoUnwantedInteractions()
 
     If the lower bound of ``between`` is set to 0, :func:`expect`
-    behaves similar to lenient from Java Mockito.
+    behaves similar to a lenient stub from Java Mockito.
     I.e. :func:`verifyStubbedInvocationsAreUsed` passes even if
     stubbed function is not called in test::
 
