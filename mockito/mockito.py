@@ -300,18 +300,6 @@ def expect(obj, strict=None,
         # maybe if you need to ensure that `dog.bark()` was called at all
         verifyNoUnwantedInteractions()
 
-    If the lower bound of ``between`` is set to 0, :func:`expect`
-    behaves similar to a lenient stub from Java Mockito.
-    I.e. :func:`verifyStubbedInvocationsAreUsed` passes even if
-    stubbed function is not called in test::
-
-        # We set our expectation
-        expect('os.path', between=(0, 3)).exists("/path").thenReturn(True)
-
-        # No call to os.path.exists happens here
-
-        verifyStubbedInvocationsAreUsed() # This passes
-
     .. note:: You must :func:`unstub` after stubbing, or use `with`
         statement.
 
