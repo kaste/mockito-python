@@ -1,6 +1,17 @@
 MOCKITO CHANGE LOG
 ==================
 
+Release 1.5.0
+-------------------------------
+
+- @Oracking fixed `expect` to support a string as its first argument.  All
+  other functions supported that already.  E.g.
+
+::
+    expect('os.path', times=2).exists(...).thenReturn(True)
+
+
+
 Release 1.4.0 (August 25, 2022)
 -------------------------------
 
