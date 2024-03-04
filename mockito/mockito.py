@@ -286,7 +286,7 @@ def patch(fn, attr_or_replacement, replacement=None):
 
 
 
-def expect(obj, strict=None,
+def expect(obj, strict=True,
            times=None, atleast=None, atmost=None, between=None):
     """Stub a function call, and set up an expected call count.
 
@@ -310,8 +310,6 @@ def expect(obj, strict=None,
     if isinstance(obj, str):
         obj = get_obj(obj)
 
-    if strict is None:
-        strict = True
     theMock = _get_mock(obj, strict=strict)
 
     verification_fn = _get_wanted_verification(
