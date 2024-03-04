@@ -45,10 +45,14 @@ Read the docs
 http://mockito-python.readthedocs.io/en/latest/
 
 
-Run the tests
--------------
+
+Development
+===========
+
+I use `rye <https://rye-up.com/>`_, and if you do too: you just clone this repo
+to your computer, then run ``rye sync`` in the root directory.  Finally, activate
+the virtualenv.  (``rye shell`` gives you a hint on how to do that.)
 
 ::
 
-    pip install pytest
-    py.test
+    pytest
