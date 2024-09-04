@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import functools
 import inspect
 import operator
 from collections import deque
@@ -407,10 +406,14 @@ class StubbedInvocation(MatchingInvocation):
 
 
 def return_(value, *a, **kw):
-    return value
+    def answer(*a, **kw):
+        return value
+    return answer
 
 def raise_(exception, *a, **kw):
-    raise exception
+    def answer(*a, **kw):
+        raise exception
+    return answer
 
 
 def discard_self(function):
@@ -429,13 +432,13 @@ class AnswerSelector(object):
 
     def thenReturn(self, *return_values):
         for return_value in return_values:
-            answer = functools.partial(return_, return_value)
+            answer = return_(return_value)
             self.__then(answer)
         return self
 
     def thenRaise(self, *exceptions):
         for exception in exceptions:
-            answer = functools.partial(raise_, exception)
+            answer = raise_(exception)
             self.__then(answer)
         return self
 

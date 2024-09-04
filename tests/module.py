@@ -6,3 +6,7 @@ class Foo(object):
 
 def one_arg(arg):
     return arg
+
+
+def send(value):
+    return value
