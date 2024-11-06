@@ -28,7 +28,7 @@ class MockRegistry:
     """
 
     def __init__(self):
-        self.mocks = _Dict()
+        self.mocks = IdentityMap()
 
     def register(self, obj, mock):
         self.mocks[obj] = mock
@@ -54,8 +54,7 @@ class MockRegistry:
 
 
 # We have this dict like because we want non-hashable items in our registry.
-# This is just enough to match the invoking code above. TBC
-class _Dict(object):
+class IdentityMap(object):
     def __init__(self):
         self._store = []
 
@@ -64,7 +63,7 @@ class _Dict(object):
         self._store.append((key, value))
 
     def remove(self, key):
-        self._store = [(k, v) for k, v in self._store if k != key]
+        self._store = [(k, v) for k, v in self._store if k is not key]
 
     def pop(self, key):
         rv = self.get(key)
@@ -76,7 +75,7 @@ class _Dict(object):
 
     def get(self, key, default=None):
         for k, value in self._store:
-            if k == key:
+            if k is key:
                 return value
         return default
 

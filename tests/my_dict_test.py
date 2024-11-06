@@ -1,62 +1,54 @@
 
-import pytest
-
-from mockito.mock_registry import _Dict
-from mockito.mocking import Mock
+from mockito.mock_registry import IdentityMap
 
 
-class TestCustomDictLike:
+class TestIdentityMap:
 
-    def testAssignKeyValuePair(self):
-        td = _Dict()
-        obj = {}
-        mock = Mock(None)
-
-        td[obj] = mock
+    def testSetItemIsImplemented(self):
+        td = IdentityMap()
+        key = object()
+        val = object()
+        td[key] = val
 
     def testGetValueForKey(self):
-        td = _Dict()
-        obj = {}
-        mock = Mock(None)
-        td[obj] = mock
+        td = IdentityMap()
+        key = object()
+        val = object()
+        td[key] = val
 
-        assert td.get(obj) == mock
+        assert td.get(key) == val
+        assert td.get(object(), 42) == 42
 
     def testReplaceValueForSameKey(self):
-        td = _Dict()
-        obj = {}
-        mock1 = Mock(None)
-        mock2 = Mock(None)
-        td[obj] = mock1
-        td[obj] = mock2
+        td = IdentityMap()
+        key = object()
+        mock1 = object()
+        mock2 = object()
+        td[key] = mock1
+        td[key] = mock2
 
-        assert td.pop(obj) == mock2
-        with pytest.raises(KeyError):
-            td.pop(obj)
+        assert td.values() == [mock2]
 
     def testPopKey(self):
-        td = _Dict()
-        obj = {}
-        mock = Mock(None)
-        td[obj] = mock
+        td = IdentityMap()
+        key = object()
+        val = object()
+        td[key] = val
 
-        assert td.pop(obj) == mock
-        assert td.get(obj) is None
-
-    def testIterValues(self):
-        td = _Dict()
-        obj = {}
-        mock = Mock(None)
-        td[obj] = mock
-
-        assert td.values() == [mock]
+        assert td.pop(key) == val
+        assert td.values() == []
 
     def testClear(self):
-        td = _Dict()
-        obj = {}
-        mock = Mock(None)
-        td[obj] = mock
+        td = IdentityMap()
+        key = object()
+        val = object()
+        td[key] = val
 
         td.clear()
-        assert td.get(obj) is None
+        assert td.values() == []
 
+    def testEqualityIsIgnored(self):
+        td = IdentityMap()
+        td[{"one", "two", "foo"}] = object()
+        td[{"one", "two", "foo"}] = object()
+        assert len(td.values()) == 2
