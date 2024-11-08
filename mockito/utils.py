@@ -7,7 +7,8 @@ import re
 
 
 NEEDS_OS_PATH_HACK = (
-    sys.platform == "win32" and (3, 12) <= sys.version_info < (3, 13))
+    sys.platform == "win32" and sys.version_info >= (3, 12)
+)
 
 
 def contains_strict(seq, element):
