@@ -1,6 +1,6 @@
 [project]
 name = "mockito"
-version = "1.5.4-dev"
+version = "1.5.4"
 description = "Spying framework"
 authors = [
     { name = "herr kaste", email = "herr.kaste@gmail.com" }
