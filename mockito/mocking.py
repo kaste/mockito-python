@@ -40,7 +40,7 @@ RealInvocation = Union[
 ]
 
 
-class _Dummy(object):
+class _Dummy:
     # We spell out `__call__` here for convenience. All other magic methods
     # must be configured before use, but we want `mock`s to be callable by
     # default.
