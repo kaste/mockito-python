@@ -73,3 +73,28 @@ It's basically the same problem, but we need to add support for the context mana
         assert res.text == 'Ok'
 
 
+Deepcopies
+----------
+
+Python's `deepcopy` is tied to `__deepcopy__`, in a nutshell `deepcopy(m)` will call `m.__deepcopy__()`.
+For a strict mock, `deepcopy(m)` will raise an error as long as the call is unexpected -- as usual.
+
+While you could completely fake it -- `when(m).__deepcopy__(...).thenReturn(42)` -- you could also enable
+the standard implementation by configuring the mock, e.g. `mock({"__deepcopy__": None}, strict=True)`.
+
+Dumb mocks are copied correctly by default.
+
+However, there is a possible catch: deep mutable objects must be set on the mock's instance, not the class.
+And the constructors configuration is set on the class, not the instance.  Huh?  Let's show an example:
+
+    m = mock()
+    m.foo = [1]  # <= this is set on the instance, not the class
+
+    m = mock({"foo": [1]})  # <= this is set on the class, not the instance
+
+Don't rely on that latter "feature", initially the configurataion was meant to only set methods, and especially
+special, dunder methods, -- and properties.  If we get proper support for properties, we'll likely make a change
+here too.
+
+Btw, `copy` will *just work* for strict mocks and does not raise an error when not configured/expected.  This is
+just not implemented and considered not-worth-the-effort.
