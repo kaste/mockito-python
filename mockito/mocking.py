@@ -232,7 +232,7 @@ class _OMITTED(object):
 
 OMITTED = _OMITTED()
 
-def mock(config_or_spec=None, spec=None, strict=OMITTED):
+def mock(config_or_spec=None, spec=None, strict=OMITTED):  # noqa: C901
     """Create 'empty' objects ('Mocks').
 
     Will create an empty unconfigured object, that you can pass
@@ -295,9 +295,22 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):
                 __tracebackhide__ = operator.methodcaller(
                     "errisinstance", AttributeError
                 )
-
-                raise AttributeError(
+                # deepcopy catches a possible AttributeError, fallback
+                # to an arbitrary RuntimeError
+                error_type = (
+                    RuntimeError
+                    if method_name == '__deepcopy__'
+                    else AttributeError
+                )
+                raise error_type(
                     "'Dummy' has no attribute %r configured" % method_name)
+
+            if (
+                method_name != "__call__"
+                and method_name == "__{}__".format(method_name[2:-2])
+            ):
+                raise AttributeError(method_name)
+
             return functools.partial(
                 remembered_invocation_builder, theMock, method_name)
 
