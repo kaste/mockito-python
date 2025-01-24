@@ -13,7 +13,7 @@ The 90% use case is that want to stub out a side effect. This is also known as (
 
 So in difference to traditional patching, in mockito you always specify concrete arguments (a call signature), and its outcome, usually a return value via `thenReturn` or a raised exception via `thenRaise`. That effectively turns function calls into constants for the time of the test.
 
-There are of course reasons when you don't want to overspecify specific tests. You _just_ want the desired stub answer. Here we go::
+There are of course reasons when you don't want to overspecify specific tests. You *just* want the desired stub answer. Here we go::
 
     when(os.path).exists(...).thenReturn(True)
 
