@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import functools
 import inspect
 import operator
 from collections import deque
@@ -311,8 +310,20 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):  # noqa: C901
             ):
                 raise AttributeError(method_name)
 
-            return functools.partial(
-                remembered_invocation_builder, theMock, method_name)
+            def ad_hoc_function(*args, **kwargs):
+                return remembered_invocation_builder(
+                    theMock, method_name, *args, **kwargs)
+            ad_hoc_function.__name__ = method_name
+            ad_hoc_function.__self__ = obj  # type: ignore[attr-defined]
+            if spec:
+                try:
+                    original_method = getattr(spec, method_name)
+                    ad_hoc_function.__wrapped__ = original_method  # type: ignore[attr-defined]  # noqa: E501
+                    ad_hoc_function.__doc__ = original_method.__doc__
+                except AttributeError:
+                    pass
+
+            return ad_hoc_function
 
         def __repr__(self):
             name = 'Dummy'
