@@ -6,6 +6,8 @@ Release 1.5.5
 --------------------------------
 
 - Improved behavior of the ad-hoc methods of mocks.  (#92)
+- Make the shortcut `when(mock).foo().thenReturn()` officially work and just assume
+  the user forgot the `None` as return value.
 
 
 

@@ -431,13 +431,13 @@ class AnswerSelector(object):
             invocation.mock.eat_self(invocation.method_name)
 
     def thenReturn(self, *return_values):
-        for return_value in return_values:
+        for return_value in return_values or (None,):
             answer = return_(return_value)
             self.__then(answer)
         return self
 
     def thenRaise(self, *exceptions):
-        for exception in exceptions:
+        for exception in exceptions or (Exception,):
             answer = raise_(exception)
             self.__then(answer)
         return self

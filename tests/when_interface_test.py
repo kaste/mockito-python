@@ -40,6 +40,21 @@ class TestUserExposedInterfaces:
         when(obj).update().thenReturn(None)
 
 
+class TestAnswerShortcuts:
+    def testAssumeReturnNoneIfOmitted(self):
+        dog = Dog()
+        when(dog).bark().thenReturn().thenReturn(42)
+        assert dog.bark() is None
+        assert dog.bark() == 42
+
+    def testAssumeRaiseExceptionIfOmitted(self):
+        dog = Dog()
+        when(dog).bark().thenRaise().thenReturn(42)
+        with pytest.raises(Exception):
+            dog.bark()
+        assert dog.bark() == 42
+
+
 @pytest.mark.usefixtures('unstub')
 class TestPassAroundStrictness:
 
