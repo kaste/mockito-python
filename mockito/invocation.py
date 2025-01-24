@@ -405,13 +405,13 @@ class StubbedInvocation(MatchingInvocation):
                 "\nUnused stub: %s" % self)
 
 
-def return_(value, *a, **kw):
-    def answer(*a, **kw):
+def return_(value):
+    def answer(*args, **kwargs):
         return value
     return answer
 
-def raise_(exception, *a, **kw):
-    def answer(*a, **kw):
+def raise_(exception):
+    def answer(*args, **kwargs):
         raise exception
     return answer
 
