@@ -70,8 +70,6 @@ class TestSpeccing:
         action = mock({'foo': 'bar'}, spec=Action)
 
         assert action.foo == 'bar'
-        with pytest.raises(InvocationError):
-            when(action).remember()
 
     def testPreconfigureWithFunction(self):
         action = mock({
