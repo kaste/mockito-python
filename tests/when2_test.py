@@ -1,7 +1,7 @@
 
 import pytest
 
-from mockito import when2, patch, spy2, verify
+from mockito import mock, when2, patch, spy2, verify
 from mockito.utils import newmethod
 
 
@@ -147,3 +147,19 @@ class TestFancyObjResolver:
             with pytest.raises(TypeError) as exc:
                 ptch(os.path.exists, lambda: 'boo')
             assert str(exc.value) == "could not destructure first argument"
+
+
+class TestFixIssue90:
+    def testAddAttributeToDumbMock(self):
+        m = mock()
+        when2(m.foo).thenReturn('bar')
+        assert m.foo() == 'bar'
+
+    @pytest.mark.xfail(reason=(
+        "strict mocks throw when accessing unconfigured attributes by design"
+    ))
+    def testAddAttributeToStrictMock(self):
+        m = mock(strict=True)
+        when2(m.foo).thenReturn('bar')
+        assert m.foo() == 'bar'
+

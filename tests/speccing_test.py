@@ -33,6 +33,7 @@ class Action(object):
         pass
 
     def run(self, arg):
+        """this is a docstring"""
         return arg
 
     def __call__(self, task):
@@ -46,7 +47,6 @@ class TestSpeccing:
         when(action).run(11).thenReturn(12)
         assert action.run(11) == 12
         verify(action).run(11)
-
 
     def testShouldScreamWhenStubbingUnknownMethod(self):
         action = mock(Action)
@@ -102,25 +102,46 @@ class TestSpeccing:
 
         assert isinstance(action, Action)
 
-    def testShouldPassIsInstanceChecks_2(self):
-        action = mock(spec=Action)
+    class TestVariousConstructorForms:
+        def testUsingKeywordArg(self):
+            action = mock(spec=Action)
 
-        assert isinstance(action, Action)
+            assert isinstance(action, Action)
 
-    def testShouldPassIsInstanceChecks_3(self):
-        action = mock({}, Action)
+        def testUsingPositionalArg(self):
+            action = mock(Action)
 
-        assert isinstance(action, Action)
+            assert isinstance(action, Action)
 
-    def testShouldPassIsInstanceChecks_4(self):
-        action = mock({}, spec=Action)
+        def testKeywordAfterConfigurationObject(self):
+            action = mock({}, spec=Action)
 
-        assert isinstance(action, Action)
+            assert isinstance(action, Action)
 
-    def testHasANiceName(self):
+        def testPositionalArgAfterConfigurationObject(self):
+            action = mock({}, Action)
+
+            assert isinstance(action, Action)
+
+    def testMockHasANiceName(self):
         action = mock(Action)
 
         assert repr(action) == "<DummyAction id=%s>" % id(action)
+
+    def testConfiguredMethodHasCorrectName(self):
+        action = mock(Action)
+        when(action).run(11).thenReturn(12)
+        assert action.run.__name__ == 'run'
+
+    def testConfiguredMethodIsBound(self):
+        action = mock(Action)
+        when(action).run(11).thenReturn(12)
+        assert action.run.__self__ == action
+
+    def testConfiguredMethodHasCorrectDocstring(self):
+        action = mock(Action)
+        when(action).run(11).thenReturn(12)
+        assert action.run.__doc__ == 'this is a docstring'
 
 
 class TestSpeccingLoose:
