@@ -443,6 +443,8 @@ class AnswerSelector(object):
         return self
 
     def thenAnswer(self, *callables):
+        if not callables:
+            raise TypeError("No answer function provided")
         for callable in callables:
             answer = callable
             if self.discard_first_arg:

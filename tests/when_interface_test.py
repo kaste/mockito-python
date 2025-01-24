@@ -47,6 +47,12 @@ class TestAnswerShortcuts:
         assert dog.bark() is None
         assert dog.bark() == 42
 
+    def testRaiseIfAnswerIsOmitted(self):
+        dog = Dog()
+        with pytest.raises(TypeError) as exc:
+            when(dog).bark().thenAnswer()
+        assert str(exc.value) == "No answer function provided"
+
     def testAssumeRaiseExceptionIfOmitted(self):
         dog = Dog()
         when(dog).bark().thenRaise().thenReturn(42)
