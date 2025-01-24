@@ -405,13 +405,13 @@ class StubbedInvocation(MatchingInvocation):
                 "\nUnused stub: %s" % self)
 
 
-def return_(value, *a, **kw):
-    def answer(*a, **kw):
+def return_(value):
+    def answer(*args, **kwargs):
         return value
     return answer
 
-def raise_(exception, *a, **kw):
-    def answer(*a, **kw):
+def raise_(exception):
+    def answer(*args, **kwargs):
         raise exception
     return answer
 
@@ -431,18 +431,20 @@ class AnswerSelector(object):
             invocation.mock.eat_self(invocation.method_name)
 
     def thenReturn(self, *return_values):
-        for return_value in return_values:
+        for return_value in return_values or (None,):
             answer = return_(return_value)
             self.__then(answer)
         return self
 
     def thenRaise(self, *exceptions):
-        for exception in exceptions:
+        for exception in exceptions or (Exception,):
             answer = raise_(exception)
             self.__then(answer)
         return self
 
     def thenAnswer(self, *callables):
+        if not callables:
+            raise TypeError("No answer function provided")
         for callable in callables:
             answer = callable
             if self.discard_first_arg:

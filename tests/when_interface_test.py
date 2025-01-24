@@ -19,7 +19,7 @@ class Unhashable(object):
 
 
 @pytest.mark.usefixtures('unstub')
-class TestUserExposedInterfaces:
+class TestEnsureEmptyInterfacesAreReturned:
 
     def testWhen(self):
         whening = when(Dog)
@@ -35,9 +35,30 @@ class TestUserExposedInterfaces:
         assert verifying.__dict__ == {}
 
 
-    def testEnsureUnhashableObjectCanBeMocked(self):
-        obj = Unhashable()
-        when(obj).update().thenReturn(None)
+def testEnsureUnhashableObjectCanBeMocked():
+    obj = Unhashable()
+    when(obj).update().thenReturn(None)
+
+
+class TestAnswerShortcuts:
+    def testAssumeReturnNoneIfOmitted(self):
+        dog = Dog()
+        when(dog).bark().thenReturn().thenReturn(42)
+        assert dog.bark() is None
+        assert dog.bark() == 42
+
+    def testRaiseIfAnswerIsOmitted(self):
+        dog = Dog()
+        with pytest.raises(TypeError) as exc:
+            when(dog).bark().thenAnswer()
+        assert str(exc.value) == "No answer function provided"
+
+    def testAssumeRaiseExceptionIfOmitted(self):
+        dog = Dog()
+        when(dog).bark().thenRaise().thenReturn(42)
+        with pytest.raises(Exception):
+            dog.bark()
+        assert dog.bark() == 42
 
 
 @pytest.mark.usefixtures('unstub')
@@ -92,13 +113,22 @@ class TestPassAroundStrictness:
         verify(Dog).waggle()
         verify(Dog).weggle()
 
-    # Where to put this test?
-    def testEnsureAddedAttributesGetRemovedOnUnstub(self):
+
+class TestEnsureAddedAttributesGetRemovedOnUnstub:
+    def testWhenPatchingTheClass(self):
         with when(Dog, strict=False).wggle():
             pass
 
         with pytest.raises(AttributeError):
-            getattr(Dog, 'wggle')
+            Dog.wggle
+
+    def testWhenPatchingAnInstance(self):
+        dog = Dog()
+        with when(dog, strict=False).wggle():
+            pass
+
+        with pytest.raises(AttributeError):
+            dog.wggle
 
 
 @pytest.mark.usefixtures('unstub')

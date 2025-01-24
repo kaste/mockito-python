@@ -194,9 +194,12 @@ def when(obj, strict=True):
     expected call counts up front.
 
     If your function is pure side effect and does not return something, you
-    can omit the specific answer. The default then is `None`::
+    can omit the specific answer. The function will then return `None` as by
+    default for Python functions::
 
-        when(manager).do_work()
+        when(manager).do_work().thenReturn()
+        # However, using `expect` may read better.
+        expect(manager).do_work()
 
     `when` verifies the method name, the expected argument signature, and the
     actual, factual arguments your code under test uses against the original
