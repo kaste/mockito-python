@@ -65,8 +65,14 @@ def get_function_host(fn):
 
         obj, name = find_invoking_frame_and_try_parse()
         # safety check!
-        assert getattr(obj, name) == fn
-
+        assert getattr(obj, name) == fn, (
+            "`getattr(obj, name) != fn` where\n"
+            "fn: %s\n"
+            "obj: %s\n"
+            "name: %s\n"
+            "getattr(obj, name): %s\n"
+            % (fn, obj, name, getattr(obj, name))
+        )
 
     return obj, name
 
