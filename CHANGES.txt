@@ -2,7 +2,7 @@ MOCKITO CHANGE LOG
 ==================
 
 
-Release 1.5.5
+Release 1.6.0
 --------------------------------
 
 - Improved behavior of the ad-hoc methods of mocks.  (#92)
