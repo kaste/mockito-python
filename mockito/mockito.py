@@ -23,7 +23,7 @@ import operator
 from . import invocation
 from . import verification
 
-from .utils import get_obj, get_obj_attr_tuple
+from .utils import deprecated, get_obj, get_obj_attr_tuple
 from .mocking import Mock
 from .mock_registry import mock_registry
 from .verification import VerificationError
@@ -421,16 +421,11 @@ def verifyExpectedInteractions(*objs):
             i.verify()
 
 
+@deprecated(
+    "'verifyNoUnwantedInteractions' is deprecated. "
+    "Use 'verifyExpectedInteractions' instead."
+)
 def verifyNoUnwantedInteractions(*args, **kwargs):
-    import warnings
-    warnings.warn(
-        (
-            "'verifyNoUnwantedInteractions' is deprecated. Use "
-            "'verifyExpectations' instead."
-        ),
-        DeprecationWarning,
-        stacklevel=2
-    )
     return verifyExpectedInteractions(*args, **kwargs)
 
 verifyNoUnwantedInteractions.__doc__ = (  # noqa: E305
