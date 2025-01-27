@@ -31,8 +31,9 @@ from .mockito import (
     verify,
     verifyNoMoreInteractions,
     verifyZeroInteractions,
-    verifyNoUnwantedInteractions,
+    verifyExpectedInteractions,
     verifyStubbedInvocationsAreUsed,
+    verifyNoUnwantedInteractions,  # deprecated
     ArgumentError,
 )
 from . import inorder
@@ -57,15 +58,18 @@ __all__ = [
     'verify',
     'verifyNoMoreInteractions',
     'verifyZeroInteractions',
-    'verifyNoUnwantedInteractions',
+    'verifyExpectedInteractions',
     'verifyStubbedInvocationsAreUsed',
     'inorder',
     'unstub',
     'forget_invocations',
     'VerificationError',
     'ArgumentError',
+
     'any',  # compatibility
     'contains',  # compatibility
     'never',  # compatibility
+
     'times',  # deprecated
+    'verifyNoUnwantedInteractions',  # deprecated
 ]

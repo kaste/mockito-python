@@ -303,12 +303,12 @@ def expect(obj, strict=True,
         dog.bark('Wuff')  # will throw at call time: too many invocations
 
         # maybe if you need to ensure that `dog.bark()` was called at all
-        verifyNoUnwantedInteractions()
+        verifyExpectedInteractions()
 
     .. note:: You must :func:`unstub` after stubbing, or use `with`
         statement.
 
-    See :func:`when`, :func:`when2`, :func:`verifyNoUnwantedInteractions`
+    See :func:`when`, :func:`when2`, :func:`verifyExpectedInteractions`
 
     """
 
@@ -363,7 +363,7 @@ def forget_invocations(*objs):
 
 
 def verifyNoMoreInteractions(*objs):
-    verifyNoUnwantedInteractions(*objs)
+    verifyExpectedInteractions(*objs)
 
     for obj in objs:
         theMock = _get_mock_or_raise(obj)
@@ -392,14 +392,14 @@ def verifyZeroInteractions(*objs):
 
 
 
-def verifyNoUnwantedInteractions(*objs):
+def verifyExpectedInteractions(*objs):
     """Verifies that expectations set via `expect` are met
 
     E.g.::
 
         expect(os.path, times=1).exists(...).thenReturn(True)
         os.path('/foo')
-        verifyNoUnwantedInteractions(os.path)  # ok, called once
+        verifyExpectedInteractions(os.path)  # ok, called once
 
     If you leave out the argument *all* registered objects will
     be checked.
@@ -419,6 +419,25 @@ def verifyNoUnwantedInteractions(*objs):
     for mock in theMocks:
         for i in mock.stubbed_invocations:
             i.verify()
+
+
+def verifyNoUnwantedInteractions(*args, **kwargs):
+    import warnings
+    warnings.warn(
+        (
+            "'verifyNoUnwantedInteractions' is deprecated. Use "
+            "'verifyExpectations' instead."
+        ),
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return verifyExpectedInteractions(*args, **kwargs)
+
+verifyNoUnwantedInteractions.__doc__ = (  # noqa: E305
+    verifyExpectedInteractions.__doc__    # type: ignore[operator]
+    + "\n\nDeprecated: Use 'verifyExpectedInteractions' instead."
+)
+
 
 def verifyStubbedInvocationsAreUsed(*objs):
     """Ensure stubs are actually used.

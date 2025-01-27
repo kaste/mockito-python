@@ -20,8 +20,15 @@
 
 import pytest
 
-from mockito import (mock, when, verify, VerificationError,
-                     verifyNoMoreInteractions, verification)
+from mockito import (
+    mock,
+    when,
+    verification,
+    verify,
+    verifyNoMoreInteractions,
+    verifyNoUnwantedInteractions,
+    VerificationError,
+)
 from mockito.verification import never
 
 
@@ -147,3 +154,14 @@ class TestReprOfVerificationClasses:
     def testBetween(self):
         between = verification.Between(1, 2)
         assert repr(between) == "<Between [1, 2]>"
+
+    def testVerifyNoUnwantedInteractionsIsDeprecated(self):
+        theMock = mock()
+        with pytest.warns(DeprecationWarning) as record:
+            verifyNoUnwantedInteractions(theMock)
+
+        assert len(record) == 1
+        assert str(record[0].message) == (
+            "'verifyNoUnwantedInteractions' is deprecated. "
+            "Use 'verifyExpectedInteractions' instead."
+        )

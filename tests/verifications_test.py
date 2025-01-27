@@ -24,7 +24,7 @@ from .test_base import TestBase
 from mockito import (
     mock, when, verify, forget_invocations, inorder, VerificationError,
     ArgumentError, verifyNoMoreInteractions, verifyZeroInteractions,
-    verifyNoUnwantedInteractions, verifyStubbedInvocationsAreUsed,
+    verifyExpectedInteractions, verifyStubbedInvocationsAreUsed,
     any)
 from mockito.verification import never
 
@@ -354,7 +354,7 @@ class TestRaiseOnUnknownObjects:
         verify,
         verifyNoMoreInteractions,
         verifyZeroInteractions,
-        verifyNoUnwantedInteractions,
+        verifyExpectedInteractions,
         verifyStubbedInvocationsAreUsed
     ])
     def testVerifyShouldRaise(self, verification_fn):

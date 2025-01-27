@@ -2,7 +2,7 @@
 import pytest
 
 from mockito import (when, when2, expect, verify, patch, mock, spy2,
-                     verifyNoUnwantedInteractions)
+                     verifyExpectedInteractions)
 from mockito.invocation import InvocationError
 
 class Dog(object):
@@ -152,7 +152,7 @@ class TestDottedPaths:
         import os.path
         os.path.exists('/Foo')
         assert os.path.exists('/Foo')
-        verifyNoUnwantedInteractions()
+        verifyExpectedInteractions()
 
     def testPatch(self):
         dummy = mock()
