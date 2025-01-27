@@ -38,14 +38,6 @@ __tracebackhide__ = operator.methodcaller(
 )
 
 
-def _multiple_arguments_in_use(*args):
-    return len([x for x in args if x]) > 1
-
-
-def _invalid_argument(value):
-    return (value is not None and value < 1) or value == 0
-
-
 def _invalid_between(between):
     if between is not None:
         try:
@@ -57,39 +49,46 @@ def _invalid_between(between):
             return True
     return False
 
+
 def _get_wanted_verification(
         times=None, atleast=None, atmost=None, between=None):
-    if times is not None and times < 0:
-        raise ArgumentError("'times' argument has invalid value.\n"
-                            "It should be at least 0. You wanted to set it to:"
-                            " %i" % times)
-    if _multiple_arguments_in_use(atleast, atmost, between):
+    if (times, atleast, atmost, between).count(None) < 3:
         raise ArgumentError(
-            "You can set only one of the arguments: 'atleast', "
+            "You can set only one of the arguments: 'times', 'atleast', "
             "'atmost' or 'between'.")
-    if _invalid_argument(atleast):
-        raise ArgumentError("'atleast' argument has invalid value.\n"
-                            "It should be at least 1.  You wanted to set it "
-                            "to: %i" % atleast)
-    if _invalid_argument(atmost):
-        raise ArgumentError("'atmost' argument has invalid value.\n"
-                            "It should be at least 1.  You wanted to set it "
-                            "to: %i" % atmost)
-    if _invalid_between(between):
-        raise ArgumentError(
-            """'between' argument has invalid value.
-It should consist of positive values with second number not greater
-than first e.g. (1, 4) or (0, 3) or (2, 2).
-You wanted to set it to: %s""" % (between,))
 
-    if atleast:
-        return verification.AtLeast(atleast)
-    elif atmost:
-        return verification.AtMost(atmost)
-    elif between:
-        return verification.Between(*between)
-    elif times is not None:
+    if times is not None:
+        if times < 0:
+            raise ArgumentError(
+                "'times' argument has invalid value.\n"
+                f"It should be at least 0.  You wanted to set it to: {times}"
+            )
         return verification.Times(times)
+    if atleast is not None:
+        if atleast < 1:
+            raise ArgumentError(
+                "'atleast' argument has invalid value.\n"
+                f"It should be at least 1.  You wanted to set it to: {atleast}"
+            )
+        return verification.AtLeast(atleast)
+    if atmost is not None:
+        if atmost < 1:
+            raise ArgumentError(
+                "'atmost' argument has invalid value.\n"
+                f"It should be at least 1.  You wanted to set it to: {atmost}"
+            )
+        return verification.AtMost(atmost)
+    if between is not None:
+        if _invalid_between(between):
+            raise ArgumentError(
+                "'between' argument has invalid value.\n"
+                "It should consist of positive values with second number "
+                "greater than first e.g. (1, 4) or (0, 3) or (2, 2).  "
+                f"You wanted to set it to: {between}"
+            )
+        return verification.Between(*between)
+    return None
+
 
 def _get_mock(obj, strict=True):
     theMock = mock_registry.mock_for(obj)
@@ -104,7 +103,7 @@ def _get_mock_or_raise(obj):
         raise ArgumentError("obj '%s' is not registered" % obj)
     return theMock
 
-def verify(obj, times=1, atleast=None, atmost=None, between=None,
+def verify(obj, times=None, atleast=None, atmost=None, between=None,
            inorder=False):
     """Central interface to verify interactions.
 
@@ -131,8 +130,11 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
     if isinstance(obj, str):
         obj = get_obj(obj)
 
-    verification_fn = _get_wanted_verification(
-        times=times, atleast=atleast, atmost=atmost, between=between)
+    verification_fn = (
+        _get_wanted_verification(
+            times=times, atleast=atleast, atmost=atmost, between=between
+        ) or verification.Times(1)
+    )
     if inorder:
         verification_fn = verification.InOrder(verification_fn)
 
