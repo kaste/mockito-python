@@ -24,6 +24,6 @@ This looks like a plethora of verification functions, and especially since  you 
 .. autofunction:: verifyExpectations
 .. autofunction:: verifyStubbedInvocationsAreUsed
 
-Note that `verifyExpectations` earlier name was `verifyNoUnwantedInteractions`.
-Th eusage of `verifyNoUnwantedInteractions` is deprecated.
+Note that `verifyExpectations` was named `verifyNoUnwantedInteractions` in v1.
+The usage of `verifyNoUnwantedInteractions` is deprecated.
 
