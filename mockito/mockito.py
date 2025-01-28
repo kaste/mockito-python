@@ -387,6 +387,11 @@ def ensureNoUnverifiedInteractions(*objs):
 def verifyNoMoreInteractions(*objs):
     return ensureNoUnverifiedInteractions(*objs)
 
+verifyNoMoreInteractions.__doc__ = (        # noqa: E305
+    ensureNoUnverifiedInteractions.__doc__  # type: ignore[operator]
+    + "\n\nDeprecated: Use 'ensureNoUnverifiedInteractions' instead."
+)
+
 
 def verifyZeroInteractions(*objs):
     """Verify that no methods have been called on given objs.
