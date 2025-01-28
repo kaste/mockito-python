@@ -396,11 +396,14 @@ verifyNoMoreInteractions.__doc__ = (        # noqa: E305
 def verifyZeroInteractions(*objs):
     """Verify that no methods have been called on given objs.
 
-    Note that strict mocks usually throw early on unexpected, unstubbed
-    invocations. Partial mocks ('monkeypatched' objects or modules) do not
-    support this functionality at all, bc only for the stubbed invocations
-    the actual usage gets recorded. So this function is of limited use,
-    nowadays.
+    Rarely used because `verify(..., times=0)` is more explicit.  Also:
+    strict mocks usually throw early on unexpected, unstubbed invocations.
+    For them, there may be no need to verify afterwards.
+    `expect(..., times=0)` may also appropriate.
+
+    Partial mocks ('monkeypatched' objects or modules) only look at the
+    stubbed invocations as the actual usage gets recorded only for them.
+    However, you could use `spy` and inject it.
 
     """
     for obj in objs:
