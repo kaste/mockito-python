@@ -380,19 +380,6 @@ def ensureNoUnverifiedInteractions(*objs):
                 raise VerificationError("\nUnwanted interaction: %s" % i)
 
 
-@deprecated(
-    "'verifyNoMoreInteractions' is deprecated. "
-    "Use 'ensureNoUnverifiedInteractions' instead."
-)
-def verifyNoMoreInteractions(*objs):
-    return ensureNoUnverifiedInteractions(*objs)
-
-verifyNoMoreInteractions.__doc__ = (        # noqa: E305
-    ensureNoUnverifiedInteractions.__doc__  # type: ignore[operator]
-    + "\n\nDeprecated: Use 'ensureNoUnverifiedInteractions' instead."
-)
-
-
 def verifyZeroInteractions(*objs):
     """Verify that no methods have been called on given objs.
 
@@ -444,19 +431,6 @@ def verifyExpectedInteractions(*objs):
             i.verify()
 
 
-@deprecated(
-    "'verifyNoUnwantedInteractions' is deprecated. "
-    "Use 'verifyExpectedInteractions' instead."
-)
-def verifyNoUnwantedInteractions(*args, **kwargs):
-    return verifyExpectedInteractions(*args, **kwargs)
-
-verifyNoUnwantedInteractions.__doc__ = (  # noqa: E305
-    verifyExpectedInteractions.__doc__    # type: ignore[operator]
-    + "\n\nDeprecated: Use 'verifyExpectedInteractions' instead."
-)
-
-
 def verifyStubbedInvocationsAreUsed(*objs):
     """Ensure stubs are actually used.
 
@@ -474,3 +448,29 @@ def verifyStubbedInvocationsAreUsed(*objs):
     for mock in theMocks:
         for i in mock.stubbed_invocations:
             i.check_used()
+
+
+@deprecated(
+    "'verifyNoMoreInteractions' is deprecated. "
+    "Use 'ensureNoUnverifiedInteractions' instead."
+)
+def verifyNoMoreInteractions(*objs):
+    return ensureNoUnverifiedInteractions(*objs)
+
+verifyNoMoreInteractions.__doc__ = (        # noqa: E305
+    ensureNoUnverifiedInteractions.__doc__  # type: ignore[operator]
+    + "\n\nDeprecated: Use 'ensureNoUnverifiedInteractions' instead."
+)
+
+
+@deprecated(
+    "'verifyNoUnwantedInteractions' is deprecated. "
+    "Use 'verifyExpectedInteractions' instead."
+)
+def verifyNoUnwantedInteractions(*args, **kwargs):
+    return verifyExpectedInteractions(*args, **kwargs)
+
+verifyNoUnwantedInteractions.__doc__ = (  # noqa: E305
+    verifyExpectedInteractions.__doc__    # type: ignore[operator]
+    + "\n\nDeprecated: Use 'verifyExpectedInteractions' instead."
+)
