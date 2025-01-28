@@ -19,11 +19,15 @@ Stable entrypoints are: :func:`when`, :func:`mock`, :func:`unstub`, :func:`verif
 This looks like a plethora of verification functions, and especially since  you often don't need to `verify` at all.
 
 .. autofunction:: verify
-.. autofunction:: verifyNoMoreInteractions
 .. autofunction:: verifyZeroInteractions
 .. autofunction:: verifyExpectations
-.. autofunction:: verifyStubbedInvocationsAreUsed
 
 Note that `verifyExpectations` was named `verifyNoUnwantedInteractions` in v1.
 The usage of `verifyNoUnwantedInteractions` is deprecated.
+
+.. autofunction:: verifyStubbedInvocationsAreUsed
+.. autofunction:: ensureNoUnverifiedInteractions
+
+Note that `ensureNoUnverifiedInteractions` was named `verifyNoMoreInteractions` in v1.
+The usage of `verifyNoMoreInteractions` is deprecated.
 
