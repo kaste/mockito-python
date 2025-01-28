@@ -446,6 +446,11 @@ def verifyExpectedInteractions(*objs):
 def verifyNoUnwantedInteractions(*args, **kwargs):
     return verifyExpectedInteractions(*args, **kwargs)
 
+verifyNoUnwantedInteractions.__doc__ = (  # noqa: E305
+    verifyExpectedInteractions.__doc__    # type: ignore[operator]
+    + "\n\nDeprecated: Use 'verifyExpectedInteractions' instead."
+)
+
 
 def verifyStubbedInvocationsAreUsed(*objs):
     """Ensure stubs are actually used.
