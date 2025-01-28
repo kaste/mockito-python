@@ -22,7 +22,7 @@ import pytest
 
 from .test_base import TestBase
 from mockito import (
-    mock, when, expect, unstub, ANY, verify, verifyNoMoreInteractions,
+    mock, when, expect, unstub, ANY, verify, ensureNoUnverifiedInteractions,
     verifyZeroInteractions, verifyExpectedInteractions,
     verifyStubbedInvocationsAreUsed)
 from mockito.invocation import InvocationError
@@ -204,28 +204,28 @@ Stubbed invocations are:
 
 class TestVerifyInteractions:
     class TestZeroInteractions:
-        def testVerifyNoMoreInteractionsWorks(self):
+        def testEnsureNoUnverifiedInteractionsWorks(self):
             when(Dog).bark('Miau')
-            verifyNoMoreInteractions(Dog)
+            ensureNoUnverifiedInteractions(Dog)
 
         def testVerifyZeroInteractionsWorks(self):
             when(Dog).bark('Miau')
             verifyZeroInteractions(Dog)
 
     class TestOneInteraction:
-        def testNothingVerifiedVerifyNoMoreInteractionsRaises(self):
+        def testNothingVerifiedEnsureNoUnverifiedInteractionsRaises(self):
             when(Dog).bark('Miau')
             rex = Dog()
             rex.bark('Miau')
             with pytest.raises(VerificationError):
-                verifyNoMoreInteractions(Dog)
+                ensureNoUnverifiedInteractions(Dog)
 
-        def testIfVerifiedVerifyNoMoreInteractionsPasses(self):
+        def testIfVerifiedEnsureNoUnverifiedInteractionsPasses(self):
             when(Dog).bark('Miau')
             rex = Dog()
             rex.bark('Miau')
             verify(Dog).bark('Miau')
-            verifyNoMoreInteractions(Dog)
+            ensureNoUnverifiedInteractions(Dog)
 
         def testNothingVerifiedVerifyZeroInteractionsRaises(self):
             when(Dog).bark('Miau')
@@ -281,7 +281,7 @@ class TestEnsureStubsAreUsed:
         def testPassIfVerifiedNoMoreInteractions(self):
             dog = mock()
             when(dog).waggle(1).thenReturn('Sure')
-            verifyNoMoreInteractions(dog)
+            ensureNoUnverifiedInteractions(dog)
 
             verifyStubbedInvocationsAreUsed(dog)
 
@@ -384,13 +384,13 @@ class TestImplicitVerificationsUsingExpect:
         with pytest.raises(InvocationError):
             rex.bark('Miau')
 
-    def testVerifyNoMoreInteractionsWorks(self, verification):
+    def testEnsureNoUnverifiedInteractionsWorks(self, verification):
         rex = Dog()
         expect(rex, **verification).bark('Miau').thenReturn('Wuff')
         rex.bark('Miau')
         rex.bark('Miau')
 
-        verifyNoMoreInteractions(rex)
+        ensureNoUnverifiedInteractions(rex)
 
     def testVerifyExpectationsWorks(self, verification):
         rex = Dog()
@@ -405,12 +405,12 @@ class TestImplicitVerificationsUsingExpect:
         {'atleast': 2},
         {'between': [1, 2]}
     ], ids=['times', 'atleast', 'between'])
-    def testVerifyNoMoreInteractionsBarksIfUnsatisfied(self, verification):
+    def testEnsureNoUnverifiedInteractionsBarksIfUnsatisfied(self, verification):  # noqa: E501
         rex = Dog()
         expect(rex, **verification).bark('Miau').thenReturn('Wuff')
 
         with pytest.raises(VerificationError):
-            verifyNoMoreInteractions(rex)
+            ensureNoUnverifiedInteractions(rex)
 
     @pytest.mark.parametrize('verification', [
         {'times': 2},
@@ -449,11 +449,11 @@ class TestImplicitVerificationsUsingExpect:
     def testExpectWitoutVerification(self):
         rex = Dog()
         expect(rex).bark('Miau').thenReturn('Wuff')
-        verifyNoMoreInteractions(rex)
+        ensureNoUnverifiedInteractions(rex)
 
         rex.bark('Miau')
         with pytest.raises(VerificationError):
-            verifyNoMoreInteractions(rex)
+            ensureNoUnverifiedInteractions(rex)
 
     # Where to put this test? During first implementation I broke this
     def testEnsureWhenGetsNotConfused(self):
@@ -461,7 +461,7 @@ class TestImplicitVerificationsUsingExpect:
         when(m).foo(1).thenReturn()
         m.foo(1)
         with pytest.raises(VerificationError):
-            verifyNoMoreInteractions(m)
+            ensureNoUnverifiedInteractions(m)
 
     def testEnsureMultipleExpectsArentConfused(self):
         rex = Dog()

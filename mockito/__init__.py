@@ -28,12 +28,13 @@ from .mockito import (
     expect,
     unstub,
     forget_invocations,
+    ensureNoUnverifiedInteractions,
     verify,
-    verifyNoMoreInteractions,
     verifyZeroInteractions,
     verifyExpectedInteractions,
     verifyStubbedInvocationsAreUsed,
     verifyNoUnwantedInteractions,  # deprecated
+    verifyNoMoreInteractions,  # deprecated
     ArgumentError,
 )
 from . import inorder
@@ -55,8 +56,8 @@ __all__ = [
     'when2',
     'patch',
     'expect',
+    'ensureNoUnverifiedInteractions',
     'verify',
-    'verifyNoMoreInteractions',
     'verifyZeroInteractions',
     'verifyExpectedInteractions',
     'verifyStubbedInvocationsAreUsed',
@@ -72,4 +73,5 @@ __all__ = [
 
     'times',  # deprecated
     'verifyNoUnwantedInteractions',  # deprecated
+    'verifyNoMoreInteractions',  # deprecated
 ]

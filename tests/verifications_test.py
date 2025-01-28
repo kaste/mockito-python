@@ -23,7 +23,7 @@ import pytest
 from .test_base import TestBase
 from mockito import (
     mock, when, verify, forget_invocations, inorder, VerificationError,
-    ArgumentError, verifyNoMoreInteractions, verifyZeroInteractions,
+    ArgumentError, ensureNoUnverifiedInteractions, verifyZeroInteractions,
     verifyExpectedInteractions, verifyStubbedInvocationsAreUsed,
     any)
 from mockito.verification import never
@@ -307,12 +307,13 @@ class VerifyNoMoreInteractionsTest(TestBase):
 
         verify(mockOne).foo()
         verify(mockTwo).bar()
-        verifyNoMoreInteractions(mockOne, mockTwo)
+        ensureNoUnverifiedInteractions(mockOne, mockTwo)
 
     def testFails(self):
         theMock = mock()
         theMock.foo()
-        self.assertRaises(VerificationError, verifyNoMoreInteractions, theMock)
+        self.assertRaises(
+            VerificationError, ensureNoUnverifiedInteractions, theMock)
 
 
 class VerifyZeroInteractionsTest(TestBase):
@@ -321,7 +322,7 @@ class VerifyZeroInteractionsTest(TestBase):
         verifyZeroInteractions(theMock)
         theMock.foo()
         self.assertRaises(
-            VerificationError, verifyNoMoreInteractions, theMock)
+            VerificationError, ensureNoUnverifiedInteractions, theMock)
 
 
 class ClearInvocationsTest(TestBase):
@@ -352,7 +353,7 @@ class ClearInvocationsTest(TestBase):
 class TestRaiseOnUnknownObjects:
     @pytest.mark.parametrize('verification_fn', [
         verify,
-        verifyNoMoreInteractions,
+        ensureNoUnverifiedInteractions,
         verifyZeroInteractions,
         verifyExpectedInteractions,
         verifyStubbedInvocationsAreUsed

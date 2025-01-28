@@ -362,7 +362,14 @@ def forget_invocations(*objs):
         theMock.clear_invocations()
 
 
-def verifyNoMoreInteractions(*objs):
+def ensureNoUnverifiedInteractions(*objs):
+    """Check if any given object has any unverified interaction.
+
+    You can use this after `verify`-ing to ensure no other interactions
+    happened.
+
+    Can lead to over-specified tests.
+    """
     verifyExpectedInteractions(*objs)
 
     for obj in objs:
@@ -371,6 +378,19 @@ def verifyNoMoreInteractions(*objs):
         for i in theMock.invocations:
             if not i.verified:
                 raise VerificationError("\nUnwanted interaction: %s" % i)
+
+
+@deprecated(
+    "'verifyNoMoreInteractions' is deprecated. "
+    "Use 'ensureNoUnverifiedInteractions' instead."
+)
+def verifyNoMoreInteractions(*objs):
+    return ensureNoUnverifiedInteractions(*objs)
+
+verifyNoMoreInteractions.__doc__ = (        # noqa: E305
+    ensureNoUnverifiedInteractions.__doc__  # type: ignore[operator]
+    + "\n\nDeprecated: Use 'ensureNoUnverifiedInteractions' instead."
+)
 
 
 def verifyZeroInteractions(*objs):

@@ -389,8 +389,8 @@ class StubbedInvocation(MatchingInvocation):
 
         # The way mockito's `verify` works is, that it checks off all 'real',
         # remembered invocations, if they get verified. This is a simple
-        # mechanism so that a later `verifyNoMoreInteractions` just has to
-        # ensure that all invocations have this flag set to ``True``.
+        # mechanism so that a later `ensureNoUnverifiedInteractions` just has
+        # to ensure that all invocations have this flag set to ``True``.
         # For verifications set up via `expect` we want all invocations
         # to get verified 'implicitly', on-the-go, so we set this flag here.
         invocation.verified = True
