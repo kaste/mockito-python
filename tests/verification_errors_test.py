@@ -164,7 +164,7 @@ class TestReprOfVerificationClasses:
         assert len(record) == 1
         assert str(record[0].message) == (
             "'verifyNoUnwantedInteractions' is deprecated. "
-            "Use 'verifyExpectations' instead."
+            "Use 'verifyExpectedInteractions' instead."
         )
 
     def testVerifyNoMoreInteractionsIsDeprecated(self):

@@ -4,7 +4,7 @@
 The functions
 =============
 
-Stable entrypoints are: :func:`when`, :func:`mock`, :func:`unstub`, :func:`verify`, :func:`spy`. New function introduced in v1 are: :func:`when2`, :func:`expect`, :func:`verifyExpectations`, :func:`verifyStubbedInvocationsAreUsed`, :func:`patch`
+Stable entrypoints are: :func:`when`, :func:`mock`, :func:`unstub`, :func:`verify`, :func:`spy`. New function introduced in v1 are: :func:`when2`, :func:`expect`, :func:`verifyExpectedInteractions`, :func:`verifyStubbedInvocationsAreUsed`, :func:`patch`
 
 .. autofunction:: when
 .. autofunction:: when2
@@ -20,9 +20,9 @@ This looks like a plethora of verification functions, and especially since  you 
 
 .. autofunction:: verify
 .. autofunction:: verifyZeroInteractions
-.. autofunction:: verifyExpectations
+.. autofunction:: verifyExpectedInteractions
 
-Note that `verifyExpectations` was named `verifyNoUnwantedInteractions` in v1.
+Note that `verifyExpectedInteractions` was named `verifyNoUnwantedInteractions` in v1.
 The usage of `verifyNoUnwantedInteractions` is deprecated.
 
 .. autofunction:: verifyStubbedInvocationsAreUsed

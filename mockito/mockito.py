@@ -303,12 +303,12 @@ def expect(obj, strict=True,
         dog.bark('Wuff')  # will throw at call time: too many invocations
 
         # maybe if you need to ensure that `dog.bark()` was called at all
-        verifyExpectations()
+        verifyExpectedInteractions()
 
     .. note:: You must :func:`unstub` after stubbing, or use `with`
         statement.
 
-    See :func:`when`, :func:`when2`, :func:`verifyExpectations`
+    See :func:`when`, :func:`when2`, :func:`verifyExpectedInteractions`
 
     """
 
@@ -370,7 +370,7 @@ def ensureNoUnverifiedInteractions(*objs):
 
     Can lead to over-specified tests.
     """
-    verifyExpectations(*objs)
+    verifyExpectedInteractions(*objs)
 
     for obj in objs:
         theMock = _get_mock_or_raise(obj)
@@ -410,14 +410,14 @@ def verifyZeroInteractions(*objs):
 
 
 
-def verifyExpectations(*objs):
+def verifyExpectedInteractions(*objs):
     """Verifies that expectations set via `expect` are met
 
     E.g.::
 
         expect(os.path, times=1).exists(...).thenReturn(True)
         os.path('/foo')
-        verifyExpectations(os.path)  # ok, called once
+        verifyExpectedInteractions(os.path)  # ok, called once
 
     If you leave out the argument *all* registered objects will
     be checked.
@@ -441,10 +441,10 @@ def verifyExpectations(*objs):
 
 @deprecated(
     "'verifyNoUnwantedInteractions' is deprecated. "
-    "Use 'verifyExpectations' instead."
+    "Use 'verifyExpectedInteractions' instead."
 )
 def verifyNoUnwantedInteractions(*args, **kwargs):
-    return verifyExpectations(*args, **kwargs)
+    return verifyExpectedInteractions(*args, **kwargs)
 
 
 def verifyStubbedInvocationsAreUsed(*objs):

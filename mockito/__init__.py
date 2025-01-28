@@ -31,7 +31,7 @@ from .mockito import (
     ensureNoUnverifiedInteractions,
     verify,
     verifyZeroInteractions,
-    verifyExpectations,
+    verifyExpectedInteractions,
     verifyStubbedInvocationsAreUsed,
     verifyNoUnwantedInteractions,  # deprecated
     verifyNoMoreInteractions,  # deprecated
@@ -59,7 +59,7 @@ __all__ = [
     'ensureNoUnverifiedInteractions',
     'verify',
     'verifyZeroInteractions',
-    'verifyExpectations',
+    'verifyExpectedInteractions',
     'verifyStubbedInvocationsAreUsed',
     'inorder',
     'unstub',

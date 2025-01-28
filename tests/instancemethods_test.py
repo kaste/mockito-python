@@ -23,7 +23,7 @@ import pytest
 from .test_base import TestBase
 from mockito import (
     mock, when, expect, unstub, ANY, verify, ensureNoUnverifiedInteractions,
-    verifyZeroInteractions, verifyExpectations,
+    verifyZeroInteractions, verifyExpectedInteractions,
     verifyStubbedInvocationsAreUsed)
 from mockito.invocation import InvocationError
 from mockito.verification import VerificationError
@@ -398,7 +398,7 @@ class TestImplicitVerificationsUsingExpect:
         rex.bark('Miau')
         rex.bark('Miau')
 
-        verifyExpectations(rex)
+        verifyExpectedInteractions(rex)
 
     @pytest.mark.parametrize('verification', [
         {'times': 2},
@@ -422,7 +422,7 @@ class TestImplicitVerificationsUsingExpect:
         expect(rex, **verification).bark('Miau').thenReturn('Wuff')
 
         with pytest.raises(VerificationError):
-            verifyExpectations(rex)
+            verifyExpectedInteractions(rex)
 
     def testVerifyExpectationsForAllRegisteredObjects(self):
         rex = Dog()
@@ -434,7 +434,7 @@ class TestImplicitVerificationsUsingExpect:
         rex.bark('Miau')
         mox.bark('Miau')
 
-        verifyExpectations()
+        verifyExpectedInteractions()
 
     def testUseWhenAndExpectAndVerifyExpectations(self):
         rex = Dog()
@@ -444,7 +444,7 @@ class TestImplicitVerificationsUsingExpect:
         rex.waggle()
         rex.bark('Miau')
 
-        verifyExpectations()
+        verifyExpectedInteractions()
 
     def testExpectWitoutVerification(self):
         rex = Dog()
