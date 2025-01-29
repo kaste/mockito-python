@@ -60,6 +60,13 @@ make that clear now in the name of the function, so you don't need the docs to t
 
 The new name should make it clear that it corresponds to the usage of `expect` (as alternative to `when`).
 
+Context managers now check the usage and any expectations (if you used `expect`) on exit.  You can
+disable this check by setting the environment variable `MOCKITO_CONTEXT_MANAGERS_CHECK_USAGE` to `"0"`.
+Note that this does not disable the check for any explicit expectations you might have set with `expect`.
+
+This roughly corresponds to the `verifyStubbedInvocationsAreUsed` contra the `verifyExpectedInteractions`
+functions.
+
 
 Development
 ===========

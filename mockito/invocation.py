@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import os
 import inspect
 import operator
 from collections import deque
@@ -481,6 +482,9 @@ class AnswerSelector(object):
         pass
 
     def __exit__(self, *exc_info):
+        self.invocation.verify()
+        if os.environ.get("MOCKITO_CONTEXT_MANAGERS_CHECK_USAGE", "1") == "1":
+            self.invocation.check_used()
         self.invocation.forget_self()
 
 
