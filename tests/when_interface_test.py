@@ -117,7 +117,7 @@ class TestPassAroundStrictness:
 class TestEnsureAddedAttributesGetRemovedOnUnstub:
     def testWhenPatchingTheClass(self):
         with when(Dog, strict=False).wggle():
-            pass
+            Dog().wggle()
 
         with pytest.raises(AttributeError):
             Dog.wggle
@@ -125,7 +125,7 @@ class TestEnsureAddedAttributesGetRemovedOnUnstub:
     def testWhenPatchingAnInstance(self):
         dog = Dog()
         with when(dog, strict=False).wggle():
-            pass
+            dog.wggle()
 
         with pytest.raises(AttributeError):
             dog.wggle

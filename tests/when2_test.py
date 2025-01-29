@@ -81,13 +81,13 @@ class TestFancyObjResolver:
 
     def testEnsureWithWhen2SameLine(self):
         with when2(os.path.commonprefix, '/Foo'):
-            pass
+            os.path.commonprefix("/Foo")
 
     def testEnsureWithWhen2SplitLine(self):
         # fmt: off
         with when2(
                 os.path.commonprefix, '/Foo'):
-            pass
+            os.path.commonprefix("/Foo")
         # fmt: on
 
     def testEnsureToResolveMethodOnClass(self):
