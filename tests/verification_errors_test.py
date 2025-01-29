@@ -156,6 +156,12 @@ class TestReprOfVerificationClasses:
         between = verification.Between(1, 2)
         assert repr(between) == "<Between [1, 2]>"
 
+    def testBetweenOpenRange(self):
+        between = verification.Between(1, float('inf'))
+        assert repr(between) == "<Between [1, inf]>"
+        between = verification.Between(1)
+        assert repr(between) == "<Between [1, inf]>"
+
     def testVerifyNoUnwantedInteractionsIsDeprecated(self):
         theMock = mock()
         with pytest.warns(DeprecationWarning) as record:

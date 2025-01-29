@@ -41,11 +41,13 @@ __tracebackhide__ = operator.methodcaller(
 def _invalid_between(between):
     if between is not None:
         try:
-            start, end = between
+            if len(between) == 1:
+                start, end = between[0], float('inf')
+            else:
+                start, end = between
+            if start < 0 or start > end:
+                return True
         except Exception:
-            return True
-
-        if start > end or start < 0:
             return True
     return False
 
@@ -83,8 +85,9 @@ def _get_wanted_verification(
             raise ArgumentError(
                 "'between' argument has invalid value.\n"
                 "It should consist of positive values with second number "
-                "greater than first e.g. (1, 4) or (0, 3) or (2, 2).  "
-                f"You wanted to set it to: {between}"
+                "greater than first e.g. (1, 4) or (0, 3) or (2, 2), "
+                "or a single non-negative number for open-ended range "
+                f"e.g. (0,).  You wanted to set it to: {between}"
             )
         return verification.Between(*between)
     return None
