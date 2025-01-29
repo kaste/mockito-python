@@ -1,10 +1,6 @@
 import pytest
 
-from mockito import (
-    expect, mock, when, unstub, verify,
-    ArgumentError, VerificationError
-)
-from mockito.invocation import InvocationError
+from mockito import mock, when, unstub, verify, ArgumentError
 
 
 class Dog(object):
