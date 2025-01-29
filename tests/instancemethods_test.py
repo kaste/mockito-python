@@ -384,6 +384,41 @@ class TestImplicitVerificationsUsingExpect:
         with pytest.raises(InvocationError):
             rex.bark('Miau')
 
+    class TestErrorMessagesOfInvocationError:
+        def testUsingTimes(self):
+            dog = mock()
+            expect(dog, times=1).bark('Miau').thenReturn('Wuff')
+            dog.bark('Miau')
+            with pytest.raises(InvocationError) as exc:
+                dog.bark('Miau')
+
+            assert str(exc.value) == (
+                "\nWanted times: %i, actual times: %i" % (1, 2)
+            )
+
+        def testUsingAtMost(self):
+            dog = mock()
+            expect(dog, atmost=1).bark('Miau').thenReturn('Wuff')
+            dog.bark('Miau')
+            with pytest.raises(InvocationError) as exc:
+                dog.bark('Miau')
+
+            assert str(exc.value) == (
+                "\nWanted at most: %i, actual times: %i" % (1, 2)
+            )
+
+        def testUsingBetween(self):
+            dog = mock()
+            expect(dog, between=(1, 2)).bark('Miau').thenReturn('Wuff')
+            dog.bark('Miau')
+            dog.bark('Miau')
+            with pytest.raises(InvocationError) as exc:
+                dog.bark('Miau')
+
+            assert str(exc.value) == (
+                "\nWanted between: [%i, %i], actual times: %i" % (1, 2, 3)
+            )
+
     def testEnsureNoUnverifiedInteractionsWorks(self, verification):
         rex = Dog()
         expect(rex, **verification).bark('Miau').thenReturn('Wuff')

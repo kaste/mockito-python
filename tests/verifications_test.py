@@ -186,6 +186,14 @@ class VerificationTestBase(TestBase):
         self.verification_function(self.mock, between=[1, 5]).foo()
         self.verification_function(self.mock, between=[2, 2]).foo()
 
+        self.verification_function(self.mock, between=[0, ]).foo()
+        self.verification_function(self.mock, between=[1, ]).foo()
+        self.verification_function(self.mock, between=[2, ]).foo()
+
+        self.verification_function(self.mock, between=[0, float('inf')]).foo()
+        self.verification_function(self.mock, between=[1, float('inf')]).foo()
+        self.verification_function(self.mock, between=[2, float('inf')]).foo()
+
     def testFailsVerificationWithBetween(self):
         self.mock.foo()
         self.mock.foo()
@@ -215,6 +223,8 @@ class VerificationTestBase(TestBase):
                           self.mock, between=(0, 1, 2))
         self.assertRaises(ArgumentError, self.verification_function,
                           self.mock, between=0)
+        self.assertRaises(ArgumentError, self.verification_function,
+                          self.mock, between=(-1,))
         self.assertRaises(ArgumentError, self.verification_function,
                           self.mock, atleast=5, atmost=5)
         self.assertRaises(ArgumentError, self.verification_function,

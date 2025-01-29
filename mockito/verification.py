@@ -59,19 +59,18 @@ class AtMost(object):
         return "<%s wanted=%s>" % (type(self).__name__, self.wanted_count)
 
 class Between(object):
-    def __init__(self, wanted_from, wanted_to):
+    def __init__(self, wanted_from, wanted_to=float('inf')):
         self.wanted_from = wanted_from
         self.wanted_to = wanted_to
 
     def verify(self, invocation, actual_count):
         if actual_count < self.wanted_from or actual_count > self.wanted_to:
             raise VerificationError(
-                "\nWanted between: [%i, %i], actual times: %i"
+                "\nWanted between: [%s, %s], actual times: %s"
                 % (self.wanted_from, self.wanted_to, actual_count))
 
     def __repr__(self):
-        return "<%s [%s, %s]>" % (
-            type(self).__name__, self.wanted_from, self.wanted_to)
+        return "<Between [%s, %s]>" % (self.wanted_from, self.wanted_to)
 
 class Times(object):
     def __init__(self, wanted_count):

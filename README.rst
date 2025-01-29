@@ -68,6 +68,13 @@ This roughly corresponds to the `verifyStubbedInvocationsAreUsed` contra the `ve
 functions.
 
 
+New in v2
+=========
+
+- `between` now supports open ranges, e.g. `between=(0, )` to check that at least 0 interactions
+  occurred.
+
+
 Development
 ===========
 

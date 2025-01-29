@@ -383,7 +383,7 @@ class StubbedInvocation(MatchingInvocation):
         elif isinstance(verification, verificationModule.Between):
             if actual_count > verification.wanted_to:
                 raise InvocationError(
-                    "\nWanted between: [%i, %i], actual times: %i"
+                    "\nWanted between: [%s, %s], actual times: %s"
                     % (verification.wanted_from,
                        verification.wanted_to,
                        actual_count))
