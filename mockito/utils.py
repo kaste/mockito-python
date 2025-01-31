@@ -21,9 +21,9 @@ def newmethod(fn, obj):
 
 
 try:
-    from warnings import deprecated  # type: ignore[attr-defined]
+    from warnings import deprecated
 except ImportError:
-    def deprecated(message):
+    def deprecated(message):  # type: ignore[no-redef]
         """Decorator to mark functions as deprecated.
 
         Emits a DeprecationWarning when the decorated function is called.
