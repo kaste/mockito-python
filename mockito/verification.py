@@ -39,6 +39,10 @@ class AtLeast(object):
         self.wanted_count = wanted_count
 
     def verify(self, invocation, actual_count):
+        if actual_count == 0:
+            msg = error_message_for_unmatched_invocation(invocation)
+            raise VerificationError(msg)
+
         if actual_count < self.wanted_count:
             raise VerificationError("\nWanted at least: %i, actual times: %i"
                                     % (self.wanted_count, actual_count))
