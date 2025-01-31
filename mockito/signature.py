@@ -31,7 +31,6 @@ def get_signature(obj, method_name):
 
 def match_signature(sig, args, kwargs):
     sig.bind(*args, **kwargs)
-    return sig
 
 
 def match_signature_allowing_placeholders(sig, args, kwargs):  # noqa: C901
@@ -102,8 +101,6 @@ def match_signature_allowing_placeholders(sig, args, kwargs):  # noqa: C901
             # Without Ellipsis and the other stuff this would really be
             # straight forward.
             sig.bind(*args, **kwargs)
-
-    return sig
 
 
 def positional_arguments(sig):
