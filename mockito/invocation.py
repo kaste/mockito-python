@@ -137,10 +137,10 @@ Stubbed invocations are:
 
 
 class RememberedProxyInvocation(RealInvocation):
-    '''Remeber params and proxy to method of original object.
+    """Remember params and proxy to method of original object.
 
     Calls method on original object and returns it's return value.
-    '''
+    """
     def __call__(self, *params, **named_params):
         self._remember_params(params, named_params)
         self.mock.remember(self)
