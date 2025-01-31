@@ -405,7 +405,7 @@ class TestImplicitVerificationsUsingExpect:
         {'atleast': 2},
         {'between': [1, 2]}
     ], ids=['times', 'atleast', 'between'])
-    def testEnsureNoUnverifiedInteractionsBarksIfUnsatisfied(self, verification):
+    def testEnsureNoUnverifiedInteractionsBarksIfUnsatisfied(self, verification):  # noqa: E501
         rex = Dog()
         expect(rex, **verification).bark('Miau').thenReturn('Wuff')
 
