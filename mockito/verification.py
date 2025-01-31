@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 import operator
+from abc import ABC, abstractmethod
 
 __all__ = ['never', 'VerificationError']
 
