@@ -351,7 +351,7 @@ class StubbedInvocation(MatchingInvocation):
     `method`).
 
     The `verification` argument is only given when `expect` is being used.
-    `strict` is used to overrule the `strict` flag of the `Mock` object.
+    `strict` is used to overrule the `strict` flag of the `mock` object.
 
     In the immediately following `__call__` call, the arguments (`args1, ...`)
     are captured.  The third part of the fluent interface (`AnswerSelector`)
