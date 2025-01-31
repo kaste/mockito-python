@@ -79,8 +79,6 @@ def match_signature_allowing_placeholders(sig, args, kwargs):  # noqa: C901
                     raise TypeError('no argument for *args left')
                 if 'multiple values for argument' in error:
                     raise
-                if 'too many keyword arguments' in error:          # PY<3.5
-                    raise
                 if 'got an unexpected keyword argument' in error:  # PY>3.5
                     raise
 
