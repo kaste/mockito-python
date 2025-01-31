@@ -1,4 +1,4 @@
-
+from __future__ import annotations
 from . import matchers
 from .utils import contains_strict
 
@@ -6,13 +6,12 @@ import functools
 import inspect
 
 try:
-    from inspect import signature, Parameter
+    from inspect import signature, Parameter, Signature
 except ImportError:
-    from funcsigs import signature, Parameter  # type: ignore[import, no-redef]
+    from funcsigs import signature, Parameter, Signature  # type: ignore[import-not-found, no-redef]  # noqa: E501
 
 
-
-def get_signature(obj, method_name):
+def get_signature(obj: object, method_name: str) -> Signature | None:
     method = getattr(obj, method_name)
 
     # Eat self for unbound methods bc signature doesn't do it
@@ -29,11 +28,13 @@ def get_signature(obj, method_name):
         return None
 
 
-def match_signature(sig, args, kwargs):
+def match_signature(sig: Signature, args: tuple, kwargs: dict) -> None:
     sig.bind(*args, **kwargs)
 
 
-def match_signature_allowing_placeholders(sig, args, kwargs):  # noqa: C901
+def match_signature_allowing_placeholders(  # noqa: C901
+    sig: Signature, args: tuple, kwargs: dict
+) -> None:
     # Let's face it. If this doesn't work out, we have to do it the hard
     # way and reimplement something like `sig.bind` with our specific
     # need for `...`, `*args`, and `**kwargs` support.
@@ -101,12 +102,12 @@ def match_signature_allowing_placeholders(sig, args, kwargs):  # noqa: C901
             sig.bind(*args, **kwargs)
 
 
-def positional_arguments(sig):
+def positional_arguments(sig: Signature) -> int:
     return len([p for n, p in sig.parameters.items()
                 if p.kind in (Parameter.POSITIONAL_ONLY,
                               Parameter.POSITIONAL_OR_KEYWORD)])
 
-def has_var_keyword(sig):
+def has_var_keyword(sig: Signature) -> bool:
     return any(p for n, p in sig.parameters.items()
                if p.kind is Parameter.VAR_KEYWORD)
 
