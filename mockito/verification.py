@@ -107,7 +107,7 @@ class Times(VerificationMode):
         return "<%s wanted=%s>" % (type(self).__name__, self.wanted_count)
 
 
-def error_message_for_unmatched_invocation(invocation: MatchingInvocation) -> str:
+def error_message_for_unmatched_invocation(invocation):
     invocations = (
         [
             invoc
