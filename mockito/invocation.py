@@ -280,19 +280,20 @@ class VerifiableInvocation(MatchingInvocation):
     Denotes the function or method signature after `verify` is called.
 
     I.e.    verify(obj).method(arg1, ...)
-                        ^^^^^^^^^^^^^^^^^  VerifiableInvocation denotes this part
+                        ^^^^^^^^^^^^^^^^^  VerifiableInvocation denotes this
+                                           part
 
-    The constructor takes the mock object, which is the registered `Mock` for the `obj`
-    in the previous examples, the method name (in the example: `method`), and the
-    verification mode (i.e. `verificationModule.Times(1)`).
+    The constructor takes the mock object, which is the registered `Mock` for
+    the `obj` in the previous examples, the method name (in the example:
+    `method`), and the verification mode (i.e. `verificationModule.Times(1)`).
 
-    In the immediately following `__call__` call, the arguments (`args1, ...`) are
-    captured and verified.  For `verify` `__call__` ends the verification process,
-    there is no third fluent interface.
+    In the immediately following `__call__` call, the arguments (`args1, ...`)
+    are captured and verified.  For `verify` `__call__` ends the verification
+    process, there is no third fluent interface.
 
-    Both calls, `__init__` plus `__call__`, encapsulate a method or function call.
-    But the `__call__` is essentially virtual and can contain placeholders and
-    matchers.
+    Both calls, `__init__` plus `__call__`, encapsulate a method or function
+    call.  But the `__call__` is essentially virtual and can contain
+    placeholders and matchers.
     """
     def __init__(self, mock, method_name, verification):
         super(VerifiableInvocation, self).__init__(mock, method_name)
