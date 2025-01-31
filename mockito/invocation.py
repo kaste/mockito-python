@@ -157,6 +157,15 @@ class RememberedProxyInvocation(Invocation):
 
 
 class MatchingInvocation(Invocation):
+    """
+    Abstract base class for `RememberedInvocation` and `VerifiableInvocation`.
+
+    Mainly implements `matches` which is used to compare calling signatures
+    where placeholders and matchers (like `any()` or `Ellipsis`) are
+    interpreted. Here, `self` can contain such special placeholders which then
+    consume multiple arguments of the (other) `invocation`.
+
+    """
     @staticmethod
     def compare(p1, p2):
         if isinstance(p1, matchers.Matcher):
@@ -167,6 +176,16 @@ class MatchingInvocation(Invocation):
         return True
 
     def capture_arguments(self, invocation):
+        """Capture arguments of `invocation` into "capturing" matchers of self.
+
+        This is used in conjunction with "capturing" matchers like
+        `ArgumentCaptor`, e.g. `captor`.
+
+        Imagine a `when(obj).method(captor).thenReturn()` configuration.  Now,
+        when `obj.method("foo")` is called, "foo" will be passed to
+        `captor.capture_value`.
+
+        """
         for x, p1 in enumerate(self.params):
             if isinstance(p1, matchers.Capturing):
                 try:
@@ -258,6 +277,24 @@ class MatchingInvocation(Invocation):
 
 
 class VerifiableInvocation(MatchingInvocation):
+    """
+    Denotes the function or method signature after `verify` is called.
+
+    I.e.  verify(obj).method(arg1, ...)
+                      ^^^^^^^^^^^^^^^^^  VerifiableInvocation denotes this part
+
+    The constructor takes the mock object, which is the registered `Mock` for
+    the `obj` in the previous examples, the method name (in the example:
+    `method`), and the verification mode (i.e. `verificationModule.Times(1)`).
+
+    In the immediately following `__call__` call, the arguments (`args1, ...`)
+    are captured and verified.  For `verify` `__call__` ends the verification
+    process, there is no third fluent interface.
+
+    Both calls, `__init__` plus `__call__`, encapsulate a method or function
+    call.  But the `__call__` is essentially virtual and can contain
+    placeholders and matchers.
+    """
     def __init__(self, mock, method_name, verification):
         super(VerifiableInvocation, self).__init__(mock, method_name)
         self.verification = verification
@@ -302,6 +339,40 @@ def verification_has_lower_bound_of_zero(verification):
 
 
 class StubbedInvocation(MatchingInvocation):
+    """
+    Denotes the function or method signature after `when` or `expect` is
+    called, -- the second part of the fluent interface.
+
+    I.e.    when(obj).method(arg1, ...).thenReturn(value1)
+          expect(obj).method(arg1, ...).thenReturn(value1)
+                      ^^^^^^^^^^^^^^^^^  StubbedInvocation denotes this part
+
+    The constructor takes the mock object, which is the registered `Mock` for
+    the `obj` in the previous examples, and the method name (in the example:
+    `method`).
+
+    The `verification` argument is only given when `expect` is being used.
+    `strict` is used to overrule the `strict` flag of the `mock` object.
+
+    In the immediately following `__call__` call, the arguments (`args1, ...`)
+    are captured.  The third part of the fluent interface (`AnswerSelector`)
+    is returned.
+
+    Both calls, `__init__` plus `__call__`, encapsulate a method or function
+    call.  But the `__call__` is essentially virtual and can contain
+    placeholders and matchers.
+
+    The actual stubbing occurs directly in the `__call__` method.  The stubbing
+    is delegated to the `mock` object.  In essence, it will likely patch or add
+    a replacement callable to `obj`, i.e.
+    `setattr(obj, method_name, new_method)`.
+
+    Note about the nomenclature:  In strict OOP languages, we only had
+    "methods", but in Python `obj` could be a class, instance, or module --
+    generally speaking: a "callable". (I.e. classes are also just callables;
+    there is no "new" keyword in Python.)
+
+    """
     def __init__(self, mock, method_name, verification=None, strict=None):
         super(StubbedInvocation, self).__init__(mock, method_name)
 
