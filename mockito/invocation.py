@@ -175,13 +175,14 @@ class MatchingInvocation(Invocation, ABC):
         return True
 
     def capture_arguments(self, invocation):
-        """Capture arguments of `invocation` into "capturing" matchers of `self`.
+        """Capture arguments of `invocation` into "capturing" matchers of self.
 
-        This is used in conjunction with "capturing" matchers like `ArgumentCaptor`, e.g.
-        `captor`.
+        This is used in conjunction with "capturing" matchers like
+        `ArgumentCaptor`, e.g. `captor`.
 
-        Imagine a `when(obj).method(captor).thenReturn()` configuration.  Now, when
-        `obj.method("foo")` is called, "foo" will be passed to `captor.capture_value`.
+        Imagine a `when(obj).method(captor).thenReturn()` configuration.  Now,
+        when `obj.method("foo")` is called, "foo" will be passed to
+        `captor.capture_value`.
 
         """
         for x, p1 in enumerate(self.params):
