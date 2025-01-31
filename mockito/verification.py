@@ -81,21 +81,8 @@ class Times(object):
             return
 
         if actual_count == 0:
-            invocations = (
-                [
-                    invoc
-                    for invoc in invocation.mock.invocations
-                    if invoc.method_name == invocation.method_name
-                ]
-                or invocation.mock.invocations
-            )
-            wanted_section = (
-                "\nWanted but not invoked:\n\n    %s\n" % invocation
-            )
-            instead_section = (
-                "\nInstead got:\n\n    %s\n"
-                % "\n    ".join(map(str, invocations))
-            ) if invocations else ""
+            msg = error_message_for_unmatched_invocation(invocation)
+            raise VerificationError(msg)
 
             raise VerificationError(
                 "%s%s\n" % (wanted_section, instead_section))
@@ -111,6 +98,27 @@ class Times(object):
 
     def __repr__(self):
         return "<%s wanted=%s>" % (type(self).__name__, self.wanted_count)
+
+
+def error_message_for_unmatched_invocation(invocation):
+    invocations = (
+        [
+            invoc
+            for invoc in invocation.mock.invocations
+            if invoc.method_name == invocation.method_name
+        ]
+        or invocation.mock.invocations
+    )
+    wanted_section = (
+        "\nWanted but not invoked:\n\n    %s\n" % invocation
+    )
+    instead_section = (
+        "\nInstead got:\n\n    %s\n"
+        % "\n    ".join(map(str, invocations))
+    ) if invocations else ""
+
+    return "%s%s\n" % (wanted_section, instead_section)
+
 
 class InOrder(object):
     '''Verifies invocations in order.
