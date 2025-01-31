@@ -390,7 +390,7 @@ class StubbedInvocation(MatchingInvocation):
         self.used = 0
 
         #: Set if `verifyStubbedInvocationsAreUsed` should pass, regardless
-        #: of any factual invocation. E.g. set by `verify(..., times=0)`
+        #: of any factual invocation. E.g. set by `expect(..., times=0)`
         if verification_has_lower_bound_of_zero(verification):
             self.allow_zero_invocations = True
         else:
