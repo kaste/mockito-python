@@ -88,17 +88,13 @@ class Times(object):
             msg = error_message_for_unmatched_invocation(invocation)
             raise VerificationError(msg)
 
+        if self.wanted_count == 0:
             raise VerificationError(
-                "%s%s\n" % (wanted_section, instead_section))
-
+                "\nUnwanted invocation of %s, times: %i"
+                % (invocation, actual_count))
         else:
-            if self.wanted_count == 0:
-                raise VerificationError(
-                    "\nUnwanted invocation of %s, times: %i"
-                    % (invocation, actual_count))
-            else:
-                raise VerificationError("\nWanted times: %i, actual times: %i"
-                                        % (self.wanted_count, actual_count))
+            raise VerificationError("\nWanted times: %i, actual times: %i"
+                                    % (self.wanted_count, actual_count))
 
     def __repr__(self):
         return "<%s wanted=%s>" % (type(self).__name__, self.wanted_count)
