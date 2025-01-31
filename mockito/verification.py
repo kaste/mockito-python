@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 import operator
+from abc import ABC, abstractmethod
 
 __all__ = ['never', 'VerificationError']
 
@@ -34,7 +35,13 @@ class VerificationError(AssertionError):
 __tracebackhide__ = operator.methodcaller("errisinstance", VerificationError)
 
 
-class AtLeast(object):
+class VerificationMode(ABC):
+    @abstractmethod
+    def verify(self, invocation, actual_count):
+        pass
+
+
+class AtLeast(VerificationMode):
     def __init__(self, wanted_count):
         self.wanted_count = wanted_count
 
@@ -50,7 +57,7 @@ class AtLeast(object):
     def __repr__(self):
         return "<%s wanted=%s>" % (type(self).__name__, self.wanted_count)
 
-class AtMost(object):
+class AtMost(VerificationMode):
     def __init__(self, wanted_count):
         self.wanted_count = wanted_count
 
@@ -62,7 +69,7 @@ class AtMost(object):
     def __repr__(self):
         return "<%s wanted=%s>" % (type(self).__name__, self.wanted_count)
 
-class Between(object):
+class Between(VerificationMode):
     def __init__(self, wanted_from, wanted_to=float('inf')):
         self.wanted_from = wanted_from
         self.wanted_to = wanted_to
@@ -76,7 +83,7 @@ class Between(object):
     def __repr__(self):
         return "<Between [%s, %s]>" % (self.wanted_from, self.wanted_to)
 
-class Times(object):
+class Times(VerificationMode):
     def __init__(self, wanted_count):
         self.wanted_count = wanted_count
 
@@ -120,7 +127,7 @@ def error_message_for_unmatched_invocation(invocation):
     return "%s%s\n" % (wanted_section, instead_section)
 
 
-class InOrder(object):
+class InOrder(VerificationMode):
     '''Verifies invocations in order.
 
     Verifies if invocation was in expected order, and if yes -- degrades to
