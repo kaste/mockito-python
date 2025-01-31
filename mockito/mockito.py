@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from __future__ import annotations
 import operator
 
 from . import invocation
@@ -38,7 +39,7 @@ __tracebackhide__ = operator.methodcaller(
 )
 
 
-def _invalid_between(between):
+def _invalid_between(between) -> bool:
     if between is not None:
         try:
             if len(between) == 1:
@@ -53,7 +54,8 @@ def _invalid_between(between):
 
 
 def _get_wanted_verification(
-        times=None, atleast=None, atmost=None, between=None):
+        times=None, atleast=None, atmost=None, between=None
+) -> verification.VerificationMode | None:
     if (times, atleast, atmost, between).count(None) < 3:
         raise ArgumentError(
             "You can set only one of the arguments: 'times', 'atleast', "
@@ -93,14 +95,14 @@ def _get_wanted_verification(
     return None
 
 
-def _get_mock(obj, strict=True):
+def _get_mock(obj: object, strict=True) -> Mock:
     theMock = mock_registry.mock_for(obj)
     if theMock is None:
         theMock = Mock(obj, strict=strict, spec=obj)
         mock_registry.register(obj, theMock)
     return theMock
 
-def _get_mock_or_raise(obj):
+def _get_mock_or_raise(obj: object) -> Mock:
     theMock = mock_registry.mock_for(obj)
     if theMock is None:
         raise ArgumentError("obj '%s' is not registered" % obj)
