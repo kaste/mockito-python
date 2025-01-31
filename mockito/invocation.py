@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from abc import ABC
 import os
 import inspect
 import operator
@@ -66,12 +67,14 @@ class Invocation(object):
         return "%s(%s)" % (self.method_name, params)
 
 
-class RememberedInvocation(Invocation):
+class RealInvocation(Invocation, ABC):
     def __init__(self, mock, method_name):
-        super(RememberedInvocation, self).__init__(mock, method_name)
+        super(RealInvocation, self).__init__(mock, method_name)
         self.verified = False
         self.verified_inorder = False
 
+
+class RememberedInvocation(RealInvocation):
     def ensure_mocked_object_has_method(self, method_name):
         if not self.mock.has_method(method_name):
             raise InvocationError(
@@ -133,16 +136,11 @@ Stubbed invocations are:
         return None
 
 
-class RememberedProxyInvocation(Invocation):
+class RememberedProxyInvocation(RealInvocation):
     '''Remeber params and proxy to method of original object.
 
     Calls method on original object and returns it's return value.
     '''
-    def __init__(self, mock, method_name):
-        super(RememberedProxyInvocation, self).__init__(mock, method_name)
-        self.verified = False
-        self.verified_inorder = False
-
     def __call__(self, *params, **named_params):
         self._remember_params(params, named_params)
         self.mock.remember(self)
