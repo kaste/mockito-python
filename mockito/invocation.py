@@ -279,9 +279,8 @@ class VerifiableInvocation(MatchingInvocation):
     """
     Denotes the function or method signature after `verify` is called.
 
-    I.e.    verify(obj).method(arg1, ...)
-                        ^^^^^^^^^^^^^^^^^  VerifiableInvocation denotes this
-                                           part
+    I.e.  verify(obj).method(arg1, ...)
+                      ^^^^^^^^^^^^^^^^^  VerifiableInvocation denotes this part
 
     The constructor takes the mock object, which is the registered `Mock` for
     the `obj` in the previous examples, the method name (in the example:
