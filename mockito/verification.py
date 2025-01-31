@@ -37,7 +37,7 @@ __tracebackhide__ = operator.methodcaller("errisinstance", VerificationError)
 
 class VerificationMode(ABC):
     @abstractmethod
-    def verify(self, invocation: MatchingInvocation, actual_count: int) -> None:
+    def verify(self, invocation, actual_count):
         pass
 
 
