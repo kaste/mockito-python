@@ -159,10 +159,10 @@ class MatchingInvocation(Invocation, ABC):
     """
     Abstract base class for `RememberedInvocation` and `VerifiableInvocation`.
 
-    Mainly implements `matches` which is used to compare calling signatures where
-    placeholders and matchers (like `any()` or `Ellipsis`) are interpreted.
-    Here, `self` can contain such special placeholders which then consume multiple
-    arguments of the (other) `invocation`.
+    Mainly implements `matches` which is used to compare calling signatures
+    where placeholders and matchers (like `any()` or `Ellipsis`) are
+    interpreted. Here, `self` can contain such special placeholders which then
+    consume multiple arguments of the (other) `invocation`.
 
     """
     @staticmethod
