@@ -153,7 +153,8 @@ class RememberedProxyInvocation(RealInvocation):
         return method(*params, **named_params)
 
 
-class MatchingInvocation(Invocation):
+
+class MatchingInvocation(Invocation, ABC):
     """
     Abstract base class for `RememberedInvocation` and `VerifiableInvocation`.
 
