@@ -20,8 +20,16 @@
 
 import pytest
 
-from mockito import (mock, when, verify, VerificationError,
-                     verifyNoMoreInteractions, verification)
+from mockito import (
+    mock,
+    when,
+    ensureNoUnverifiedInteractions,
+    verification,
+    verify,
+    verifyNoMoreInteractions,
+    verifyNoUnwantedInteractions,
+    VerificationError,
+)
 from mockito.verification import never
 
 
@@ -120,7 +128,7 @@ Instead got:
         theMock = mock()
         theMock.foo(1, 'foo')
         with pytest.raises(VerificationError) as exc:
-            verifyNoMoreInteractions(theMock)
+            ensureNoUnverifiedInteractions(theMock)
         assert "\nUnwanted interaction: foo(1, 'foo')" == str(exc.value)
 
     def testPrintsNeverWantedInteractionsNicely(self):
@@ -147,3 +155,31 @@ class TestReprOfVerificationClasses:
     def testBetween(self):
         between = verification.Between(1, 2)
         assert repr(between) == "<Between [1, 2]>"
+
+    def testBetweenOpenRange(self):
+        between = verification.Between(1, float('inf'))
+        assert repr(between) == "<Between [1, inf]>"
+        between = verification.Between(1)
+        assert repr(between) == "<Between [1, inf]>"
+
+    def testVerifyNoUnwantedInteractionsIsDeprecated(self):
+        theMock = mock()
+        with pytest.warns(DeprecationWarning) as record:
+            verifyNoUnwantedInteractions(theMock)
+
+        assert len(record) == 1
+        assert str(record[0].message) == (
+            "'verifyNoUnwantedInteractions' is deprecated. "
+            "Use 'verifyExpectedInteractions' instead."
+        )
+
+    def testVerifyNoMoreInteractionsIsDeprecated(self):
+        theMock = mock()
+        with pytest.warns(DeprecationWarning) as record:
+            verifyNoMoreInteractions(theMock)
+
+        assert len(record) == 1
+        assert str(record[0].message) == (
+            "'verifyNoMoreInteractions' is deprecated. "
+            "Use 'ensureNoUnverifiedInteractions' instead."
+        )

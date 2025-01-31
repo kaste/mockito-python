@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from __future__ import annotations
 import inspect
 import operator
 from collections import deque
@@ -25,18 +26,14 @@ from collections import deque
 from . import invocation, signature, utils
 from .mock_registry import mock_registry
 
+from typing import Callable
+
 __all__ = ['mock']
 
 __tracebackhide__ = operator.methodcaller(
     "errisinstance",
     invocation.InvocationError
 )
-
-from typing import Deque, List, Union
-RealInvocation = Union[
-    invocation.RememberedInvocation,
-    invocation.RememberedProxyInvocation
-]
 
 
 class _Dummy:
@@ -47,39 +44,50 @@ class _Dummy:
         return self.__getattr__('__call__')(*args, **kwargs)  # type: ignore[attr-defined]  # noqa: E501
 
 
-def remembered_invocation_builder(mock, method_name, *args, **kwargs):
+def remembered_invocation_builder(
+    mock: Mock, method_name: str, *args, **kwargs
+):
     invoc = invocation.RememberedInvocation(mock, method_name)
     return invoc(*args, **kwargs)
 
 
 class Mock(object):
-    def __init__(self, mocked_obj, strict=True, spec=None):
+    def __init__(
+        self,
+        mocked_obj: object,
+        strict: bool = True,
+        spec: object | None = None
+    ) -> None:
         self.mocked_obj = mocked_obj
         self.strict = strict
         self.spec = spec
 
-        self.invocations: List[RealInvocation] = []
-        self.stubbed_invocations: Deque[invocation.StubbedInvocation] = deque()
+        self.invocations: list[invocation.RealInvocation] = []
+        self.stubbed_invocations: deque[invocation.StubbedInvocation] = deque()
 
-        self._original_methods = {}
-        self._methods_to_unstub = {}
-        self._signatures_store = {}
+        self._original_methods: dict[str, Callable | None] = {}
+        self._methods_to_unstub: dict[str, Callable | None] = {}
+        self._signatures_store: dict[str, signature.Signature | None] = {}
 
-    def remember(self, invocation):
+    def remember(self, invocation: invocation.RealInvocation) -> None:
         self.invocations.append(invocation)
 
-    def finish_stubbing(self, stubbed_invocation):
+    def finish_stubbing(
+        self, stubbed_invocation: invocation.StubbedInvocation
+    ) -> None:
         self.stubbed_invocations.appendleft(stubbed_invocation)
 
-    def clear_invocations(self):
+    def clear_invocations(self) -> None:
         self.invocations = []
 
-    def get_original_method(self, method_name):
+    def get_original_method(self, method_name: str) -> Callable | None:
         return self._original_methods.get(method_name, None)
 
     # STUBBING
 
-    def _get_original_method_before_stub(self, method_name):
+    def _get_original_method_before_stub(
+        self, method_name: str
+    ) -> tuple[Callable | None, bool]:
         """
         Looks up the original method on the `spec` object and returns it
         together with an indication of whether the method is found
@@ -99,10 +107,12 @@ class Mock(object):
             # the better error message for the user.
             return getattr(self.spec, method_name, None), False
 
-    def set_method(self, method_name, new_method):
+    def set_method(self, method_name: str, new_method: object) -> None:
         setattr(self.mocked_obj, method_name, new_method)
 
-    def replace_method(self, method_name, original_method):
+    def replace_method(
+        self, method_name: str, original_method: object | None
+    ) -> None:
 
         def new_mocked_method(*args, **kwargs):
             return remembered_invocation_builder(
@@ -123,18 +133,18 @@ class Mock(object):
             )
 
         if isinstance(original_method, staticmethod):
-            new_mocked_method = staticmethod(new_mocked_method)  # type: ignore[assignment]  # noqa: E501
+            new_mocked_method = staticmethod(new_mocked_method)
         elif isinstance(original_method, classmethod):
             new_mocked_method = classmethod(new_mocked_method)  # type: ignore[assignment]  # noqa: E501
         elif (
             inspect.isclass(self.mocked_obj)
             and inspect.isclass(original_method)  # TBC: Inner classes
         ):
-            new_mocked_method = staticmethod(new_mocked_method)  # type: ignore[assignment]  # noqa: E501
+            new_mocked_method = staticmethod(new_mocked_method)
 
         self.set_method(method_name, new_mocked_method)
 
-    def stub(self, method_name):
+    def stub(self, method_name: str) -> None:
         try:
             self._methods_to_unstub[method_name]
         except KeyError:
@@ -152,7 +162,9 @@ class Mock(object):
             self._original_methods[method_name] = original_method
             self.replace_method(method_name, original_method)
 
-    def forget_stubbed_invocation(self, invocation):
+    def forget_stubbed_invocation(
+        self, invocation: invocation.StubbedInvocation
+    ) -> None:
         assert invocation in self.stubbed_invocations
 
         if len(self.stubbed_invocations) == 1:
@@ -170,7 +182,9 @@ class Mock(object):
             )
             self.restore_method(invocation.method_name, original_method)
 
-    def restore_method(self, method_name, original_method):
+    def restore_method(
+        self, method_name: str, original_method: object | None
+    ) -> None:
         # If original_method is None, we *added* it to mocked_obj, so we
         # must delete it here.
         if original_method:
@@ -178,7 +192,7 @@ class Mock(object):
         else:
             delattr(self.mocked_obj, method_name)
 
-    def unstub(self):
+    def unstub(self) -> None:
         while self._methods_to_unstub:
             method_name, original_method = self._methods_to_unstub.popitem()
             self.restore_method(method_name, original_method)
@@ -187,13 +201,13 @@ class Mock(object):
 
     # SPECCING
 
-    def has_method(self, method_name):
+    def has_method(self, method_name: str) -> bool:
         if self.spec is None:
             return True
 
         return hasattr(self.spec, method_name)
 
-    def get_signature(self, method_name):
+    def get_signature(self, method_name: str) -> signature.Signature | None:
         if self.spec is None:
             return None
 
@@ -204,7 +218,7 @@ class Mock(object):
             self._signatures_store[method_name] = sig
             return sig
 
-    def eat_self(self, method_name):
+    def eat_self(self, method_name: str) -> bool:
         """Returns if the method will have a prepended self/class arg on call
         """
         try:
