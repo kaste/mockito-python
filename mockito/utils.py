@@ -1,9 +1,10 @@
-
 import importlib
 import inspect
 import sys
 import types
 import re
+import warnings
+import functools
 
 
 NEEDS_OS_PATH_HACK = (
@@ -17,6 +18,25 @@ def contains_strict(seq, element):
 
 def newmethod(fn, obj):
     return types.MethodType(fn, obj)
+
+
+try:
+    from warnings import deprecated
+except ImportError:
+    def deprecated(message):  # type: ignore[no-redef]
+        """Decorator to mark functions as deprecated.
+
+        Emits a DeprecationWarning when the decorated function is called.
+        """
+        def wrapper(func):
+            @functools.wraps(func)
+            def wrapped(*args, **kwargs):
+                warnings.warn(message, DeprecationWarning, stacklevel=2)
+                return func(*args, **kwargs)
+
+            return wrapped
+
+        return wrapper
 
 
 def get_function_host(fn):
