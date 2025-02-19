@@ -137,12 +137,22 @@ def error_message_for_unmatched_invocation(
         or invocation.mock.invocations
     )
     wanted_section = (
-        "\nWanted but not invoked:\n\n    %s\n" % invocation
+        f"\nWanted but not invoked:\n\n    {invocation}\n"
     )
-    instead_section = (
-        "\nInstead got:\n\n    %s\n"
-        % "\n    ".join(map(str, invocations))
-    ) if invocations else ""
+    if invocations:
+        content = "\n    ".join(map(str, invocations))
+        instead_section = f"\nInstead got:\n\n    {content}\n"
+    elif (
+        len(invocation.mock.stubbed_invocations) > 1
+        or len(invocation.mock.stubbed_invocations) == 1
+        and str(invocation.mock.stubbed_invocations[0]) != str(invocation)
+    ):
+        content = "\n    ".join(sorted(
+            map(str, invocation.mock.stubbed_invocations)
+        ))
+        instead_section = f"\nStubbed are:\n\n    {content}\n"
+    else:
+        instead_section = ""
 
     return "%s%s\n" % (wanted_section, instead_section)
 

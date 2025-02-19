@@ -103,6 +103,59 @@ Instead got:
 
 '''
 
+    def testPrintsStubbedInvocationsIfNoInteractionHasBeenRecorded(self):
+        theMock = mock()
+        when(theMock).bar('foo').thenReturn()
+        when(theMock).foo('bar').thenReturn()
+
+        with pytest.raises(VerificationError) as exc:
+            verify(theMock).box('fox')
+
+        assert str(exc.value) == '''
+Wanted but not invoked:
+
+    box('fox')
+
+Stubbed are:
+
+    bar('foo')
+    foo('bar')
+
+'''
+
+    def testPrintsStubbedInvocationsIfNoInteractionHasBeenRecorded_EnsureSortedOutput(self):  # noqa: E501
+        theMock = mock()
+        when(theMock).foo('bar').thenReturn()
+        when(theMock).bar('foo').thenReturn()
+
+        with pytest.raises(VerificationError) as exc:
+            verify(theMock).box('fox')
+
+        assert str(exc.value) == '''
+Wanted but not invoked:
+
+    box('fox')
+
+Stubbed are:
+
+    bar('foo')
+    foo('bar')
+
+'''
+
+    def testDoesNotPrintTheStubsIfSameAsTheWantedSection(self):
+        theMock = mock()
+        when(theMock).foo(...).thenReturn()
+
+        with pytest.raises(VerificationError) as exc:
+            verify(theMock).foo(...)
+
+        assert str(exc.value) == '''
+Wanted but not invoked:
+
+    foo(...)
+
+'''
 
     def testPrintKeywordArgumentsNicely(self):
         theMock = mock()
