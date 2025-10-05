@@ -14,7 +14,7 @@
 
 import sys
 import os
-import pkg_resources
+import importlib.metadata as metadata
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -64,10 +64,10 @@ author = u'Szczepan Faber, Serhiy Oplakanets, herr.kaste'
 # release = u'0.6.1'
 
 try:
-    release = pkg_resources.get_distribution('mockito').version
-except pkg_resources.DistributionNotFound:
-    print('mockito must be installed to build the documentation.')
-    print('Install from source using `pip install -e .` in a virtualenv.')
+    release = metadata.version("mockito")
+except metadata.PackageNotFoundError:
+    print("mockito must be installed to build the documentation.")
+    print("Install from source using `uv sync` or `pip install -e .` in a virtualenv.")
     sys.exit(1)
 
 if 'dev' in release:
