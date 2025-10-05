@@ -18,7 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from __future__ import annotations
+
 import operator
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .invocation import MatchingInvocation
 
 __all__ = ['never', 'VerificationError']
 
@@ -34,11 +41,25 @@ class VerificationError(AssertionError):
 __tracebackhide__ = operator.methodcaller("errisinstance", VerificationError)
 
 
-class AtLeast(object):
-    def __init__(self, wanted_count):
+class VerificationMode(ABC):
+    @abstractmethod
+    def verify(
+        self, invocation: MatchingInvocation, actual_count: int
+    ) -> None:
+        pass
+
+
+class AtLeast(VerificationMode):
+    def __init__(self, wanted_count: int) -> None:
         self.wanted_count = wanted_count
 
-    def verify(self, invocation, actual_count):
+    def verify(
+        self, invocation: MatchingInvocation, actual_count: int
+    ) -> None:
+        if actual_count == 0:
+            msg = error_message_for_unmatched_invocation(invocation)
+            raise VerificationError(msg)
+
         if actual_count < self.wanted_count:
             raise VerificationError("\nWanted at least: %i, actual times: %i"
                                     % (self.wanted_count, actual_count))
@@ -46,11 +67,13 @@ class AtLeast(object):
     def __repr__(self):
         return "<%s wanted=%s>" % (type(self).__name__, self.wanted_count)
 
-class AtMost(object):
-    def __init__(self, wanted_count):
+class AtMost(VerificationMode):
+    def __init__(self, wanted_count: int) -> None:
         self.wanted_count = wanted_count
 
-    def verify(self, invocation, actual_count):
+    def verify(
+        self, invocation: MatchingInvocation, actual_count: int
+    ) -> None:
         if actual_count > self.wanted_count:
             raise VerificationError("\nWanted at most: %i, actual times: %i"
                                     % (self.wanted_count, actual_count))
@@ -58,69 +81,90 @@ class AtMost(object):
     def __repr__(self):
         return "<%s wanted=%s>" % (type(self).__name__, self.wanted_count)
 
-class Between(object):
-    def __init__(self, wanted_from, wanted_to):
+class Between(VerificationMode):
+    def __init__(
+        self, wanted_from: int, wanted_to: int | float = float('inf')
+    ) -> None:
         self.wanted_from = wanted_from
         self.wanted_to = wanted_to
 
-    def verify(self, invocation, actual_count):
+    def verify(
+        self, invocation: MatchingInvocation, actual_count: int
+    ) -> None:
         if actual_count < self.wanted_from or actual_count > self.wanted_to:
             raise VerificationError(
-                "\nWanted between: [%i, %i], actual times: %i"
+                "\nWanted between: [%s, %s], actual times: %s"
                 % (self.wanted_from, self.wanted_to, actual_count))
 
     def __repr__(self):
-        return "<%s [%s, %s]>" % (
-            type(self).__name__, self.wanted_from, self.wanted_to)
+        return "<Between [%s, %s]>" % (self.wanted_from, self.wanted_to)
 
-class Times(object):
-    def __init__(self, wanted_count):
+class Times(VerificationMode):
+    def __init__(self, wanted_count: int) -> None:
         self.wanted_count = wanted_count
 
-    def verify(self, invocation, actual_count):
+    def verify(
+        self, invocation: MatchingInvocation, actual_count: int
+    ) -> None:
         if actual_count == self.wanted_count:
             return
 
         if actual_count == 0:
-            invocations = (
-                [
-                    invoc
-                    for invoc in invocation.mock.invocations
-                    if invoc.method_name == invocation.method_name
-                ]
-                or invocation.mock.invocations
-            )
-            wanted_section = (
-                "\nWanted but not invoked:\n\n    %s\n" % invocation
-            )
-            instead_section = (
-                "\nInstead got:\n\n    %s\n"
-                % "\n    ".join(map(str, invocations))
-            ) if invocations else ""
+            msg = error_message_for_unmatched_invocation(invocation)
+            raise VerificationError(msg)
 
+        if self.wanted_count == 0:
             raise VerificationError(
-                "%s%s\n" % (wanted_section, instead_section))
-
+                "\nUnwanted invocation of %s, times: %i"
+                % (invocation, actual_count))
         else:
-            if self.wanted_count == 0:
-                raise VerificationError(
-                    "\nUnwanted invocation of %s, times: %i"
-                    % (invocation, actual_count))
-            else:
-                raise VerificationError("\nWanted times: %i, actual times: %i"
-                                        % (self.wanted_count, actual_count))
+            raise VerificationError("\nWanted times: %i, actual times: %i"
+                                    % (self.wanted_count, actual_count))
 
     def __repr__(self):
         return "<%s wanted=%s>" % (type(self).__name__, self.wanted_count)
 
-class InOrder(object):
+
+def error_message_for_unmatched_invocation(
+    invocation: MatchingInvocation
+) -> str:
+    invocations = (
+        [
+            invoc
+            for invoc in invocation.mock.invocations
+            if invoc.method_name == invocation.method_name
+        ]
+        or invocation.mock.invocations
+    )
+    wanted_section = (
+        f"\nWanted but not invoked:\n\n    {invocation}\n"
+    )
+    if invocations:
+        content = "\n    ".join(map(str, invocations))
+        instead_section = f"\nInstead got:\n\n    {content}\n"
+    elif (
+        len(invocation.mock.stubbed_invocations) > 1
+        or len(invocation.mock.stubbed_invocations) == 1
+        and str(invocation.mock.stubbed_invocations[0]) != str(invocation)
+    ):
+        content = "\n    ".join(sorted(
+            map(str, invocation.mock.stubbed_invocations)
+        ))
+        instead_section = f"\nStubbed are:\n\n    {content}\n"
+    else:
+        instead_section = ""
+
+    return "%s%s\n" % (wanted_section, instead_section)
+
+
+class InOrder(VerificationMode):
     '''Verifies invocations in order.
 
     Verifies if invocation was in expected order, and if yes -- degrades to
     original Verifier (AtLeast, Times, Between, ...).
     '''
 
-    def __init__(self, original_verification):
+    def __init__(self, original_verification: VerificationMode) -> None:
         '''
 
         @param original_verification: Original verification to degrade to if
@@ -128,7 +172,9 @@ class InOrder(object):
         '''
         self.original_verification = original_verification
 
-    def verify(self, wanted_invocation, count):
+    def verify(
+        self, wanted_invocation: MatchingInvocation, count: int
+    ) -> None:
         for invocation in wanted_invocation.mock.invocations:
             if not invocation.verified_inorder:
                 if not wanted_invocation.matches(invocation):

@@ -18,12 +18,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from __future__ import annotations
 import operator
 
 from . import invocation
 from . import verification
 
-from .utils import get_obj, get_obj_attr_tuple
+from .utils import deprecated, get_obj, get_obj_attr_tuple
 from .mocking import Mock
 from .mock_registry import mock_registry
 from .verification import VerificationError
@@ -38,73 +39,76 @@ __tracebackhide__ = operator.methodcaller(
 )
 
 
-def _multiple_arguments_in_use(*args):
-    return len([x for x in args if x]) > 1
-
-
-def _invalid_argument(value):
-    return (value is not None and value < 1) or value == 0
-
-
-def _invalid_between(between):
+def _invalid_between(between) -> bool:
     if between is not None:
         try:
-            start, end = between
+            if len(between) == 1:
+                start, end = between[0], float('inf')
+            else:
+                start, end = between
+            if start < 0 or start > end:
+                return True
         except Exception:
-            return True
-
-        if start > end or start < 0:
             return True
     return False
 
+
 def _get_wanted_verification(
-        times=None, atleast=None, atmost=None, between=None):
-    if times is not None and times < 0:
-        raise ArgumentError("'times' argument has invalid value.\n"
-                            "It should be at least 0. You wanted to set it to:"
-                            " %i" % times)
-    if _multiple_arguments_in_use(atleast, atmost, between):
+        times=None, atleast=None, atmost=None, between=None
+) -> verification.VerificationMode | None:
+    if (times, atleast, atmost, between).count(None) < 3:
         raise ArgumentError(
-            "You can set only one of the arguments: 'atleast', "
+            "You can set only one of the arguments: 'times', 'atleast', "
             "'atmost' or 'between'.")
-    if _invalid_argument(atleast):
-        raise ArgumentError("'atleast' argument has invalid value.\n"
-                            "It should be at least 1.  You wanted to set it "
-                            "to: %i" % atleast)
-    if _invalid_argument(atmost):
-        raise ArgumentError("'atmost' argument has invalid value.\n"
-                            "It should be at least 1.  You wanted to set it "
-                            "to: %i" % atmost)
-    if _invalid_between(between):
-        raise ArgumentError(
-            """'between' argument has invalid value.
-It should consist of positive values with second number not greater
-than first e.g. (1, 4) or (0, 3) or (2, 2).
-You wanted to set it to: %s""" % (between,))
 
-    if atleast:
-        return verification.AtLeast(atleast)
-    elif atmost:
-        return verification.AtMost(atmost)
-    elif between:
-        return verification.Between(*between)
-    elif times is not None:
+    if times is not None:
+        if times < 0:
+            raise ArgumentError(
+                "'times' argument has invalid value.\n"
+                f"It should be at least 0.  You wanted to set it to: {times}"
+            )
         return verification.Times(times)
+    if atleast is not None:
+        if atleast < 1:
+            raise ArgumentError(
+                "'atleast' argument has invalid value.\n"
+                f"It should be at least 1.  You wanted to set it to: {atleast}"
+            )
+        return verification.AtLeast(atleast)
+    if atmost is not None:
+        if atmost < 1:
+            raise ArgumentError(
+                "'atmost' argument has invalid value.\n"
+                f"It should be at least 1.  You wanted to set it to: {atmost}"
+            )
+        return verification.AtMost(atmost)
+    if between is not None:
+        if _invalid_between(between):
+            raise ArgumentError(
+                "'between' argument has invalid value.\n"
+                "It should consist of positive values with second number "
+                "greater than first e.g. (1, 4) or (0, 3) or (2, 2), "
+                "or a single non-negative number for open-ended range "
+                f"e.g. (0,).  You wanted to set it to: {between}"
+            )
+        return verification.Between(*between)
+    return None
 
-def _get_mock(obj, strict=True):
+
+def _get_mock(obj: object, strict=True) -> Mock:
     theMock = mock_registry.mock_for(obj)
     if theMock is None:
         theMock = Mock(obj, strict=strict, spec=obj)
         mock_registry.register(obj, theMock)
     return theMock
 
-def _get_mock_or_raise(obj):
+def _get_mock_or_raise(obj: object) -> Mock:
     theMock = mock_registry.mock_for(obj)
     if theMock is None:
         raise ArgumentError("obj '%s' is not registered" % obj)
     return theMock
 
-def verify(obj, times=1, atleast=None, atmost=None, between=None,
+def verify(obj, times=None, atleast=None, atmost=None, between=None,
            inorder=False):
     """Central interface to verify interactions.
 
@@ -131,8 +135,11 @@ def verify(obj, times=1, atleast=None, atmost=None, between=None,
     if isinstance(obj, str):
         obj = get_obj(obj)
 
-    verification_fn = _get_wanted_verification(
-        times=times, atleast=atleast, atmost=atmost, between=between)
+    verification_fn = (
+        _get_wanted_verification(
+            times=times, atleast=atleast, atmost=atmost, between=between
+        ) or verification.Times(1)
+    )
     if inorder:
         verification_fn = verification.InOrder(verification_fn)
 
@@ -301,12 +308,12 @@ def expect(obj, strict=True,
         dog.bark('Wuff')  # will throw at call time: too many invocations
 
         # maybe if you need to ensure that `dog.bark()` was called at all
-        verifyNoUnwantedInteractions()
+        verifyExpectedInteractions()
 
     .. note:: You must :func:`unstub` after stubbing, or use `with`
         statement.
 
-    See :func:`when`, :func:`when2`, :func:`verifyNoUnwantedInteractions`
+    See :func:`when`, :func:`when2`, :func:`verifyExpectedInteractions`
 
     """
 
@@ -360,8 +367,15 @@ def forget_invocations(*objs):
         theMock.clear_invocations()
 
 
-def verifyNoMoreInteractions(*objs):
-    verifyNoUnwantedInteractions(*objs)
+def ensureNoUnverifiedInteractions(*objs):
+    """Check if any given object has any unverified interaction.
+
+    You can use this after `verify`-ing to ensure no other interactions
+    happened.
+
+    Can lead to over-specified tests.
+    """
+    verifyExpectedInteractions(*objs)
 
     for obj in objs:
         theMock = _get_mock_or_raise(obj)
@@ -374,11 +388,14 @@ def verifyNoMoreInteractions(*objs):
 def verifyZeroInteractions(*objs):
     """Verify that no methods have been called on given objs.
 
-    Note that strict mocks usually throw early on unexpected, unstubbed
-    invocations. Partial mocks ('monkeypatched' objects or modules) do not
-    support this functionality at all, bc only for the stubbed invocations
-    the actual usage gets recorded. So this function is of limited use,
-    nowadays.
+    Rarely used because `verify(..., times=0)` is more explicit.  Also:
+    strict mocks usually throw early on unexpected, unstubbed invocations.
+    For them, there may be no need to verify afterwards.
+    `expect(..., times=0)` may also appropriate.
+
+    Partial mocks ('monkeypatched' objects or modules) only look at the
+    stubbed invocations as the actual usage gets recorded only for them.
+    However, you could use `spy` and inject it.
 
     """
     for obj in objs:
@@ -390,14 +407,14 @@ def verifyZeroInteractions(*objs):
 
 
 
-def verifyNoUnwantedInteractions(*objs):
+def verifyExpectedInteractions(*objs):
     """Verifies that expectations set via `expect` are met
 
     E.g.::
 
         expect(os.path, times=1).exists(...).thenReturn(True)
         os.path('/foo')
-        verifyNoUnwantedInteractions(os.path)  # ok, called once
+        verifyExpectedInteractions(os.path)  # ok, called once
 
     If you leave out the argument *all* registered objects will
     be checked.
@@ -418,6 +435,7 @@ def verifyNoUnwantedInteractions(*objs):
         for i in mock.stubbed_invocations:
             i.verify()
 
+
 def verifyStubbedInvocationsAreUsed(*objs):
     """Ensure stubs are actually used.
 
@@ -435,3 +453,29 @@ def verifyStubbedInvocationsAreUsed(*objs):
     for mock in theMocks:
         for i in mock.stubbed_invocations:
             i.check_used()
+
+
+@deprecated(
+    "'verifyNoMoreInteractions' is deprecated. "
+    "Use 'ensureNoUnverifiedInteractions' instead."
+)
+def verifyNoMoreInteractions(*objs):
+    return ensureNoUnverifiedInteractions(*objs)
+
+verifyNoMoreInteractions.__doc__ = (        # noqa: E305
+    ensureNoUnverifiedInteractions.__doc__  # type: ignore[operator]
+    + "\n\nDeprecated: Use 'ensureNoUnverifiedInteractions' instead."
+)
+
+
+@deprecated(
+    "'verifyNoUnwantedInteractions' is deprecated. "
+    "Use 'verifyExpectedInteractions' instead."
+)
+def verifyNoUnwantedInteractions(*args, **kwargs):
+    return verifyExpectedInteractions(*args, **kwargs)
+
+verifyNoUnwantedInteractions.__doc__ = (  # noqa: E305
+    verifyExpectedInteractions.__doc__    # type: ignore[operator]
+    + "\n\nDeprecated: Use 'verifyExpectedInteractions' instead."
+)

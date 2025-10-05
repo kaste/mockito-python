@@ -18,6 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .mocking import Mock
 
 
 class MockRegistry:
@@ -30,13 +35,13 @@ class MockRegistry:
     def __init__(self):
         self.mocks = IdentityMap()
 
-    def register(self, obj, mock):
+    def register(self, obj: object, mock: Mock) -> None:
         self.mocks[obj] = mock
 
-    def mock_for(self, obj):
+    def mock_for(self, obj: object) -> Mock | None:
         return self.mocks.get(obj, None)
 
-    def unstub(self, obj):
+    def unstub(self, obj: object) -> None:
         try:
             mock = self.mocks.pop(obj)
         except KeyError:
@@ -44,12 +49,12 @@ class MockRegistry:
         else:
             mock.unstub()
 
-    def unstub_all(self):
+    def unstub_all(self) -> None:
         for mock in self.get_registered_mocks():
             mock.unstub()
         self.mocks.clear()
 
-    def get_registered_mocks(self):
+    def get_registered_mocks(self) -> list[Mock]:
         return self.mocks.values()
 
 

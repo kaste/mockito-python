@@ -2,7 +2,7 @@
 import pytest
 
 from mockito import (when, when2, expect, verify, patch, mock, spy2,
-                     verifyNoUnwantedInteractions)
+                     verifyExpectedInteractions)
 from mockito.invocation import InvocationError
 
 class Dog(object):
@@ -117,7 +117,7 @@ class TestPassAroundStrictness:
 class TestEnsureAddedAttributesGetRemovedOnUnstub:
     def testWhenPatchingTheClass(self):
         with when(Dog, strict=False).wggle():
-            pass
+            Dog().wggle()
 
         with pytest.raises(AttributeError):
             Dog.wggle
@@ -125,7 +125,7 @@ class TestEnsureAddedAttributesGetRemovedOnUnstub:
     def testWhenPatchingAnInstance(self):
         dog = Dog()
         with when(dog, strict=False).wggle():
-            pass
+            dog.wggle()
 
         with pytest.raises(AttributeError):
             dog.wggle
@@ -152,7 +152,7 @@ class TestDottedPaths:
         import os.path
         os.path.exists('/Foo')
         assert os.path.exists('/Foo')
-        verifyNoUnwantedInteractions()
+        verifyExpectedInteractions()
 
     def testPatch(self):
         dummy = mock()

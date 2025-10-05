@@ -38,7 +38,8 @@ class TestUntub:
         unstub(m)
         assert m.foo() is None
 
-class TestAutomaticUnstubbing:
+
+class TestContextManagerUnstubStrategy:
 
     def testWith1(self):
         rex = Dog()
@@ -76,6 +77,7 @@ class TestAutomaticUnstubbing:
         with when(rex).waggle().thenReturn('Yup'):
             with when(mox).waggle().thenReturn('Nope'):
                 assert rex.waggle() == 'Yup'
+                assert mox.waggle() == 'Nope'
 
         assert rex.waggle() == 'Unsure'
         assert mox.waggle() == 'Unsure'
