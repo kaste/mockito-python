@@ -78,10 +78,7 @@ New in v2
 Development
 ===========
 
-I use `rye <https://rye-up.com/>`_, and if you do too: you just clone this repo
-to your computer, then run ``rye sync`` in the root directory.  Finally, activate
-the virtualenv.  (``rye shell`` gives you a hint on how to do that.)
+I use `uv <https://docs.astral.sh/uv/>`_, and if you do too: you just clone this repo
+to your computer, then run ``uv sync`` in the root directory.  Example usage::
 
-::
-
-    pytest
+    uv run pytest
