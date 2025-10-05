@@ -26,7 +26,7 @@ from collections import deque
 from . import invocation, signature, utils
 from .mock_registry import mock_registry
 
-from typing import Callable
+from typing import Callable, TypeVar
 
 __all__ = ['mock']
 
@@ -35,6 +35,16 @@ __tracebackhide__ = operator.methodcaller(
     invocation.InvocationError
 )
 
+from typing import List, Union
+
+from .observer import Subject, Observer
+
+RealInvocation = Union[
+    invocation.RememberedInvocation,
+    invocation.RememberedProxyInvocation
+]
+
+T = TypeVar('T', bound='Subject')
 
 class _Dummy:
     # We spell out `__call__` here for convenience. All other magic methods
@@ -51,7 +61,7 @@ def remembered_invocation_builder(
     return invoc(*args, **kwargs)
 
 
-class Mock(object):
+class Mock(Subject):
     def __init__(
         self,
         mocked_obj: object,
@@ -69,8 +79,21 @@ class Mock(object):
         self._methods_to_unstub: dict[str, Callable | None] = {}
         self._signatures_store: dict[str, signature.Signature | None] = {}
 
+        self._observers: List[Observer] = []
+
+    def attach(self, observer: Observer[T]) -> None:
+        self._observers.append(observer)
+
+    def detach(self, observer: Observer[T]) -> None:
+        self._observers.remove(observer)
+
+    def notify(self) -> None:
+        for observer in self._observers:
+            observer.update(self)
+
     def remember(self, invocation: invocation.RealInvocation) -> None:
         self.invocations.append(invocation)
+        self.notify()
 
     def finish_stubbing(
         self, stubbed_invocation: invocation.StubbedInvocation
