@@ -9,6 +9,6 @@ ignore =
   E303,
   E306,
   E731
-exclude = .git,.cache,docs,.env,.build,build
+exclude = .git,.github,.cache,.mypy_cache,.pytest_cache,docs,.venv,.build,build
 max-complexity = 10
 max-line-length = 79
