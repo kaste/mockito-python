@@ -51,7 +51,7 @@ def remembered_invocation_builder(
     return invoc(*args, **kwargs)
 
 
-class Mock(object):
+class Mock:
     def __init__(
         self,
         mocked_obj: object,
@@ -69,8 +69,18 @@ class Mock(object):
         self._methods_to_unstub: dict[str, Callable | None] = {}
         self._signatures_store: dict[str, signature.Signature | None] = {}
 
+        self._observers: list = []
+
+    def attach(self, observer) -> None:
+        self._observers.append(observer)
+
+    def detach(self, observer) -> None:
+        self._observers.remove(observer)
+
     def remember(self, invocation: invocation.RealInvocation) -> None:
         self.invocations.append(invocation)
+        for observer in self._observers:
+            observer.update(invocation)
 
     def finish_stubbing(
         self, stubbed_invocation: invocation.StubbedInvocation
