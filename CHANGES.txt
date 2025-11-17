@@ -4,6 +4,14 @@ MOCKITO CHANGE LOG
 
 Release 2.0.0
 ---------------------------------
+- Calling `thenAnswer()` without arguments is now allowed and is treated like
+  `thenReturn()` without arguments: the stubbed method will return `None`.
+- Deprecate `verifyNoMoreInteractions` in favor of `ensureNoUnverifiedInteractions`.
+- Deprecate `verifyNoUnwantedInteractions` in favor of `verifyExpectedInteractions`.
+- Context managers now check usage and any expectations (set via `expect`) on exit. The usage
+  check can be disabled with the environment variable `MOCKITO_CONTEXT_MANAGERS_CHECK_USAGE="0"`.
+- The `between` matcher now supports open ranges, e.g. `between=(0,)` to assert that at least
+  0 interactions occurred.
 
 
 
