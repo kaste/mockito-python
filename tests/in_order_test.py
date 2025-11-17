@@ -105,5 +105,14 @@ def test_exiting_context_manager_should_detatch_mocks():
         in_order.verify(dog).bark()
 
     # can still verify after leaving the context manager
-    verify(cat).meow()
+    verify(cat, times=1).meow()
     verify(dog).bark()
+
+
+def test_do_not_record_after_detach():
+    cat = mock()
+    with InOrder(cat) as in_order:
+        pass
+    cat.meow()
+    with pytest.raises(VerificationError):
+        in_order.verify(cat).meow()
