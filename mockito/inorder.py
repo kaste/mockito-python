@@ -66,23 +66,26 @@ class InOrder:
         if mock not in self._mocks:
             raise VerificationError(
                 f"InOrder Verification Error! "
-                f"Unexpected call from not observed {mock.mocked_obj}."
+                f"Unexpected call from not observed {mock}."
             )
 
         if not self.ordered_invocations:
             raise VerificationError(
-                f"Trying to verify ordered invocation of {mock.mocked_obj}, "
+                f"Trying to verify ordered invocation of {mock}, "
                 f"but no other invocations have been recorded."
             )
         invocation = self.ordered_invocations.popleft()
         called_mock = invocation.mock
+        # Basically we need a reverse map here.
+        # `mock_for` is a find_mock_for_obj and we do a find_obj_for_mock
+        obj = next(o for o, m in mock_registry.mocks._store if m == called_mock)
 
         expected_mock = mock_registry.mock_for(mock)
         if called_mock != expected_mock:
             raise VerificationError(
                 f"InOrder verification error! "
                 f"Wanted a call from {mock}, but "
-                f"got {invocation} from {called_mock} instead!"
+                f"got {invocation} from {obj} instead!"
             )
         return verify_main(obj=mock, atleast=1, inorder=True)
 
