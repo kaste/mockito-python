@@ -532,9 +532,7 @@ class AnswerSelector(object):
         return self
 
     def thenAnswer(self, *callables: Callable) -> Self:
-        if not callables:
-            raise TypeError("No answer function provided")
-        for callable in callables:
+        for callable in callables or (return_(None),):
             answer = callable
             if self.discard_first_arg:
                 answer = discard_self(answer)
