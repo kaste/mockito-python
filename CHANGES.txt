@@ -2,13 +2,17 @@ MOCKITO CHANGE LOG
 ==================
 
 
-Release 1.6.0
---------------------------------
+Release 2.0.0
+---------------------------------
+
+
+
+Release 1.5.5 (November 17, 2025)
+---------------------------------
 
 - Improved behavior of the ad-hoc methods of mocks.  (#92)
 - Make the shortcut `when(mock).foo().thenReturn()` officially work and just assume
   the user forgot the `None` as return value.
-- Disallow the shortcut `when(mock).foo().thenAnswer()` as it reads odd.
 
 
 
