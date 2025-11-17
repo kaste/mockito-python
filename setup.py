@@ -1,18 +1,7 @@
 from setuptools import setup
 
-import re
-import ast
-
-
-_version_re = re.compile(r'__version__\s+=\s+(.*)')
-
-with open('mockito/__init__.py', 'rb') as f:
-    version = str(ast.literal_eval(_version_re.search(
-        f.read().decode('utf-8')).group(1)))
-
-
 setup(name='mockito',
-      version=version,
+      version='0.0.0',
       packages=['mockito'],
       url='https://github.com/kaste/mockito-python',
       maintainer='herr.kaste',

@@ -1,6 +1,5 @@
 [project]
 name = "mockito"
-version = "2.0.0-dev"
 description = "Spying framework"
 authors = [
     { name = "herr kaste", email = "herr.kaste@gmail.com" }
@@ -9,17 +8,23 @@ dependencies = []
 readme = "README.rst"
 requires-python = ">=3.7"
 license = { text = "MIT" }
+dynamic = ["version"]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [tool.hatch.metadata]
 allow-direct-references = true
 
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "mockito/_version.py"
+
 [dependency-groups]
 dev = [
-    "bump2version>=1.0.1",
     "codespell>=2.2.5",
     "flake8>=5.0.4",
     "ipython>=7.34.0",
@@ -27,5 +32,8 @@ dev = [
     "numpy>=1.21.6",
     "pytest>=7.4.4",
     "sphinx>=4.3.2",
+    "sphinx-autobuild>=2021.3.14",
+]
+docs = [
     "sphinx-autobuild>=2021.3.14",
 ]

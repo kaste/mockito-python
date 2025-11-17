@@ -46,7 +46,12 @@ from .matchers import *  # noqa: F401 F403
 from .matchers import any, contains, times
 from .verification import never
 
-__version__ = '2.0.0-dev'
+try:
+    # Prefer the generated version file written by hatch-vcs/setuptools-scm
+    from ._version import __version__  # type: ignore
+except Exception:  # pragma: no cover - purely defensive fallback
+    # Fallback for editable/dev scenarios before the version file exists
+    __version__ = "0+unknown"
 
 __all__ = [
     'mock',
