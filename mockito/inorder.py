@@ -20,12 +20,16 @@
 from __future__ import annotations
 
 from collections import Counter, deque
-from typing import Tuple, Deque
+from functools import partial
+from typing import Deque
 
 from .verification import VerificationError
-from .invocation import RealInvocation
-from .mocking import Mock
-from .mockito import verify as verify_main
+from .invocation import (
+    RealInvocation,
+    VerifiableInvocation,
+    verification_has_lower_bound_of_zero,
+)
+from .mockito import ArgumentError, verify as verify_main
 from .mock_registry import mock_registry
 
 
@@ -54,7 +58,14 @@ class InOrder:
     def update(self, invocation: RealInvocation) -> None:
         self.ordered_invocations.append(invocation)
 
-    def verify(self, obj: object):
+    def verify(
+        self,
+        obj: object,
+        times=None,
+        atleast=None,
+        atmost=None,
+        between=None,
+    ):
         """
         Central method of InOrder class.
         Use this method to verify the calling order of observed mocks.
@@ -63,43 +74,23 @@ class InOrder:
         """
         expected_mock = mock_registry.mock_for(obj)
         if expected_mock is None:
-            raise VerificationError(
+            raise ArgumentError(
                 f"\n{obj} is not setup with any stubbings or expectations."
             )
 
         if obj not in self._objects:
-            raise VerificationError(
+            raise ArgumentError(
                 f"\n{obj} is not part of that InOrder."
             )
 
-        if not self.ordered_invocations:
-            raise VerificationError(
-                "\nThere are no recorded invocations."
-            )
-
-        # Find the next invocation in global order that hasn't been used
-        # for "in-order" verification yet.
-        next_invocation = next(
-            (inv for inv in self.ordered_invocations if not inv.verified_inorder),
-            None,
+        return verify_main(
+            obj=obj,
+            times=times,
+            atleast=atleast,
+            atmost=atmost,
+            between=between,
+            _factory=partial(InOrderVerifiableInvocation, inorder=self),
         )
-        if next_invocation is None:
-            raise VerificationError(
-                "\nThere are no more recorded invocations."
-            )
-
-        called_mock = next_invocation.mock
-        if called_mock != expected_mock:
-            called_obj = mock_registry.obj_for(called_mock)
-            if called_obj is None:
-                raise RuntimeError(
-                    f"{called_mock} is not in the registry (anymore)."
-                )
-            raise VerificationError(
-                f"\nWanted a call from {obj}, but "
-                f"got {called_obj}.{next_invocation} instead!"
-            )
-        return verify_main(obj=obj, atleast=1, inorder=True)
 
     def __enter__(self):
         return self
@@ -108,3 +99,74 @@ class InOrder:
         for obj in self._objects:
             if m := mock_registry.mock_for(obj):
                 m.detach(self)
+
+
+class InOrderVerifiableInvocation(VerifiableInvocation):
+    def __init__(self, mock, method_name, verification, inorder: InOrder):
+        super().__init__(mock, method_name, verification)
+        self._inorder = inorder
+
+    def __call__(self, *params, **named_params):  # noqa: C901
+        self._remember_params(params, named_params)
+
+        ordered = self._inorder.ordered_invocations
+
+        if not ordered:
+            raise VerificationError(
+                "\nThere are no recorded invocations."
+            )
+
+        # Find first invocation in global order that hasn't been used
+        # for "in-order" verification yet.
+        try:
+            start_idx, next_invocation = next(
+                (i, inv)
+                for i, inv in enumerate(ordered)
+                if not inv.verified_inorder
+            )
+        except StopIteration:
+            raise VerificationError(
+                "\nThere are no more recorded invocations."
+            )
+
+        called_mock = next_invocation.mock
+        if called_mock is not self.mock:
+            called_obj = mock_registry.obj_for(called_mock)
+            if called_obj is None:
+                raise RuntimeError(
+                    f"{called_mock} is not in the registry (anymore)."
+                )
+            expected_obj = mock_registry.obj_for(self.mock)
+            raise VerificationError(
+                f"\nWanted a call from {expected_obj}, but "
+                f"got {called_obj}.{next_invocation} instead!"
+            )
+
+        matched_invocations = []
+
+        # Walk the contiguous block of this mock in the global queue.
+        for inv in list(ordered)[start_idx:]:
+            if inv.verified_inorder:
+                continue
+            if inv.mock is not self.mock:
+                break
+
+            if not self.matches(inv):
+                raise VerificationError(
+                    "\nWanted %s to be invoked,\n"
+                    "got    %s instead." % (self, inv)
+                )
+
+            self.capture_arguments(inv)
+            matched_invocations.append(inv)
+
+        self.verification.verify(self, len(matched_invocations))
+
+        for inv in matched_invocations:
+            inv.verified = True
+            inv.verified_inorder = True
+
+        if verification_has_lower_bound_of_zero(self.verification):
+            for stub in self.mock.stubbed_invocations:
+                if stub.matches(self) or self.matches(stub):
+                    stub.allow_zero_invocations = True

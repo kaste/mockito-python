@@ -108,8 +108,15 @@ def _get_mock_or_raise(obj: object) -> Mock:
         raise ArgumentError("obj '%s' is not registered" % obj)
     return theMock
 
-def verify(obj, times=None, atleast=None, atmost=None, between=None,
-           inorder=False):
+def verify(
+    obj,
+    times=None,
+    atleast=None,
+    atmost=None,
+    between=None,
+    inorder=False,
+    _factory=None,
+):
     """Central interface to verify interactions.
 
     `verify` uses a fluent interface::
@@ -145,10 +152,11 @@ def verify(obj, times=None, atleast=None, atmost=None, between=None,
 
     theMock = _get_mock_or_raise(obj)
 
+    factory = _factory or invocation.VerifiableInvocation
+
     class Verify(object):
         def __getattr__(self, method_name):
-            return invocation.VerifiableInvocation(
-                theMock, method_name, verification_fn)
+            return factory(theMock, method_name, verification_fn)
 
     return Verify()
 

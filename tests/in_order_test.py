@@ -1,6 +1,6 @@
 import pytest
 
-from mockito import expect, mock, VerificationError
+from mockito import expect, mock, ArgumentError, VerificationError
 from mockito.inorder import InOrder
 from mockito import verify
 
@@ -52,7 +52,7 @@ def test_error_message_for_unknown_objects():
     bob = Dog()
     bob.say("Grrr!")
     with InOrder(bob) as in_order:
-        with pytest.raises(VerificationError) as e:
+        with pytest.raises(ArgumentError) as e:
             in_order.verify(bob).say("Wuff!")
     assert str(e.value) == (
         f"\n{bob} is not setup with any stubbings or expectations."
@@ -91,7 +91,7 @@ def test_verifing_not_observed_mocks_should_raise():
     in_order: InOrder = InOrder(cat)
     to_ignore.bark()
 
-    with pytest.raises(VerificationError) as e:
+    with pytest.raises(ArgumentError) as e:
         in_order.verify(to_ignore).bark()
     assert str(e.value) == (
         f"\n{to_ignore} is not part of that InOrder."
@@ -159,3 +159,65 @@ def test_do_not_record_after_detach():
     cat.meow()
     with pytest.raises(VerificationError):
         in_order.verify(cat).meow()
+
+
+def test_in_order_verify_times_across_mocks():
+    cat = mock()
+    dog = mock()
+
+    in_order: InOrder = InOrder(cat, dog)
+    cat.meow()
+    dog.bark()
+    cat.meow()
+    cat.meow()
+
+    in_order.verify(cat, times=1).meow()
+    in_order.verify(dog).bark()
+    in_order.verify(cat, times=2).meow()
+
+
+def test_in_order_verify_atleast():
+    cat = mock()
+    dog = mock()
+
+    in_order: InOrder = InOrder(cat, dog)
+    cat.meow()
+    cat.meow()
+    cat.meow()
+    dog.bark()
+    cat.meow()
+
+    in_order.verify(cat, atleast=2).meow()
+    in_order.verify(dog).bark()
+    in_order.verify(cat, atleast=1).meow()
+
+
+def test_in_order_verify_atmost():
+    cat = mock()
+    dog = mock()
+
+    in_order: InOrder = InOrder(cat, dog)
+    cat.meow()
+    cat.meow()
+    dog.bark()
+    cat.meow()
+
+    in_order.verify(cat, atmost=2).meow()
+    in_order.verify(dog).bark()
+    in_order.verify(cat, atmost=1).meow()
+
+
+def test_in_order_verify_between():
+    cat = mock()
+    dog = mock()
+
+    in_order: InOrder = InOrder(cat, dog)
+    cat.meow()
+    cat.meow()
+    dog.bark()
+    cat.meow()
+    cat.meow()
+
+    in_order.verify(cat, between=(1, 3)).meow()
+    in_order.verify(dog).bark()
+    in_order.verify(cat, between=(1, 3)).meow()
