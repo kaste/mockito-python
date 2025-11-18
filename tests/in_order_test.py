@@ -1,8 +1,17 @@
 import pytest
 
-from mockito import mock, VerificationError
+from mockito import expect, mock, VerificationError
 from mockito.inorder import InOrder
 from mockito import verify
+
+
+class Dog:
+    def say(self, what):
+        return what
+
+    def __str__(self):
+        return "<Dog>"
+
 
 def test_observing_the_same_mock_twice_should_raise():
     a = mock()
@@ -39,6 +48,42 @@ def test_incorrect_order_declaration_should_fail():
     )
 
 
+def test_error_message_for_unknown_objects():
+    bob = Dog()
+    bob.say("Grrr!")
+    with InOrder(bob) as in_order:
+        with pytest.raises(VerificationError) as e:
+            in_order.verify(bob).say("Wuff!")
+    assert str(e.value) == (
+        f"\n{bob} is not setup with any stubbings or expectations."
+    )
+
+def test_error_message_if_queue_was_never_not_empty():
+    bob = Dog()
+    expect(bob).say(...)
+    with InOrder(bob) as in_order:
+        with pytest.raises(VerificationError) as e:
+            in_order.verify(bob).say(...)
+
+    assert str(e.value) == (
+        "\nThere are no recorded invocations."
+    )
+
+def test_error_message_if_queue_is_empty():
+    bob = Dog()
+    rob = Dog()
+    expect(bob).say(...)
+    expect(rob).say(...)
+    with InOrder(bob, rob) as in_order:
+        bob.say("Wuff!")
+        in_order.verify(bob).say(...)
+        with pytest.raises(VerificationError) as e:
+            in_order.verify(rob).say(...)
+
+    assert str(e.value) == (
+        "\nThere are no more recorded invocations."
+    )
+
 def test_verifing_not_observed_mocks_should_raise():
     cat = mock()
     to_ignore = mock()
@@ -49,7 +94,7 @@ def test_verifing_not_observed_mocks_should_raise():
     with pytest.raises(VerificationError) as e:
         in_order.verify(to_ignore).bark()
     assert str(e.value) == (
-        f"\nUnexpected call from not observed {to_ignore}."
+        f"\n{to_ignore} is not part of that InOrder."
     )
 
 def test_can_verify_multiple_orders():

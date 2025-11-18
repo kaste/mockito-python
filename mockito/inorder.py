@@ -62,28 +62,42 @@ class InOrder:
         :param mock: mock to verify the ordered invocation
 
         """
+        expected_mock = mock_registry.mock_for(mock)
+        if expected_mock is None:
+            raise VerificationError(
+                f"\n{mock} is not setup with any stubbings or expectations."
+            )
 
         if mock not in self._mocks:
             raise VerificationError(
-                f"\nUnexpected call from not observed {mock}."
+                f"\n{mock} is not part of that InOrder."
             )
 
         if not self.ordered_invocations:
             raise VerificationError(
-                f"\nTrying to verify ordered invocation of {mock}, "
-                f"but no other invocations have been recorded."
+                "\nThere are no recorded invocations."
             )
-        invocation = self.ordered_invocations.popleft()
-        called_mock = invocation.mock
+
+        # Find the next invocation in global order that hasn't been used
+        # for "in-order" verification yet.
+        next_invocation = next(
+            (inv for inv in self.ordered_invocations if not inv.verified_inorder),
+            None,
+        )
+        if next_invocation is None:
+            raise VerificationError(
+                "\nThere are no more recorded invocations."
+            )
+
+        called_mock = next_invocation.mock
         # Basically we need a reverse map here.
         # `mock_for` is a find_mock_for_obj and we do a find_obj_for_mock
         obj = next(o for o, m in mock_registry.mocks._store if m == called_mock)
 
-        expected_mock = mock_registry.mock_for(mock)
         if called_mock != expected_mock:
             raise VerificationError(
                 f"\nWanted a call from {mock}, but "
-                f"got {obj}.{invocation} instead!"
+                f"got {obj}.{next_invocation} instead!"
             )
         return verify_main(obj=mock, atleast=1, inorder=True)
 
@@ -91,5 +105,7 @@ class InOrder:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        for mock in self._mocks:
-            mock.detach(self)
+        for obj in self._mocks:
+            m = mock_registry.mock_for(obj)
+            if m:
+                m.detach(self)
