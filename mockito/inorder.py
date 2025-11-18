@@ -49,11 +49,13 @@ class InOrder:
                 f"{[str(d) for d in duplicates]}"
             )
         self._objects = objects
-        for obj in objects:
+        self._attach_all()
+        self.ordered_invocations: Deque[RealInvocation] = deque()
+
+    def _attach_all(self):
+        for obj in self._objects:
             if m := mock_registry.mock_for(obj):
                 m.attach(self)
-
-        self.ordered_invocations: Deque[RealInvocation] = deque()
 
     def update(self, invocation: RealInvocation) -> None:
         self.ordered_invocations.append(invocation)
@@ -93,6 +95,7 @@ class InOrder:
         )
 
     def __enter__(self):
+        self._attach_all()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

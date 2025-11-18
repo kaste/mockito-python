@@ -72,10 +72,14 @@ class Mock:
         self._observers: list = []
 
     def attach(self, observer) -> None:
-        self._observers.append(observer)
+        if observer not in self._observers:
+            self._observers.append(observer)
 
     def detach(self, observer) -> None:
-        self._observers.remove(observer)
+        try:
+            self._observers.remove(observer)
+        except ValueError:
+            pass
 
     def remember(self, invocation: invocation.RealInvocation) -> None:
         self.invocations.append(invocation)

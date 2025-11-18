@@ -161,6 +161,17 @@ def test_do_not_record_after_detach():
         in_order.verify(cat).meow()
 
 
+def test_allow_double_entrance():
+    cat = mock()
+    in_order = InOrder(cat)
+    with in_order:
+        pass
+    cat.meow()
+    with in_order:
+        cat.meow()
+    in_order.verify(cat, times=1).meow()
+
+
 def test_in_order_verify_times_across_mocks():
     cat = mock()
     dog = mock()
