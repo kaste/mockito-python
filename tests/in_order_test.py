@@ -8,7 +8,7 @@ def test_observing_the_same_mock_twice_should_raise():
     a = mock()
     with pytest.raises(ValueError) as e:
         InOrder(a, a)
-    assert str(e.value) == ("The following Mocks are duplicated: "
+    assert str(e.value) == ("\nThe following Mocks are duplicated: "
                             f"['{a}']")
 
 def test_correct_order_declaration_should_pass():
@@ -34,8 +34,7 @@ def test_incorrect_order_declaration_should_fail():
     with pytest.raises(VerificationError) as e:
         in_order.verify(cat).meow()
     assert str(e.value) == (
-        "InOrder verification error! "
-        f"Wanted a call from {cat}, but got "
+        f"\nWanted a call from {cat}, but got "
         f"bark() from {dog} instead!"
     )
 
@@ -50,8 +49,7 @@ def test_verifing_not_observed_mocks_should_raise():
     with pytest.raises(VerificationError) as e:
         in_order.verify(to_ignore).bark()
     assert str(e.value) == (
-        f"InOrder Verification Error! "
-        f"Unexpected call from not observed {to_ignore}."
+        f"\nUnexpected call from not observed {to_ignore}."
     )
 
 def test_can_verify_multiple_orders():

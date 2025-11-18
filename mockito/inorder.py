@@ -41,7 +41,7 @@ class InOrder:
         duplicates = [d for d, freq in counter.items() if freq > 1]
         if duplicates:
             raise ValueError(
-                f"The following Mocks are duplicated: "
+                f"\nThe following Mocks are duplicated: "
                 f"{[str(d) for d in duplicates]}"
             )
         self._mocks = mocks
@@ -65,13 +65,12 @@ class InOrder:
 
         if mock not in self._mocks:
             raise VerificationError(
-                f"InOrder Verification Error! "
-                f"Unexpected call from not observed {mock}."
+                f"\nUnexpected call from not observed {mock}."
             )
 
         if not self.ordered_invocations:
             raise VerificationError(
-                f"Trying to verify ordered invocation of {mock}, "
+                f"\nTrying to verify ordered invocation of {mock}, "
                 f"but no other invocations have been recorded."
             )
         invocation = self.ordered_invocations.popleft()
@@ -83,8 +82,7 @@ class InOrder:
         expected_mock = mock_registry.mock_for(mock)
         if called_mock != expected_mock:
             raise VerificationError(
-                f"InOrder verification error! "
-                f"Wanted a call from {mock}, but "
+                f"\nWanted a call from {mock}, but "
                 f"got {invocation} from {obj} instead!"
             )
         return verify_main(obj=mock, atleast=1, inorder=True)
