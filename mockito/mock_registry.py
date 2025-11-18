@@ -41,6 +41,9 @@ class MockRegistry:
     def mock_for(self, obj: object) -> Mock | None:
         return self.mocks.get(obj, None)
 
+    def obj_for(self, mock: Mock) -> object | None:
+        return self.mocks.lookup(mock)
+
     def unstub(self, obj: object) -> None:
         try:
             mock = self.mocks.pop(obj)
@@ -82,6 +85,12 @@ class IdentityMap(object):
         for k, value in self._store:
             if k is key:
                 return value
+        return default
+
+    def lookup(self, value, default=None):
+        for key, v in self._store:
+            if v is value:
+                return key
         return default
 
     def values(self):

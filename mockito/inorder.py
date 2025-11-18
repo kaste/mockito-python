@@ -36,18 +36,17 @@ def verify(object, *args, **kwargs):
 
 class InOrder:
 
-    def __init__(self, *mocks: object):
-        counter = Counter(mocks)
+    def __init__(self, *objects: object):
+        counter = Counter(objects)
         duplicates = [d for d, freq in counter.items() if freq > 1]
         if duplicates:
             raise ValueError(
                 f"\nThe following Mocks are duplicated: "
                 f"{[str(d) for d in duplicates]}"
             )
-        self._mocks = mocks
-        for mock in mocks:
-            m = mock_registry.mock_for(mock)
-            if m:
+        self._objects = objects
+        for obj in objects:
+            if m := mock_registry.mock_for(obj):
                 m.attach(self)
 
         self.ordered_invocations: Deque[RealInvocation] = deque()
@@ -55,22 +54,22 @@ class InOrder:
     def update(self, invocation: RealInvocation) -> None:
         self.ordered_invocations.append(invocation)
 
-    def verify(self, mock: object):
+    def verify(self, obj: object):
         """
         Central method of InOrder class.
         Use this method to verify the calling order of observed mocks.
-        :param mock: mock to verify the ordered invocation
+        :param obj: obj to verify the ordered invocation
 
         """
-        expected_mock = mock_registry.mock_for(mock)
+        expected_mock = mock_registry.mock_for(obj)
         if expected_mock is None:
             raise VerificationError(
-                f"\n{mock} is not setup with any stubbings or expectations."
+                f"\n{obj} is not setup with any stubbings or expectations."
             )
 
-        if mock not in self._mocks:
+        if obj not in self._objects:
             raise VerificationError(
-                f"\n{mock} is not part of that InOrder."
+                f"\n{obj} is not part of that InOrder."
             )
 
         if not self.ordered_invocations:
@@ -90,22 +89,22 @@ class InOrder:
             )
 
         called_mock = next_invocation.mock
-        # Basically we need a reverse map here.
-        # `mock_for` is a find_mock_for_obj and we do a find_obj_for_mock
-        obj = next(o for o, m in mock_registry.mocks._store if m == called_mock)
-
         if called_mock != expected_mock:
+            called_obj = mock_registry.obj_for(called_mock)
+            if called_obj is None:
+                raise RuntimeError(
+                    f"{called_mock} is not in the registry (anymore)."
+                )
             raise VerificationError(
-                f"\nWanted a call from {mock}, but "
-                f"got {obj}.{next_invocation} instead!"
+                f"\nWanted a call from {obj}, but "
+                f"got {called_obj}.{next_invocation} instead!"
             )
-        return verify_main(obj=mock, atleast=1, inorder=True)
+        return verify_main(obj=obj, atleast=1, inorder=True)
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        for obj in self._mocks:
-            m = mock_registry.mock_for(obj)
-            if m:
+        for obj in self._objects:
+            if m := mock_registry.mock_for(obj):
                 m.detach(self)
