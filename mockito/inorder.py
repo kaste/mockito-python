@@ -83,7 +83,7 @@ class InOrder:
         if called_mock != expected_mock:
             raise VerificationError(
                 f"\nWanted a call from {mock}, but "
-                f"got {invocation} from {obj} instead!"
+                f"got {obj}.{invocation} instead!"
             )
         return verify_main(obj=mock, atleast=1, inorder=True)
 

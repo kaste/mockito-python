@@ -35,7 +35,7 @@ def test_incorrect_order_declaration_should_fail():
         in_order.verify(cat).meow()
     assert str(e.value) == (
         f"\nWanted a call from {cat}, but got "
-        f"bark() from {dog} instead!"
+        f"{dog}.bark() instead!"
     )
 
 
