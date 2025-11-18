@@ -17,8 +17,14 @@ def test_observing_the_same_mock_twice_should_raise():
     a = mock()
     with pytest.raises(ValueError) as e:
         InOrder(a, a)
-    assert str(e.value) == ("\nThe following Mocks are duplicated: "
-                            f"['{a}']")
+    assert str(e.value) == f"{a} is provided more than once"
+
+
+def test_observing_the_same_mock_twice_should_raise_unhashable_obj():
+    a = dict()  # type: ignore[var-annotated]
+    with pytest.raises(ValueError):
+        InOrder(a, a)
+
 
 def test_correct_order_declaration_should_pass():
     cat = mock()

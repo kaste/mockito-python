@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 from __future__ import annotations
 
-from collections import Counter, deque
+from collections import deque
 from functools import partial
 from typing import Deque
 
@@ -41,14 +41,12 @@ def verify(object, *args, **kwargs):
 class InOrder:
 
     def __init__(self, *objects: object):
-        counter = Counter(objects)
-        duplicates = [d for d, freq in counter.items() if freq > 1]
-        if duplicates:
-            raise ValueError(
-                f"\nThe following Mocks are duplicated: "
-                f"{[str(d) for d in duplicates]}"
-            )
-        self._objects = objects
+        objects_ = []
+        for obj in objects:
+            if obj in objects_:
+                raise ValueError(f"{obj} is provided more than once")
+            objects_.append(obj)
+        self._objects = objects_
         self._attach_all()
         self.ordered_invocations: Deque[RealInvocation] = deque()
 
