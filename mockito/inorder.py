@@ -36,7 +36,7 @@ def verify(object, *args, **kwargs):
 
 class InOrder:
 
-    def __init__(self, *mocks: Mock):
+    def __init__(self, *mocks: object):
         counter = Counter(mocks)
         duplicates = [d for d, freq in counter.items() if freq > 1]
         if duplicates:
@@ -55,7 +55,7 @@ class InOrder:
     def update(self, invocation: RealInvocation) -> None:
         self.ordered_invocations.append(invocation)
 
-    def verify(self, mock):
+    def verify(self, mock: object):
         """
         Central method of InOrder class.
         Use this method to verify the calling order of observed mocks.
