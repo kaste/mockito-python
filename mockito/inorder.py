@@ -41,9 +41,9 @@ def verify(object, *args, **kwargs):
 class InOrder:
 
     def __init__(self, *objects: object):
-        objects_ = []
+        objects_: list[object] = []
         for obj in objects:
-            if obj in objects_:
+            if any(observed is obj for observed in objects_):
                 raise ValueError(f"{obj} is provided more than once")
             objects_.append(obj)
         self._objects = objects_
@@ -78,7 +78,7 @@ class InOrder:
                 f"\n{obj} is not setup with any stubbings or expectations."
             )
 
-        if obj not in self._objects:
+        if not any(observed is obj for observed in self._objects):
             raise ArgumentError(
                 f"\n{obj} is not part of that InOrder."
             )

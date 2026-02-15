@@ -13,6 +13,11 @@ class Dog:
         return "<Dog>"
 
 
+class EqualDog(Dog):
+    def __eq__(self, other):
+        return isinstance(other, EqualDog)
+
+
 def test_observing_the_same_mock_twice_should_raise():
     a = mock()
     with pytest.raises(ValueError) as e:
@@ -24,6 +29,29 @@ def test_observing_the_same_mock_twice_should_raise_unhashable_obj():
     a = dict()  # type: ignore[var-annotated]
     with pytest.raises(ValueError):
         InOrder(a, a)
+
+
+def test_observing_distinct_but_equal_objects_should_not_raise():
+    a = EqualDog()
+    b = EqualDog()
+    InOrder(a, b)
+
+
+def test_verifying_equal_but_not_observed_object_should_raise_not_part_of_inorder():
+    observed = EqualDog()
+    not_observed = EqualDog()
+
+    expect(observed).say(...)
+    expect(not_observed).say(...)
+
+    in_order = InOrder(observed)
+
+    with pytest.raises(ArgumentError) as e:
+        in_order.verify(not_observed).say(...)
+
+    assert str(e.value) == (
+        f"\n{not_observed} is not part of that InOrder."
+    )
 
 
 def test_correct_order_declaration_should_pass():
