@@ -1,8 +1,12 @@
+import gc
+import weakref
+
 import pytest
 
 from mockito import expect, mock, ArgumentError, VerificationError
 from mockito.inorder import InOrder
 from mockito import verify
+from mockito.mock_registry import mock_registry
 
 
 class Dog:
@@ -102,6 +106,36 @@ def test_error_message_if_queue_was_never_not_empty():
     assert str(e.value) == (
         "\nThere are no recorded invocations."
     )
+
+
+def test_capture_calls_after_late_mock_registration():
+    bob = Dog()
+
+    in_order = InOrder(bob)
+
+    expect(bob).say(...)
+    bob.say("Wuff!")
+
+    in_order.verify(bob).say(...)
+
+
+def test_register_observer_is_cleaned_up_automatically_on_gc():
+    baseline = len(mock_registry._register_observers)
+
+    in_order = InOrder(Dog())
+    assert len(mock_registry._register_observers) == baseline + 1
+
+    in_order_ref = weakref.ref(in_order)
+    del in_order
+    gc.collect()
+
+    assert in_order_ref() is None
+
+    # Trigger observer pruning.
+    mock()
+
+    assert len(mock_registry._register_observers) == baseline
+
 
 def test_error_message_if_queue_is_empty():
     bob = Dog()
@@ -248,6 +282,22 @@ def test_allow_double_entrance():
     with in_order:
         cat.meow()
     in_order.verify(cat, times=1).meow()
+
+
+def test_close_should_detach_and_stop_late_registration_capture():
+    bob = Dog()
+
+    in_order = InOrder(bob)
+    in_order.close()
+    in_order.close()
+
+    expect(bob).say(...)
+    bob.say("Wuff!")
+
+    with pytest.raises(VerificationError) as e:
+        in_order.verify(bob).say(...)
+
+    assert str(e.value) == "\nThere are no recorded invocations."
 
 
 def test_in_order_verify_times_across_mocks():

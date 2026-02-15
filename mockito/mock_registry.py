@@ -19,10 +19,14 @@
 # THE SOFTWARE.
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
+import weakref
+from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
     from .mocking import Mock
+
+
+RegisterObserver = Callable[[object, "Mock"], None]
 
 
 class MockRegistry:
@@ -34,9 +38,46 @@ class MockRegistry:
 
     def __init__(self):
         self.mocks = IdentityMap()
+        self._register_observers: list[weakref.WeakMethod] = []
 
     def register(self, obj: object, mock: Mock) -> None:
         self.mocks[obj] = mock
+
+        alive_observers: list[weakref.WeakMethod] = []
+        for observer_ref in self._register_observers:
+            observer = observer_ref()
+            if observer is None:
+                continue
+
+            observer(obj, mock)
+            alive_observers.append(observer_ref)
+
+        self._register_observers = alive_observers
+
+    def add_register_observer(self, observer: RegisterObserver) -> None:
+        self._prune_dead_register_observers()
+        for observer_ref in self._register_observers:
+            callback = observer_ref()
+            if callback is not None and callback == observer:
+                return
+
+        self._register_observers.append(weakref.WeakMethod(observer))
+
+    def remove_register_observer(self, observer: RegisterObserver) -> None:
+        self._prune_dead_register_observers()
+
+        for i, observer_ref in enumerate(self._register_observers):
+            callback = observer_ref()
+            if callback is not None and callback == observer:
+                del self._register_observers[i]
+                break
+
+    def _prune_dead_register_observers(self) -> None:
+        self._register_observers = [
+            observer_ref
+            for observer_ref in self._register_observers
+            if observer_ref() is not None
+        ]
 
     def mock_for(self, obj: object) -> Mock | None:
         return self.mocks.get(obj, None)

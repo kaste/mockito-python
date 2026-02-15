@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from collections import deque
 from functools import partial
-from typing import Deque
+from typing import Deque, TYPE_CHECKING
 
 from .verification import VerificationError
 from .invocation import (
@@ -31,6 +31,9 @@ from .invocation import (
 )
 from .mockito import ArgumentError, verify as verify_main
 from .mock_registry import mock_registry
+
+if TYPE_CHECKING:
+    from .mocking import Mock
 
 
 def verify(object, *args, **kwargs):
@@ -47,13 +50,39 @@ class InOrder:
                 raise ValueError(f"{obj} is provided more than once")
             objects_.append(obj)
         self._objects = objects_
-        self._attach_all()
+        self._active = True
+        self._observer_registered = False
         self.ordered_invocations: Deque[RealInvocation] = deque()
+
+        self._register_observer()
+        self._attach_all()
+
+    def _is_observed(self, obj: object) -> bool:
+        return any(observed is obj for observed in self._objects)
+
+    def _register_observer(self) -> None:
+        if not self._observer_registered:
+            mock_registry.add_register_observer(self._on_mock_registered)
+            self._observer_registered = True
+
+    def _unregister_observer(self) -> None:
+        if self._observer_registered:
+            mock_registry.remove_register_observer(self._on_mock_registered)
+            self._observer_registered = False
 
     def _attach_all(self):
         for obj in self._objects:
             if m := mock_registry.mock_for(obj):
                 m.attach(self)
+
+    def _detach_all(self) -> None:
+        for obj in self._objects:
+            if m := mock_registry.mock_for(obj):
+                m.detach(self)
+
+    def _on_mock_registered(self, obj: object, mock: Mock) -> None:
+        if self._active and self._is_observed(obj):
+            mock.attach(self)
 
     def update(self, invocation: RealInvocation) -> None:
         self.ordered_invocations.append(invocation)
@@ -78,7 +107,7 @@ class InOrder:
                 f"\n{obj} is not setup with any stubbings or expectations."
             )
 
-        if not any(observed is obj for observed in self._objects):
+        if not self._is_observed(obj):
             raise ArgumentError(
                 f"\n{obj} is not part of that InOrder."
             )
@@ -92,14 +121,19 @@ class InOrder:
             _factory=partial(InOrderVerifiableInvocation, inorder=self),
         )
 
+    def close(self) -> None:
+        self._active = False
+        self._detach_all()
+        self._unregister_observer()
+
     def __enter__(self):
+        self._active = True
+        self._register_observer()
         self._attach_all()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        for obj in self._objects:
-            if m := mock_registry.mock_for(obj):
-                m.detach(self)
+        self.close()
 
 
 class InOrderVerifiableInvocation(VerifiableInvocation):
