@@ -143,7 +143,7 @@ class InOrderVerifiableInvocation(VerifiableInvocation):
                 f"got {called_obj}.{next_invocation} instead!"
             )
 
-        matched_invocations = []
+        matched_invocations: list[RealInvocation] = []
 
         # Walk the contiguous block of this mock in the global queue.
         for inv in list(ordered)[start_idx:]:
@@ -153,10 +153,12 @@ class InOrderVerifiableInvocation(VerifiableInvocation):
                 break
 
             if not self.matches(inv):
-                raise VerificationError(
-                    "\nWanted %s to be invoked,\n"
-                    "got    %s instead." % (self, inv)
-                )
+                if not matched_invocations:
+                    raise VerificationError(
+                        "\nWanted %s to be invoked,\n"
+                        "got    %s instead." % (self, inv)
+                    )
+                break
 
             self.capture_arguments(inv)
             matched_invocations.append(inv)

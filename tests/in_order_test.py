@@ -158,6 +158,50 @@ def test_can_verify_multiple_arguments():
     in_order.verify(dog).bark()
     in_order.verify(cat).meow("Rrrr")
 
+
+def test_can_verify_contiguous_calls_with_argument_checking():
+    cat = mock()
+
+    in_order = InOrder(cat)
+    cat.meow("a")
+    cat.meow("b")
+
+    in_order.verify(cat).meow("a")
+    in_order.verify(cat).meow("b")
+
+
+def test_verifying_more_contiguous_calls_than_recorded_should_raise():
+    cat = mock()
+
+    in_order = InOrder(cat)
+    cat.meow("a")
+    cat.meow("b")
+
+    in_order.verify(cat).meow("a")
+    in_order.verify(cat).meow("b")
+
+    with pytest.raises(VerificationError) as e:
+        in_order.verify(cat).meow("a")
+
+    assert str(e.value) == "\nThere are no more recorded invocations."
+
+
+def test_first_contiguous_call_argument_mismatch_should_raise():
+    cat = mock()
+
+    in_order = InOrder(cat)
+    cat.meow("a")
+    cat.meow("b")
+
+    with pytest.raises(VerificationError) as e:
+        in_order.verify(cat).meow("b")
+
+    assert str(e.value) == (
+        "\nWanted meow('b') to be invoked,"
+        "\ngot    meow('a') instead."
+    )
+
+
 def test_in_order_context_manager():
     cat = mock()
     dog = mock()
