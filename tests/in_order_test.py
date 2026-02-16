@@ -360,3 +360,45 @@ def test_in_order_verify_between():
     in_order.verify(cat, between=(1, 3)).meow()
     in_order.verify(dog).bark()
     in_order.verify(cat, between=(1, 3)).meow()
+
+
+@pytest.mark.parametrize(
+    "verify_kwargs",
+    [
+        {"times": 0},
+        {"between": (0, 2)},
+    ],
+    ids=["times_0", "between_0_2"],
+)
+def test_in_order_verify_zero_lower_bound_does_not_fail_on_other_mock(
+    verify_kwargs,
+):
+    cat = mock()
+    dog = mock()
+
+    in_order: InOrder = InOrder(cat, dog)
+    dog.bark()
+
+    in_order.verify(cat, **verify_kwargs).meow()
+    in_order.verify(dog).bark()
+
+
+@pytest.mark.parametrize(
+    "verify_kwargs",
+    [
+        {"times": 0},
+        {"between": (0, 2)},
+    ],
+    ids=["times_0", "between_0_2"],
+)
+def test_in_order_verify_zero_lower_bound_does_not_fail_on_empty_queue(
+    verify_kwargs,
+):
+    cat = mock()
+
+    in_order: InOrder = InOrder(cat)
+
+    in_order.verify(cat, **verify_kwargs).meow()
+
+    cat.meow()
+    in_order.verify(cat).meow()

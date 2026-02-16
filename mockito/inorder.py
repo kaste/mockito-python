@@ -24,11 +24,7 @@ from functools import partial
 from typing import Deque, TYPE_CHECKING
 
 from .verification import VerificationError
-from .invocation import (
-    RealInvocation,
-    VerifiableInvocation,
-    verification_has_lower_bound_of_zero,
-)
+from .invocation import RealInvocation, VerifiableInvocation
 from .mockito import ArgumentError, verify as verify_main
 from .mock_registry import mock_registry
 
@@ -147,6 +143,8 @@ class InOrderVerifiableInvocation(VerifiableInvocation):
         ordered = self._inorder.ordered_invocations
 
         if not ordered:
+            if self.handle_zero_matches_if_allowed():
+                return
             raise VerificationError(
                 "\nThere are no recorded invocations."
             )
@@ -160,12 +158,16 @@ class InOrderVerifiableInvocation(VerifiableInvocation):
                 if not inv.verified_inorder
             )
         except StopIteration:
+            if self.handle_zero_matches_if_allowed():
+                return
             raise VerificationError(
                 "\nThere are no more recorded invocations."
             )
 
         called_mock = next_invocation.mock
         if called_mock is not self.mock:
+            if self.handle_zero_matches_if_allowed():
+                return
             called_obj = mock_registry.obj_for(called_mock)
             if called_obj is None:
                 raise RuntimeError(
@@ -203,7 +205,12 @@ class InOrderVerifiableInvocation(VerifiableInvocation):
             inv.verified = True
             inv.verified_inorder = True
 
-        if verification_has_lower_bound_of_zero(self.verification):
-            for stub in self.mock.stubbed_invocations:
-                if stub.matches(self) or self.matches(stub):
-                    stub.allow_zero_invocations = True
+        self.maybe_check_stubs_as_used()
+
+    def handle_zero_matches_if_allowed(self) -> bool:
+        if not self.verification_allows_zero_matches:
+            return False
+
+        self.verification.verify(self, 0)
+        self.maybe_check_stubs_as_used()
+        return True

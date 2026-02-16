@@ -310,6 +310,8 @@ class VerifiableInvocation(MatchingInvocation):
     ) -> None:
         super(VerifiableInvocation, self).__init__(mock, method_name)
         self.verification = verification
+        self.verification_allows_zero_matches = \
+            verification_has_lower_bound_of_zero(self.verification)
 
     def __call__(self, *params: Any, **named_params: Any) -> None:
         self._remember_params(params, named_params)
@@ -325,8 +327,22 @@ class VerifiableInvocation(MatchingInvocation):
         for invocation in matched_invocations:
             invocation.verified = True
 
-        # check stubs as 'used'
-        if verification_has_lower_bound_of_zero(self.verification):
+        self.maybe_check_stubs_as_used()
+
+    def maybe_check_stubs_as_used(self) -> None:
+        """Mark matching stubs as used for explicit zero-lower-bound verifies.
+
+        This is important for follow-up global checks like
+        ``verifyStubbedInvocationsAreUsed`` and
+        ``ensureNoUnverifiedInteractions``: once a call pattern was explicitly
+        verified (including the case where the expected count is zero), those
+        checks should not fail only because the corresponding stub has factual
+        usage count ``0``.
+
+        In other words, such tests are about verifying *absence* of matching
+        invocations, not about requiring that the stub was exercised.
+        """
+        if self.verification_allows_zero_matches:
             for stub in self.mock.stubbed_invocations:
                 # Remember: matches(a, b) does not imply matches(b, a)
                 # (see above!), so we check for both
