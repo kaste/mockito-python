@@ -140,6 +140,21 @@ class NestedPropertyAccess:
     def p(self):
         return self.q + 2
 
+
+class ReentrantSamePropertyAccess:
+    def __init__(self):
+        self._depth = 0
+
+    @property
+    def p(self):
+        if self._depth == 0:
+            self._depth += 1
+            try:
+                return self.p + 1
+            finally:
+                self._depth -= 1
+        return 41
+
 def test_property_access():
     assert F().p == 42
     with when(F).p.thenReturn(23):
@@ -171,6 +186,14 @@ def test_nested_property_access_then_call_original_implementation():
             assert nested.p == 42
             assert nested.q == 40
             assert nested.p == 42
+
+
+def test_reentrant_same_property_then_call_original_implementation():
+    reentrant = ReentrantSamePropertyAccess()
+
+    with when(ReentrantSamePropertyAccess).p.thenCallOriginalImplementation():
+        assert reentrant.p == 42
+        assert reentrant.p == 42
 
 
 def test_descriptor_access():
