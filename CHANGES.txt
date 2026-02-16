@@ -12,6 +12,25 @@ Release 2.0.0
   check can be disabled with the environment variable `MOCKITO_CONTEXT_MANAGERS_CHECK_USAGE="0"`.
 - The `between` matcher now supports open ranges, e.g. `between=(0,)` to assert that at least
   0 interactions occurred.
+- Added a first-class `InOrder` API via ``mockito.InOrder`` (also available as
+  ``mockito.inorder.InOrder``). The legacy in-order mode only supported one mock at a time;
+  the new API supports true cross-mock order verification.
+
+  Migration (old limited style -> new style)::
+
+      # Before (legacy, single-mock order only)
+      from mockito import inorder
+      inorder.verify(cat).meow()
+      inorder.verify(cat).purr()
+
+      # Now (preferred, explicit cross-mock order)
+      from mockito import InOrder
+      in_order = InOrder(cat, dog)
+      in_order.verify(cat).meow()
+      in_order.verify(dog).bark()
+
+- The legacy in-order verification mode (``inorder.verify(...)``)
+  is deprecated in favor of ``InOrder(...)``.
 
 
 
