@@ -367,8 +367,9 @@ def test_in_order_verify_between():
     [
         {"times": 0},
         {"between": (0, 2)},
+        {"between": (0,)},
     ],
-    ids=["times_0", "between_0_2"],
+    ids=["times_0", "between_0_2", "between_0_open_ended"],
 )
 def test_in_order_verify_zero_lower_bound_does_not_fail_on_other_mock(
     verify_kwargs,
@@ -388,8 +389,9 @@ def test_in_order_verify_zero_lower_bound_does_not_fail_on_other_mock(
     [
         {"times": 0},
         {"between": (0, 2)},
+        {"between": (0,)},
     ],
-    ids=["times_0", "between_0_2"],
+    ids=["times_0", "between_0_2", "between_0_open_ended"],
 )
 def test_in_order_verify_zero_lower_bound_does_not_fail_on_empty_queue(
     verify_kwargs,
