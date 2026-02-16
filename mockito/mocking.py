@@ -229,7 +229,7 @@ class Mock:
             self._original_methods[method_name] = original_method
             self.replace_method(method_name, original_method)
 
-    def stub_property(self, method_name):
+    def stub_property(self, method_name: str) -> None:
         try:
             self._methods_to_unstub[method_name]
         except KeyError:
@@ -237,14 +237,15 @@ class Mock:
                 original_method,
                 was_in_spec
             ) = self._get_original_method_before_stub(method_name)
+
+            self.set_method(method_name, _mocked_property(self, method_name))
+
             if was_in_spec:
                 # This indicates the original method was found directly on
                 # the spec object and should therefore be restored by unstub
                 self._methods_to_unstub[method_name] = original_method
             else:
                 self._methods_to_unstub[method_name] = None
-
-            self.set_method(method_name, _mocked_property(self, method_name))
 
 
     def forget_stubbed_invocation(

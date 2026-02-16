@@ -1,5 +1,5 @@
 import pytest
-from mockito import mock, verify, when, invocation
+from mockito import mock, verify, when, unstub as unstub_all, invocation
 from mockito.invocation import return_
 
 
@@ -146,3 +146,14 @@ def test_descriptor_access():
     with when(F).query.thenReturn(23):
         assert F.query == 23
     assert F.query == 42
+
+def test_failed_instance_property_stubbing_does_not_poison_unstub():
+    f = F()
+    assert f.p == 42
+
+    with pytest.raises(AttributeError, match="has no setter"):
+        when(f).p.thenReturn(23)
+
+    assert f.p == 42
+    unstub_all()
+    assert f.p == 42
