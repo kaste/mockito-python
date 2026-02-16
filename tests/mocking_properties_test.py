@@ -131,30 +131,6 @@ class F:
         return 42
 
 
-class NestedPropertyAccess:
-    @property
-    def q(self):
-        return 40
-
-    @property
-    def p(self):
-        return self.q + 2
-
-
-class ReentrantSamePropertyAccess:
-    def __init__(self):
-        self._depth = 0
-
-    @property
-    def p(self):
-        if self._depth == 0:
-            self._depth += 1
-            try:
-                return self.p + 1
-            finally:
-                self._depth -= 1
-        return 41
-
 def test_property_access():
     assert F().p == 42
     with when(F).p.thenReturn(23):
@@ -176,24 +152,6 @@ def test_property_access_then_return_then_call_original_implementation():
         assert F().p == 42
 
     assert F().p == 42
-
-
-def test_nested_property_access_then_call_original_implementation():
-    nested = NestedPropertyAccess()
-
-    with when(NestedPropertyAccess).p.thenCallOriginalImplementation():
-        with when(NestedPropertyAccess).q.thenCallOriginalImplementation():
-            assert nested.p == 42
-            assert nested.q == 40
-            assert nested.p == 42
-
-
-def test_reentrant_same_property_then_call_original_implementation():
-    reentrant = ReentrantSamePropertyAccess()
-
-    with when(ReentrantSamePropertyAccess).p.thenCallOriginalImplementation():
-        assert reentrant.p == 42
-        assert reentrant.p == 42
 
 
 def test_descriptor_access():
@@ -224,6 +182,49 @@ def test_instance_property_stubbing_fails_fast_with_guidance(unstub):
         "Cannot stub property 'p' on an instance. "
         "Use class-level stubbing instead: when(F).p.thenReturn(...)."
     )
+
+
+class NestedPropertyAccess:
+    @property
+    def q(self):
+        return 40
+
+    @property
+    def p(self):
+        return self.q + 2
+
+
+def test_nested_property_access_then_call_original_implementation():
+    nested = NestedPropertyAccess()
+
+    with when(NestedPropertyAccess).p.thenCallOriginalImplementation():
+        with when(NestedPropertyAccess).q.thenCallOriginalImplementation():
+            assert nested.p == 42
+            assert nested.q == 40
+            assert nested.p == 42
+
+
+class ReentrantSamePropertyAccess:
+    def __init__(self):
+        self._depth = 0
+
+    @property
+    def p(self):
+        if self._depth == 0:
+            self._depth += 1
+            try:
+                return self.p + 1
+            finally:
+                self._depth -= 1
+        return 41
+
+
+def test_reentrant_same_property_then_call_original_implementation():
+    reentrant = ReentrantSamePropertyAccess()
+
+    with when(ReentrantSamePropertyAccess).p.thenCallOriginalImplementation():
+        assert reentrant.p == 42
+        assert reentrant.p == 42
 
 
 class NonDescriptorAttribute:
