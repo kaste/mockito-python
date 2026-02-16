@@ -19,6 +19,8 @@
 # THE SOFTWARE.
 from __future__ import annotations
 
+import ast
+import inspect
 from collections import deque
 from functools import partial
 from typing import Deque, TYPE_CHECKING
@@ -46,6 +48,9 @@ class InOrder:
                 raise ValueError(f"{obj} is provided more than once")
             objects_.append(obj)
         self._objects = objects_
+        self._object_labels = self._guess_object_labels_from_callsite(
+            len(objects_)
+        )
         self._active = True
         self._observer_registered = False
         self.ordered_invocations: Deque[RealInvocation] = deque()
@@ -131,6 +136,107 @@ class InOrder:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
+    def _callsite_label_for_obj(self, obj: object) -> str | None:
+        for observed, label in zip(self._objects, self._object_labels):
+            if observed is obj:
+                return label
+        return None
+
+    def _label_for_obj(self, obj: object) -> str:
+        if label := self._callsite_label_for_obj(obj):
+            return label
+        return str(obj)
+
+    def _label_for_mock(self, mock: Mock) -> str:
+        obj = mock_registry.obj_for(mock)
+        if obj is None:
+            return str(mock)
+        return self._label_for_obj(obj)
+
+    def _format_invocation(self, mock: Mock, invocation: object) -> str:
+        if len(self._objects) == 1:
+            return str(invocation)
+        return f"{self._label_for_mock(mock)}.{invocation}"
+
+    def _guess_object_labels_from_callsite(self, count: int) -> list[str | None]:
+        if count == 0:
+            return []
+
+        # For a single observed object, object qualification adds little value
+        # to mismatch messages (there is no cross-object ambiguity anyway).
+        if count == 1:
+            return [None]
+
+        frame = inspect.currentframe()
+        caller_frame = (
+            frame.f_back.f_back
+            if frame and frame.f_back and frame.f_back.f_back
+            else None
+        )
+
+        if caller_frame is None:
+            return [None] * count
+
+        try:
+            source_lines, start_lineno = inspect.getsourcelines(
+                caller_frame.f_code
+            )
+            source = ''.join(source_lines)
+            call_lineno = caller_frame.f_lineno - start_lineno + 1
+            tree = ast.parse(source)
+        except (OSError, TypeError, SyntaxError):
+            return [None] * count
+        finally:
+            del frame
+            del caller_frame
+
+        call = self._find_inorder_call_for_lineno(tree, call_lineno)
+        if call is None:
+            return [None] * count
+
+        labels: list[str | None] = []
+        for arg in call.args[:count]:
+            segment = ast.get_source_segment(source, arg)
+            labels.append(segment.strip() if segment else None)
+
+        if len(labels) < count:
+            labels.extend([None] * (count - len(labels)))
+
+        return labels
+
+    def _find_inorder_call_for_lineno(
+        self,
+        tree: ast.AST,
+        lineno: int,
+    ) -> ast.Call | None:
+        candidate: ast.Call | None = None
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            if not self._is_inorder_constructor_call(node):
+                continue
+
+            start = node.lineno
+            end = getattr(node, 'end_lineno', node.lineno)
+            if start <= lineno <= end:
+                # Ambiguous callsite (e.g. nested / same-line InOrder calls):
+                # bail out.
+                if candidate is not None:
+                    return None
+
+                candidate = node
+
+        return candidate
+
+    def _is_inorder_constructor_call(self, node: ast.Call) -> bool:
+        if isinstance(node.func, ast.Name):
+            return node.func.id == 'InOrder'
+
+        if isinstance(node.func, ast.Attribute):
+            return node.func.attr == 'InOrder'
+
+        return False
+
 
 class InOrderVerifiableInvocation(VerifiableInvocation):
     def __init__(self, mock, method_name, verification, inorder: InOrder):
@@ -168,15 +274,28 @@ class InOrderVerifiableInvocation(VerifiableInvocation):
         if called_mock is not self.mock:
             if self.handle_zero_matches_if_allowed():
                 return
-            called_obj = mock_registry.obj_for(called_mock)
-            if called_obj is None:
+            if mock_registry.obj_for(called_mock) is None:
                 raise RuntimeError(
                     f"{called_mock} is not in the registry (anymore)."
                 )
+
             expected_obj = mock_registry.obj_for(self.mock)
+            expected_has_callsite_label = (
+                expected_obj is not None
+                and self._inorder._callsite_label_for_obj(expected_obj)
+            )
+            got = self._inorder._format_invocation(called_mock, next_invocation)
+
+            if expected_has_callsite_label:
+                wanted = self._inorder._format_invocation(self.mock, self)
+                raise VerificationError(
+                    "\nWanted %s to be invoked,"
+                    "\ngot    %s instead." % (wanted, got)
+                )
+
             raise VerificationError(
-                f"\nWanted a call from {expected_obj}, but "
-                f"got {called_obj}.{next_invocation} instead!"
+                f"\nWanted a call from {expected_obj},"
+                f"\ngot    {got} instead."
             )
 
         matched_invocations: list[RealInvocation] = []
@@ -193,8 +312,8 @@ class InOrderVerifiableInvocation(VerifiableInvocation):
                     if self.handle_zero_matches_if_allowed():
                         return
                     raise VerificationError(
-                        "\nWanted %s to be invoked,\n"
-                        "got    %s instead." % (self, inv)
+                        "\nWanted %s to be invoked,"
+                        "\ngot    %s instead." % (self, inv)
                     )
                 break
 

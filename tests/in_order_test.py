@@ -85,9 +85,42 @@ def test_incorrect_order_declaration_should_fail():
 
     with pytest.raises(VerificationError) as e:
         in_order.verify(cat).meow()
+
     assert str(e.value) == (
-        f"\nWanted a call from {cat}, but got "
-        f"{dog}.bark() instead!"
+        "\nWanted cat.meow() to be invoked,"
+        "\ngot    dog.bark() instead."
+    )
+
+
+def test_in_order_error_message_uses_callsite_names_for_wrong_mock():
+    garfield = mock()
+    sinclair = mock()
+
+    in_order = InOrder(sinclair, garfield)
+    garfield.meow()
+
+    with pytest.raises(VerificationError) as e:
+        in_order.verify(sinclair).meow()
+
+    assert str(e.value) == (
+        "\nWanted sinclair.meow() to be invoked,"
+        "\ngot    garfield.meow() instead."
+    )
+
+
+def test_in_order_error_message_falls_back_when_inorder_callsite_is_ambiguous():
+    garfield = mock()
+    sinclair = mock()
+
+    in_order, _ = InOrder(sinclair, garfield), InOrder(garfield)
+    garfield.meow()
+
+    with pytest.raises(VerificationError) as e:
+        in_order.verify(sinclair).meow()
+
+    assert str(e.value) == (
+        f"\nWanted a call from {sinclair},"
+        f"\ngot    {garfield}.meow() instead."
     )
 
 
@@ -231,6 +264,21 @@ def test_first_contiguous_call_argument_mismatch_should_raise():
     in_order = InOrder(cat)
     cat.meow("a")
     cat.meow("b")
+
+    with pytest.raises(VerificationError) as e:
+        in_order.verify(cat).meow("b")
+
+    assert str(e.value) == (
+        "\nWanted meow('b') to be invoked,"
+        "\ngot    meow('a') instead."
+    )
+
+
+def test_in_order_error_message_does_not_use_callsite_name_for_single_observed_object():
+    cat = mock()
+
+    in_order = InOrder(cat)
+    cat.meow("a")
 
     with pytest.raises(VerificationError) as e:
         in_order.verify(cat).meow("b")
