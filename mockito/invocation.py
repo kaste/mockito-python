@@ -598,6 +598,16 @@ def discard_self(function: Callable[..., T]) -> Callable[..., T]:
     return function_without_self
 
 
+def as_awaitable(function: Callable[..., Any]) -> Callable[..., Any]:
+    async def function_as_awaitable(*args, **kwargs) -> Any:
+        result = function(*args, **kwargs)
+        if inspect.isawaitable(result):
+            return await result
+        return result
+
+    return function_as_awaitable
+
+
 class AnswerSelector(object):
     def __init__(self, invocation: StubbedInvocation) -> None:
         self.invocation = invocation
@@ -630,6 +640,8 @@ class AnswerSelector(object):
             answer = callable
             if self.discard_first_arg:
                 answer = discard_self(answer)
+            if self.is_coroutine:
+                answer = as_awaitable(answer)
             self.__then(answer)
         return self
 
