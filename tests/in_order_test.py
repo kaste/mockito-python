@@ -236,6 +236,27 @@ def test_first_contiguous_call_argument_mismatch_should_raise():
     )
 
 
+@pytest.mark.parametrize(
+    "verify_kwargs",
+    [
+        {"times": 0},
+        {"between": (0, 2)},
+        {"between": (0,)},
+    ],
+    ids=["times_0", "between_0_2", "between_0_open_ended"],
+)
+def test_in_order_verify_zero_lower_bound_does_not_fail_on_same_mock_argument_mismatch(
+    verify_kwargs,
+):
+    cat = mock()
+
+    in_order = InOrder(cat)
+    cat.meow("x")
+
+    in_order.verify(cat, **verify_kwargs).meow("y")
+    in_order.verify(cat).meow("x")
+
+
 def test_in_order_context_manager():
     cat = mock()
     dog = mock()

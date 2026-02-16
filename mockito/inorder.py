@@ -190,6 +190,8 @@ class InOrderVerifiableInvocation(VerifiableInvocation):
 
             if not self.matches(inv):
                 if not matched_invocations:
+                    if self.handle_zero_matches_if_allowed():
+                        return
                     raise VerificationError(
                         "\nWanted %s to be invoked,\n"
                         "got    %s instead." % (self, inv)
