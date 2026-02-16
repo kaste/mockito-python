@@ -564,6 +564,20 @@ def return_(value: T) -> Callable[..., T]:
         return value
     return answer
 
+
+def return_awaitable(value: T) -> Callable[..., Any]:
+    async def answer(*args, **kwargs) -> T:
+        return value
+    return answer
+
+
+def is_coroutine_method(method: Any) -> bool:
+    if isinstance(method, (staticmethod, classmethod)):
+        method = method.__func__
+
+    return inspect.iscoroutinefunction(method)
+
+
 def raise_(exception: Exception | type[Exception]) -> Callable[..., NoReturn]:
     def answer(*args, **kwargs) -> NoReturn:
         raise exception
@@ -581,10 +595,16 @@ class AnswerSelector(object):
         self.invocation = invocation
         self.discard_first_arg = \
             invocation.mock.eat_self(invocation.method_name)
+        self.is_coroutine = is_coroutine_method(
+            invocation.mock.get_original_method(invocation.method_name)
+        )
 
     def thenReturn(self, *return_values: Any) -> Self:
         for return_value in return_values or (None,):
-            answer = return_(return_value)
+            if self.is_coroutine:
+                answer = return_awaitable(return_value)
+            else:
+                answer = return_(return_value)
             self.__then(answer)
         return self
 
