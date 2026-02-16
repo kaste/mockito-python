@@ -230,6 +230,17 @@ class Mock:
             self.replace_method(method_name, original_method)
 
     def stub_property(self, method_name: str) -> None:
+        if not inspect.isclass(self.mocked_obj):
+            raise invocation.InvocationError(
+                "Cannot stub property '%s' on an instance. "
+                "Use class-level stubbing instead: when(%s).%s.thenReturn(...)."
+                % (
+                    method_name,
+                    type(self.mocked_obj).__name__,
+                    method_name,
+                )
+            )
+
         try:
             self._methods_to_unstub[method_name]
         except KeyError:

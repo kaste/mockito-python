@@ -1,6 +1,6 @@
 import pytest
 from mockito import mock, verify, when, unstub as unstub_all, invocation
-from mockito.invocation import return_
+from mockito.invocation import InvocationError, return_
 
 
 def test_deprecated_a(unstub):
@@ -151,9 +151,21 @@ def test_failed_instance_property_stubbing_does_not_poison_unstub():
     f = F()
     assert f.p == 42
 
-    with pytest.raises(AttributeError, match="has no setter"):
+    with pytest.raises(InvocationError):
         when(f).p.thenReturn(23)
 
     assert f.p == 42
     unstub_all()
     assert f.p == 42
+
+
+def test_instance_property_stubbing_fails_fast_with_guidance(unstub):
+    f = F()
+
+    with pytest.raises(InvocationError) as exc:
+        when(f).p.thenReturn(23)
+
+    assert str(exc.value) == (
+        "Cannot stub property 'p' on an instance. "
+        "Use class-level stubbing instead: when(F).p.thenReturn(...)."
+    )
