@@ -23,6 +23,14 @@ def run(coro):
     return asyncio.run(coro)
 
 
+async def answer_async(task_id):
+    return f"answer-async:{task_id}"
+
+
+async def answer_async_raises(task_id):
+    raise RuntimeError(f"boom:{task_id}")
+
+
 def test_when_thenAnswer_sync_callable_async_method_returns_awaitable():
     when(AsyncWorker).run("a").thenAnswer(
         lambda task_id: f"answer:{task_id}"
@@ -45,3 +53,34 @@ def test_when_thenAnswer_sync_callable_async_function_returns_awaitable():
 
     assert inspect.isawaitable(pending)
     assert run(pending) == "answer:a"
+
+
+def test_when_thenAnswer_async_callable_async_method_returns_awaitable():
+    when(AsyncWorker).run("a").thenAnswer(answer_async)
+
+    worker = AsyncWorker()
+    pending = worker.run("a")
+
+    assert inspect.isawaitable(pending)
+    assert run(pending) == "answer-async:a"
+
+
+def test_when_thenAnswer_async_callable_async_function_returns_awaitable():
+    this_module = sys.modules[__name__]
+    when(this_module).async_job("a").thenAnswer(answer_async)
+
+    pending = async_job("a")
+
+    assert inspect.isawaitable(pending)
+    assert run(pending) == "answer-async:a"
+
+
+def test_when_thenAnswer_async_callable_async_method_raises_on_await():
+    when(AsyncWorker).run("a").thenAnswer(answer_async_raises)
+
+    worker = AsyncWorker()
+    pending = worker.run("a")
+
+    assert inspect.isawaitable(pending)
+    with pytest.raises(RuntimeError, match="boom:a"):
+        run(pending)
