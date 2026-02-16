@@ -5,7 +5,12 @@ import pytest
 
 from mockito import expect, mock, ArgumentError, VerificationError
 from mockito.inorder import InOrder
-from mockito import verify
+from mockito import (
+    verify,
+    when,
+    ensureNoUnverifiedInteractions,
+    verifyStubbedInvocationsAreUsed,
+)
 from mockito.mock_registry import mock_registry
 
 
@@ -449,3 +454,29 @@ def test_in_order_verify_zero_lower_bound_does_not_fail_when_all_calls_are_consu
 
     cat.meow("second")
     in_order.verify(cat).meow("second")
+
+
+@pytest.mark.parametrize(
+    "verify_kwargs",
+    [
+        {"times": 0},
+        {"between": (0, 2)},
+    ],
+    ids=["times_0", "between_0_2"],
+)
+def test_in_order_zero_verify_marks_stub_as_checked_for_follow_up_global_verifications(
+    verify_kwargs,
+):
+    cat = mock()
+
+    when(cat).meow("used").thenReturn("used")
+    when(cat).meow("unused").thenReturn("unused")
+
+    in_order = InOrder(cat)
+    cat.meow("used")
+
+    in_order.verify(cat).meow("used")
+    in_order.verify(cat, **verify_kwargs).meow("unused")
+
+    ensureNoUnverifiedInteractions(cat)
+    verifyStubbedInvocationsAreUsed(cat)
