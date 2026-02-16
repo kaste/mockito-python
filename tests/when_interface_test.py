@@ -62,6 +62,58 @@ class TestAnswerShortcuts:
 
 
 @pytest.mark.usefixtures('unstub')
+class TestMissingInvocationParentheses:
+
+    def testWhenRaisesEarlyIfMethodCallParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(Dog).bark.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testExpectRaisesEarlyIfMethodCallParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(Dog).bark.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testWhenRaisesEarlyForThenRaiseIfMethodCallParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(Dog).bark.thenRaise(RuntimeError('Boom'))
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testExpectRaisesEarlyForThenRaiseIfMethodCallParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(Dog).bark.thenRaise(RuntimeError('Boom'))
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testWhenRaisesEarlyForThenAnswerIfMethodCallParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(Dog).bark.thenAnswer(lambda: 'Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testExpectRaisesEarlyForThenAnswerIfMethodCallParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(Dog).bark.thenAnswer(lambda: 'Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testWhenRaisesEarlyForThenCallOriginalIfMethodCallParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(Dog).bark.thenCallOriginalImplementation()
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testExpectRaisesEarlyForThenCallOriginalIfMethodCallParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(Dog).bark.thenCallOriginalImplementation()
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+
+@pytest.mark.usefixtures('unstub')
 class TestPassAroundStrictness:
 
     def testReconfigureStrictMock(self):

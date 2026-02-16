@@ -52,6 +52,13 @@ def remembered_invocation_builder(
 
 
 class wait_for_invocation:
+    ANSWER_SELECTOR_METHODS = {
+        'thenReturn',
+        'thenRaise',
+        'thenAnswer',
+        'thenCallOriginalImplementation',
+    }
+
     def __init__(self, theMock, method_name, **kwargs):
         self.theMock = theMock
         self.method_name = method_name
@@ -61,11 +68,31 @@ class wait_for_invocation:
         return invocation.StubbedInvocation(
             self.theMock, self.method_name, **self.kwargs)(*args, **kwargs)
 
+    def _missing_invocation_for_callable(self, attr_name: str) -> bool:
+        if attr_name not in self.ANSWER_SELECTOR_METHODS:
+            return False
+
+        spec = self.theMock.spec
+        if spec is None:
+            return False
+
+        try:
+            value = getattr(spec, self.method_name)
+        except AttributeError:
+            return False
+
+        return callable(value)
+
     def __getattr__(self, attr_name):
+        if self._missing_invocation_for_callable(attr_name):
+            raise invocation.InvocationError(
+                f"expected an invocation of '{self.method_name}'"
+            )
+
         invoc = invocation.StubbedPropertyAccess(
             self.theMock, self.method_name, **self.kwargs)()
         return getattr(invoc, attr_name)
-        raise RuntimeError(f"expected an invocation of '{self.method_name}'")
+
 
 class _mocked_property:
     def __init__(self, mock, method_name):
