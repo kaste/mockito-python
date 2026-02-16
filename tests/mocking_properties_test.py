@@ -224,3 +224,17 @@ def test_instance_property_stubbing_fails_fast_with_guidance(unstub):
         "Cannot stub property 'p' on an instance. "
         "Use class-level stubbing instead: when(F).p.thenReturn(...)."
     )
+
+
+class NonDescriptorAttribute:
+    token = 0
+
+
+def test_property_call_original_missing_implementation_error_message():
+    with pytest.raises(invocation.AnswerError) as exc:
+        when(NonDescriptorAttribute).token.thenCallOriginalImplementation()
+
+    assert str(exc.value) == (
+        "'%s' has no original implementation for '%s'." %
+        (NonDescriptorAttribute, 'token')
+    )
