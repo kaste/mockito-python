@@ -583,6 +583,14 @@ def raise_(exception: Exception | type[Exception]) -> Callable[..., NoReturn]:
         raise exception
     return answer
 
+
+def raise_awaitable(
+    exception: Exception | type[Exception]
+) -> Callable[..., Any]:
+    async def answer(*args, **kwargs) -> NoReturn:
+        raise exception
+    return answer
+
 def discard_self(function: Callable[..., T]) -> Callable[..., T]:
     def function_without_self(*args, **kwargs) -> T:
         args = args[1:]
@@ -610,7 +618,10 @@ class AnswerSelector(object):
 
     def thenRaise(self, *exceptions: Exception | type[Exception]) -> Self:
         for exception in exceptions or (Exception,):
-            answer = raise_(exception)
+            if self.is_coroutine:
+                answer = raise_awaitable(exception)
+            else:
+                answer = raise_(exception)
             self.__then(answer)
         return self
 
