@@ -583,11 +583,24 @@ class AnswerSelector(object):
         answer = self.invocation.mock.get_original_method(
             self.invocation.method_name
         )
+        if isinstance(self.invocation, StubbedPropertyAccess):
+            if not hasattr(answer, '__get__'):
+                raise AnswerError(
+                    "'%s' has no original implementation for '%s'." %
+                    (
+                        self.invocation.mock.mocked_obj,
+                        self.invocation.method_name,
+                    )
+                )
+            self.__then(self._property_descriptor_answer(answer))
+            return self
+
         if not answer:
             raise AnswerError(
                 "'%s' has no original implementation for '%s'." %
                 (self.invocation.mock.mocked_obj, self.invocation.method_name)
             )
+
         if (
             # A classmethod is not callable
             # and a staticmethod is not callable in old version of python,
@@ -600,6 +613,15 @@ class AnswerSelector(object):
 
         self.__then(answer)
         return self
+
+    def _property_descriptor_answer(self, descriptor: object) -> Callable:
+        def answer(*args: Any, **kwargs: Any) -> Any:
+            obj, type_ = self.invocation.mock.get_current_property_access(
+                self.invocation.method_name
+            )
+            return descriptor.__get__(obj, type_)
+
+        return answer
 
     def __then(self, answer: Callable) -> None:
         self.invocation.add_answer(answer)

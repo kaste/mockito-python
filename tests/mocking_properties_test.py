@@ -141,6 +141,17 @@ def test_property_access():
     with pytest.raises(AttributeError):
         assert F().fool == 23  # type: ignore[attr-defined]
 
+
+def test_property_access_then_return_then_call_original_implementation():
+    assert F().p == 42
+
+    with when(F).p.thenReturn(21).thenCallOriginalImplementation():
+        assert F().p == 21
+        assert F().p == 42
+        assert F().p == 42
+
+    assert F().p == 42
+
 def test_descriptor_access():
     assert F.query == 42
     with when(F).query.thenReturn(23):

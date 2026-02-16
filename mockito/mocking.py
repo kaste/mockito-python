@@ -22,11 +22,11 @@ from __future__ import annotations
 import inspect
 import operator
 from collections import deque
+from contextlib import contextmanager
 
 from . import invocation, signature, utils
 from .mock_registry import mock_registry
 
-from typing import Callable
 
 __all__ = ['mock']
 
@@ -100,8 +100,13 @@ class _mocked_property:
         self.method_name = method_name
 
     def __get__(self, obj, type):
-        return invocation.RememberedPropertyAccess(
-            self.mock, self.method_name)()
+        # For property/descriptors, `thenCallOriginalImplementation()` must
+        # call `original_descriptor.__get__(obj, type)`. Unlike regular method
+        # stubs, these `obj/type` binding values are only available during this
+        # attribute access path, so we keep them in temporary context.
+        with self.mock.property_access_context(self.method_name, obj, type):
+            return invocation.RememberedPropertyAccess(
+                self.mock, self.method_name)()
 
 
 class Mock:
@@ -118,9 +123,11 @@ class Mock:
         self.invocations: list[invocation.RealInvocation] = []
         self.stubbed_invocations: deque[invocation.StubbedInvocation] = deque()
 
-        self._original_methods: dict[str, Callable | None] = {}
-        self._methods_to_unstub: dict[str, Callable | None] = {}
+        self._original_methods: dict[str, object | None] = {}
+        self._methods_to_unstub: dict[str, object | None] = {}
         self._signatures_store: dict[str, signature.Signature | None] = {}
+        self._property_access_context: \
+            list[tuple[str, object | None, object]] = []
 
         self._observers: list = []
 
@@ -147,14 +154,38 @@ class Mock:
     def clear_invocations(self) -> None:
         self.invocations = []
 
-    def get_original_method(self, method_name: str) -> Callable | None:
+    def get_original_method(self, method_name: str) -> object | None:
         return self._original_methods.get(method_name, None)
+
+    @contextmanager
+    def property_access_context(
+        self, method_name: str, obj: object | None, type_: object
+    ):
+        self._property_access_context.append((method_name, obj, type_))
+        try:
+            yield
+        finally:
+            self._property_access_context.pop()
+
+    def get_current_property_access(
+        self, method_name: str
+    ) -> tuple[object | None, object]:
+        for accessed_method_name, obj, type_ in reversed(
+            self._property_access_context
+        ):
+            if accessed_method_name == method_name:
+                return obj, type_
+
+        raise RuntimeError(
+            "Could not resolve property access context for '%s'."
+            % method_name
+        )
 
     # STUBBING
 
     def _get_original_method_before_stub(
         self, method_name: str
-    ) -> tuple[Callable | None, bool]:
+    ) -> tuple[object | None, bool]:
         """
         Looks up the original method on the `spec` object and returns it
         together with an indication of whether the method is found
@@ -233,7 +264,8 @@ class Mock:
         if not inspect.isclass(self.mocked_obj):
             raise invocation.InvocationError(
                 "Cannot stub property '%s' on an instance. "
-                "Use class-level stubbing instead: when(%s).%s.thenReturn(...)."
+                "Use class-level stubbing instead: "
+                "when(%s).%s.thenReturn(...)."
                 % (
                     method_name,
                     type(self.mocked_obj).__name__,
@@ -249,6 +281,7 @@ class Mock:
                 was_in_spec
             ) = self._get_original_method_before_stub(method_name)
 
+            self._original_methods[method_name] = original_method
             self.set_method(method_name, _mocked_property(self, method_name))
 
             if was_in_spec:
