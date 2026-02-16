@@ -3,14 +3,18 @@ import weakref
 
 import pytest
 
-from mockito import expect, mock, ArgumentError, VerificationError
-from mockito.inorder import InOrder
 from mockito import (
+    expect,
+    mock,
+    ArgumentError,
+    VerificationError,
+    InOrder as TopLevelInOrder,
     verify,
     when,
     ensureNoUnverifiedInteractions,
     verifyStubbedInvocationsAreUsed,
 )
+from mockito.inorder import InOrder
 from mockito.mock_registry import mock_registry
 
 
@@ -25,6 +29,22 @@ class Dog:
 class EqualDog(Dog):
     def __eq__(self, other):
         return isinstance(other, EqualDog)
+
+
+def test_in_order_is_exported_from_top_level_api():
+    assert TopLevelInOrder is InOrder
+
+
+def test_top_level_in_order_import_smoke_across_mocks():
+    cat = mock()
+    dog = mock()
+
+    in_order = TopLevelInOrder(cat, dog)
+    cat.meow()
+    dog.bark()
+
+    in_order.verify(cat).meow()
+    in_order.verify(dog).bark()
 
 
 def test_observing_the_same_mock_twice_should_raise():

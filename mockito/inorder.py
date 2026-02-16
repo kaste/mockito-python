@@ -40,6 +40,54 @@ def verify(object, *args, **kwargs):
 
 
 class InOrder:
+    """Verify interactions in strict order across one or multiple objects.
+
+    This is the preferred API for order-sensitive verification. `InOrder`
+    keeps one global queue of recorded invocations for all observed objects,
+    then verifies against that queue from left to right.
+
+    Basic usage::
+
+        from mockito import mock, InOrder
+
+        cat = mock()
+        dog = mock()
+
+        in_order = InOrder(cat, dog)
+        cat.meow()
+        dog.bark()
+
+        in_order.verify(cat).meow()
+        in_order.verify(dog).bark()
+
+    `InOrder.verify` uses the same fluent style and verification arguments as
+    :func:`verify`, including ``times``, ``atleast``, ``atmost`` and
+    ``between``::
+
+        in_order.verify(cat, times=2).meow(...)
+        in_order.verify(dog, between=(1, 3)).bark()
+
+    Zero-lower-bound verifications (e.g. ``times=0`` or ``between=(0, 2)``)
+    may pass without consuming the next queued invocation.
+
+    `InOrder` can be used as a context manager::
+
+        with InOrder(cat, dog) as in_order:
+            cat.meow()
+            dog.bark()
+            in_order.verify(cat).meow()
+            in_order.verify(dog).bark()
+
+    Only the objects passed to `InOrder` are observed. Calls on other objects
+    are ignored. Registration is dynamic: objects that are stubbed after
+    `InOrder(...)` construction are still captured while the instance is active.
+
+    See related :func:`verify`, :func:`expect`,
+    :func:`ensureNoUnverifiedInteractions`, and
+    :func:`verifyStubbedInvocationsAreUsed`.
+
+    """
+
 
     def __init__(self, *objects: object):
         objects_: list[object] = []
