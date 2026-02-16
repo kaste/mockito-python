@@ -29,11 +29,16 @@ from .verification import VerificationError
 from .invocation import RealInvocation, VerifiableInvocation
 from .mockito import ArgumentError, verify as verify_main
 from .mock_registry import mock_registry
+from .utils import deprecated
 
 if TYPE_CHECKING:
     from .mocking import Mock
 
 
+@deprecated(
+    "'inorder.verify' is deprecated. "
+    "Use 'InOrder(...).verify(...)' instead."
+)
 def verify(object, *args, **kwargs):
     kwargs['inorder'] = True
     return verify_main(object, *args, **kwargs)

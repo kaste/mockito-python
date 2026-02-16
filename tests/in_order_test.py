@@ -14,6 +14,7 @@ from mockito import (
     ensureNoUnverifiedInteractions,
     verifyStubbedInvocationsAreUsed,
 )
+from mockito import inorder
 from mockito.inorder import InOrder
 from mockito.mock_registry import mock_registry
 
@@ -45,6 +46,20 @@ def test_top_level_in_order_import_smoke_across_mocks():
 
     in_order.verify(cat).meow()
     in_order.verify(dog).bark()
+
+
+def test_legacy_inorder_verify_is_deprecated():
+    cat = mock()
+    cat.meow()
+
+    with pytest.warns(DeprecationWarning) as record:
+        inorder.verify(cat).meow()
+
+    assert len(record) == 1
+    assert str(record[0].message) == (
+        "'inorder.verify' is deprecated. "
+        "Use 'InOrder(...).verify(...)' instead."
+    )
 
 
 def test_observing_the_same_mock_twice_should_raise():
