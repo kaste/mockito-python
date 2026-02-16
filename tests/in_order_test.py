@@ -425,3 +425,27 @@ def test_in_order_verify_zero_lower_bound_does_not_fail_on_empty_queue(
 
     cat.meow()
     in_order.verify(cat).meow()
+
+
+@pytest.mark.parametrize(
+    "verify_kwargs",
+    [
+        {"times": 0},
+        {"between": (0, 2)},
+    ],
+    ids=["times_0", "between_0_2"],
+)
+def test_in_order_verify_zero_lower_bound_does_not_fail_when_all_calls_are_consumed(
+    verify_kwargs,
+):
+    cat = mock()
+
+    in_order = InOrder(cat)
+
+    cat.meow("first")
+    in_order.verify(cat).meow("first")
+
+    in_order.verify(cat, **verify_kwargs).meow("never-called")
+
+    cat.meow("second")
+    in_order.verify(cat).meow("second")
