@@ -21,6 +21,7 @@
 from __future__ import annotations
 import inspect
 import operator
+import types
 from collections import deque
 from contextlib import contextmanager
 
@@ -81,7 +82,13 @@ class wait_for_invocation:
         except AttributeError:
             return False
 
-        return callable(value) or isinstance(value, classmethod)
+        return (
+            inspect.isfunction(value)
+            or inspect.isbuiltin(value)
+            or isinstance(value, staticmethod)
+            or isinstance(value, classmethod)
+            or isinstance(value, types.MethodDescriptorType)
+        )
 
     def __getattr__(self, attr_name):
         if self._missing_invocation_for_callable(attr_name):

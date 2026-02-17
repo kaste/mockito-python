@@ -1,4 +1,6 @@
 
+import math
+
 import pytest
 
 from mockito import (when, when2, expect, verify, patch, mock, spy2,
@@ -147,6 +149,30 @@ class TestMissingInvocationParentheses:
             expect(StaticDog).bark.thenReturn('Sure')
 
         assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testWhenRaisesEarlyForBuiltinFunctionIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(math).sin.thenReturn(0)
+
+        assert str(exc.value) == "expected an invocation of 'sin'"
+
+    def testExpectRaisesEarlyForBuiltinFunctionIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(math).sin.thenReturn(0)
+
+        assert str(exc.value) == "expected an invocation of 'sin'"
+
+    def testWhenRaisesEarlyForBuiltinMethodDescriptorIfMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(dict).get.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'get'"
+
+    def testExpectRaisesEarlyForBuiltinMethodDescriptorIfMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(dict).get.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'get'"
 
 
 @pytest.mark.usefixtures('unstub')

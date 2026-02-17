@@ -266,6 +266,26 @@ def test_callable_descriptor_access_can_be_stubbed():
         assert CallableDescriptorUser.query() == "Stubbed user"
 
 
+class _CallableDescriptorObject:
+    def __get__(self, obj, type):
+        assert obj is None, "callable descriptor object is a class property"
+        return "A user"
+
+    def __call__(self):
+        return "descriptor object is callable too"
+
+
+class CallableDescriptorObjectUser:
+    query = _CallableDescriptorObject()
+
+
+def test_callable_descriptor_object_access_can_be_stubbed():
+    assert CallableDescriptorObjectUser.query == "A user"
+
+    with when(CallableDescriptorObjectUser).query.thenReturn("Stubbed user"):
+        assert CallableDescriptorObjectUser.query == "Stubbed user"
+
+
 class _InheritedDescriptor:
     def __get__(self, obj, owner):
         return 7 if obj else 42
