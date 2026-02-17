@@ -42,6 +42,12 @@ def test_deprecated_c(unstub):
         m.tx
 
 
+# The following "recommended" approaches are what we had before
+# we got first class property support.  It is the recommended
+# approach within the old framework.
+# The new behavior starts below with "class F".
+
+
 def test_recommended_approach_1(unstub):
     prop = mock()
     when(prop).__get__(Ellipsis).thenRaise(ValueError)
