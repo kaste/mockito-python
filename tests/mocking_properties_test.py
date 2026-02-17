@@ -108,7 +108,7 @@ def test_sqlalchemy_2():
     when(query_prop).filter_by(...).thenReturn(
         mock({"first": lambda: "A user"})
     )
-    with when(_QueryProperty).__get__(...).thenReturn(query_prop):
+    with when(User).query.thenReturn(query_prop):
         assert User.query.filter_by(username='admin').first() == "A user"
 
 @pytest.mark.xfail(reason='Not implemented.')
@@ -116,7 +116,7 @@ def test_sqlalchemy_3a():
     assert User.query == 42
     query_prop = mock()
     when(query_prop).filter_by(...).first().thenReturn("A user")
-    with when(_QueryProperty).__get__(...).thenReturn(query_prop):
+    with when(User).query.thenReturn(query_prop):
         assert User.query.filter_by(username='admin').first() == "A user"
 
 @pytest.mark.xfail(reason='Not implemented.')
