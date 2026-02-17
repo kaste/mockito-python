@@ -10,6 +10,18 @@ class Dog(object):
         pass
 
 
+class ClassDog(object):
+    @classmethod
+    def bark(cls):
+        pass
+
+
+class StaticDog(object):
+    @staticmethod
+    def bark():
+        pass
+
+
 class Unhashable(object):
     def update(self, **kwargs):
         pass
@@ -109,6 +121,30 @@ class TestMissingInvocationParentheses:
     def testExpectRaisesEarlyForThenCallOriginalIfMethodCallParenthesesAreMissing(self):
         with pytest.raises(InvocationError) as exc:
             expect(Dog).bark.thenCallOriginalImplementation()
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testWhenRaisesEarlyForClassmethodIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(ClassDog).bark.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testExpectRaisesEarlyForClassmethodIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(ClassDog).bark.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testWhenRaisesEarlyForStaticmethodIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(StaticDog).bark.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testExpectRaisesEarlyForStaticmethodIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(StaticDog).bark.thenReturn('Sure')
 
         assert str(exc.value) == "expected an invocation of 'bark'"
 

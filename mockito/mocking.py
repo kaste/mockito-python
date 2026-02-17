@@ -81,7 +81,7 @@ class wait_for_invocation:
         except AttributeError:
             return False
 
-        return callable(value)
+        return callable(value) or isinstance(value, classmethod)
 
     def __getattr__(self, attr_name):
         if self._missing_invocation_for_callable(attr_name):
