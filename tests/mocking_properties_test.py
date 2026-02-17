@@ -245,3 +245,22 @@ def test_property_call_original_missing_implementation_error_message():
         "'%s' has no original implementation for '%s'." %
         (NonDescriptorAttribute, 'token')
     )
+
+
+class _CallableDescriptor:
+    def __get__(self, obj, type):
+        assert obj is None, "callable descriptor is a class property"
+        return lambda: "A user"
+
+
+class CallableDescriptorUser:
+    query = _CallableDescriptor()
+
+
+def test_callable_descriptor_access_can_be_stubbed():
+    assert CallableDescriptorUser.query() == "A user"
+
+    with when(CallableDescriptorUser).query.thenReturn(
+        lambda: "Stubbed user"
+    ):
+        assert CallableDescriptorUser.query() == "Stubbed user"

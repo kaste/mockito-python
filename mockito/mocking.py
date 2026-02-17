@@ -77,7 +77,7 @@ class wait_for_invocation:
             return False
 
         try:
-            value = getattr(spec, self.method_name)
+            value = inspect.getattr_static(spec, self.method_name)
         except AttributeError:
             return False
 
