@@ -67,7 +67,7 @@ try:
     release = metadata.version("mockito")
 except metadata.PackageNotFoundError:
     print("mockito must be installed to build the documentation.")
-    print("Install from source using `uv sync` or `pip install -e .` in a virtualenv.")
+    print("Install from source using `uv sync` in the project root.")
     sys.exit(1)
 
 if 'dev' in release:

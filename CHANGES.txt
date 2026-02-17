@@ -4,6 +4,8 @@ MOCKITO CHANGE LOG
 
 Release 2.0.0
 ---------------------------------
+- Packaging is now fully defined via ``pyproject.toml`` (``hatchling`` backend);
+  the obsolete ``setup.py`` shim has been removed.
 - Calling `thenAnswer()` without arguments is now allowed and is treated like
   `thenReturn()` without arguments: the stubbed method will return `None`.
 - Deprecate `verifyNoMoreInteractions` in favor of `ensureNoUnverifiedInteractions`.
