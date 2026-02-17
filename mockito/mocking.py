@@ -200,9 +200,17 @@ class Mock:
         try:
             return self.spec.__dict__[method_name], True
         except (AttributeError, KeyError):
-            # Classes with defined `__slots__` and then no `__dict__` are not
-            # patchable but if we catch the `AttributeError` here, we get
-            # the better error message for the user.
+            # If the attr is not directly in __dict__, class specs should use
+            # static lookup so inherited descriptors are preserved as
+            # descriptors (instead of triggering __get__ via getattr).
+            if inspect.isclass(self.spec):
+                try:
+                    return inspect.getattr_static(self.spec, method_name), False
+                except AttributeError:
+                    return None, False
+
+            # For instance specs, keep dynamic getattr so existing
+            # bound-method/spying behavior stays unchanged.
             return getattr(self.spec, method_name, None), False
 
     def set_method(self, method_name: str, new_method: object) -> None:

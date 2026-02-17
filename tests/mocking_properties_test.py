@@ -264,3 +264,27 @@ def test_callable_descriptor_access_can_be_stubbed():
         lambda: "Stubbed user"
     ):
         assert CallableDescriptorUser.query() == "Stubbed user"
+
+
+class _InheritedDescriptor:
+    def __get__(self, obj, owner):
+        return 7 if obj else 42
+
+
+class _InheritedDescriptorBase:
+    token = _InheritedDescriptor()
+
+
+class _InheritedDescriptorChild(_InheritedDescriptorBase):
+    pass
+
+
+def test_inherited_descriptor_then_call_original_implementation():
+    assert _InheritedDescriptorChild.token == 42
+    assert _InheritedDescriptorChild().token == 7
+
+    with when(
+        _InheritedDescriptorChild
+    ).token.thenCallOriginalImplementation():
+        assert _InheritedDescriptorChild.token == 42
+        assert _InheritedDescriptorChild().token == 7
