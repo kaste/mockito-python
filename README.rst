@@ -82,3 +82,11 @@ I use `uv <https://docs.astral.sh/uv/>`_, and if you do too: you just clone this
 to your computer, then run ``uv sync`` in the root directory.  Example usage::
 
     uv run pytest
+
+For docs, install only the docs dependencies with::
+
+    uv sync --no-dev --group docs
+
+Or to install everything (all dependency groups), run::
+
+    uv sync --all-groups

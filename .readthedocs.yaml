@@ -10,7 +10,7 @@ build:
   commands:
     # Install uv and sync dependencies from uv.lock
     - pip install uv
-    - uv sync --frozen
+    - uv sync --frozen --no-dev --group docs
     - uv run sphinx-build -b html docs $READTHEDOCS_OUTPUT/html
 
 # Build documentation from the docs/ directory using Sphinx
