@@ -22,6 +22,12 @@ This looks like a plethora of verification functions, and especially since  you 
 .. autofunction:: verifyZeroInteractions
 .. autofunction:: verifyExpectedInteractions
 
+In-order verification across one or multiple observed objects is provided by
+:class:`InOrder`.
+
+.. autoclass:: InOrder
+   :class-doc-from: class
+
 Note that `verifyExpectedInteractions` was named `verifyNoUnwantedInteractions` in v1.
 The usage of `verifyNoUnwantedInteractions` is deprecated.
 

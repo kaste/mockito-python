@@ -38,6 +38,7 @@ from .mockito import (
     ArgumentError,
 )
 from . import inorder
+from .inorder import InOrder
 from .spying import spy, spy2
 from .mocking import mock
 from .verification import VerificationError
@@ -67,6 +68,7 @@ __all__ = [
     'verifyExpectedInteractions',
     'verifyStubbedInvocationsAreUsed',
     'inorder',
+    'InOrder',
     'unstub',
     'forget_invocations',
     'VerificationError',

@@ -250,6 +250,9 @@ class VerifyTest(VerificationTestBase):
         self.assertRaises(VerificationError, verify(self.mock, never).foo)
 
 
+@pytest.mark.filterwarnings(
+    r"ignore:'inorder.verify' is deprecated\..*:DeprecationWarning"
+)
 class InorderVerifyTest(VerificationTestBase):
     def __init__(self, *args, **kwargs):
         VerificationTestBase.__init__(self, inorder.verify, *args, **kwargs)
