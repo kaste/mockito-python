@@ -62,6 +62,13 @@ def test_legacy_inorder_verify_is_deprecated():
     )
 
 
+def test_in_order_public_surface_is_verify_only():
+    in_order = InOrder(mock())
+
+    public = [name for name in dir(in_order) if not name.startswith('_')]
+    assert public == ["verify"]
+
+
 def test_observing_the_same_mock_twice_should_raise():
     a = mock()
     with pytest.raises(ValueError) as e:
@@ -393,12 +400,11 @@ def test_allow_double_entrance():
     in_order.verify(cat, times=1).meow()
 
 
-def test_close_should_detach_and_stop_late_registration_capture():
+def test_exited_in_order_should_stop_late_registration_capture():
     bob = Dog()
 
-    in_order = InOrder(bob)
-    in_order.close()
-    in_order.close()
+    with InOrder(bob) as in_order:
+        pass
 
     expect(bob).say(...)
     bob.say("Wuff!")

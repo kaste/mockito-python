@@ -93,6 +93,36 @@ class InOrder:
 
     """
 
+    def __init__(self, *objects: object) -> None:
+        self._core = InOrderImpl(*objects)
+
+    def verify(
+        self,
+        obj: object,
+        times=None,
+        atleast=None,
+        atmost=None,
+        between=None,
+    ):
+        return self._core.verify(
+            obj,
+            times=times,
+            atleast=atleast,
+            atmost=atmost,
+            between=between,
+        )
+
+    def __enter__(self):
+        self._core.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._core.__exit__(exc_type, exc_val, exc_tb)
+
+
+class InOrderImpl:
+    """Internal implementation behind the public `InOrder` facade."""
+
 
     def __init__(self, *objects: object):
         objects_: list[object] = []
@@ -221,11 +251,12 @@ class InOrder:
             return [None]
 
         frame = inspect.currentframe()
-        caller_frame = (
-            frame.f_back.f_back
-            if frame and frame.f_back and frame.f_back.f_back
-            else None
-        )
+        # Start at the direct caller and then walk out of our own module.
+        # This is important because public `InOrder` delegates to `InOrderImpl`,
+        # so the first stack frames are internal wrappers.
+        caller_frame = frame.f_back if frame else None
+        while caller_frame and caller_frame.f_code.co_filename == __file__:
+            caller_frame = caller_frame.f_back
 
         if caller_frame is None:
             return [None] * count
@@ -292,7 +323,7 @@ class InOrder:
 
 
 class InOrderVerifiableInvocation(VerifiableInvocation):
-    def __init__(self, mock, method_name, verification, inorder: InOrder):
+    def __init__(self, mock, method_name, verification, inorder: InOrderImpl):
         super().__init__(mock, method_name, verification)
         self._inorder = inorder
 
