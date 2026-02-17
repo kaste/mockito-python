@@ -34,6 +34,11 @@ Release 2.0.0
 - The legacy in-order verification mode (``inorder.verify(...)``)
   is deprecated in favor of ``InOrder(...)``.
 
+- Added first-class property/descriptor stubbing support, including class-level property
+  stubbing via `when(F).p.thenReturn(...)` and `thenCallOriginalImplementation()` support for
+  property stubs (including chained answers like
+  `thenReturn(...).thenCallOriginalImplementation()`). Stubbing instance properties now fails
+  fast with clear guidance to use class-level stubbing (`when(F).p...`).
 
 
 Release 1.5.5 (November 17, 2025)
