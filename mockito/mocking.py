@@ -315,16 +315,17 @@ class Mock:
         new_mocked_method.__name__ = method_name
         if original_method:
             new_mocked_method.__doc__ = original_method.__doc__
-            new_mocked_method.__wrapped__ = original_method  # type: ignore[attr-defined]  # noqa: E501
+            new_mocked_method.__wrapped__ = original_method  # type: ignore[attr-defined]
             try:
                 new_mocked_method.__module__ = original_method.__module__
             except AttributeError:
                 pass
 
+        if _is_coroutine_method(original_method):
+            new_mocked_method = inspect.markcoroutinefunction(new_mocked_method)
+
         if inspect.ismethod(original_method):
-            new_mocked_method = utils.newmethod(
-                new_mocked_method, self.mocked_obj
-            )
+            new_mocked_method = utils.newmethod(new_mocked_method, self.mocked_obj)
 
         if isinstance(original_method, staticmethod):
             new_mocked_method = staticmethod(new_mocked_method)
@@ -446,6 +447,15 @@ class Mock:
                     and not inspect.isclass(original_method)
                 )
             )
+
+
+def _is_coroutine_method(method: object | None) -> bool:
+    if isinstance(method, (staticmethod, classmethod)):
+        method = method.__func__
+    elif inspect.ismethod(method):
+        method = method.__func__
+
+    return inspect.iscoroutinefunction(method)
 
 
 class _OMITTED(object):
