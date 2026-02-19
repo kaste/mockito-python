@@ -132,6 +132,14 @@ class _mocked_property:
             return invocation.RememberedPropertyAccess(
                 self.mock, self.method_name)()
 
+    def __set__(self, obj, value):
+        # Keep this wrapper a data descriptor so it wins over instance
+        # __dict__ during reads.
+        return None
+
+    def __delete__(self, obj):
+        return None
+
 
 class Mock:
     def __init__(

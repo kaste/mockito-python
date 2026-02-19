@@ -204,6 +204,57 @@ def test_descriptor_access():
         assert F.query == 23
     assert F.query == 42
 
+
+def test_data_descriptor_stubbing_overrides_instance_dict_value(unstub):
+    class DataDescriptor:
+        def __get__(self, obj, owner):
+            if obj is None:
+                return self
+            return f"descriptor:{obj.__dict__['token']}"
+
+        def __set__(self, obj, value):
+            obj.__dict__["token"] = value
+
+    class DescriptorUser:
+        token = DataDescriptor()
+
+    user = DescriptorUser()
+    user.token = "instance-value"
+    assert user.token == "descriptor:instance-value"
+
+    when(DescriptorUser).token.thenReturn("stubbed")
+
+    assert user.token == "stubbed"
+
+
+def test_data_descriptor_setter_side_effects_are_suppressed_while_stubbed():
+    class SetterCountingDescriptor:
+        def __get__(self, obj, owner):
+            if obj is None:
+                return self
+            return obj.__dict__.get("token", None)
+
+        def __set__(self, obj, value):
+            obj.__dict__["set_calls"] = obj.__dict__.get("set_calls", 0) + 1
+            obj.__dict__["token"] = value
+
+    class DescriptorUser:
+        token = SetterCountingDescriptor()
+
+    user = DescriptorUser()
+    user.token = "initial"
+    assert user.__dict__["set_calls"] == 1
+    assert user.token == "initial"
+
+    with when(DescriptorUser).token.thenReturn("stubbed"):
+        user.token = "changed-during-stub"
+        assert user.__dict__["set_calls"] == 1
+        assert user.token == "stubbed"
+
+    assert user.__dict__["set_calls"] == 1
+    assert user.token == "initial"
+
+
 def test_failed_instance_property_stubbing_does_not_poison_unstub():
     f = F()
     assert f.p == 42
