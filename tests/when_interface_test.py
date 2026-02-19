@@ -1,5 +1,6 @@
 
 import math
+import functools
 
 import pytest
 
@@ -22,6 +23,22 @@ class StaticDog(object):
     @staticmethod
     def bark():
         pass
+
+
+class PartialMethodDog(object):
+    def bark(self, sound):
+        return sound
+
+    bark_once = functools.partialmethod(bark, 'Wuff')
+
+
+class _CallableAttribute:
+    def __call__(self):
+        return "Wuff"
+
+
+class CallableAttributeDog(object):
+    bark = _CallableAttribute()
 
 
 class Unhashable(object):
@@ -185,6 +202,18 @@ class TestMissingInvocationParentheses:
             expect(dict).get.thenReturn('Sure')
 
         assert str(exc.value) == "expected an invocation of 'get'"
+
+    def testWhenRaisesEarlyForPartialmethodIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(PartialMethodDog).bark_once.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark_once'"
+
+    def testWhenRaisesEarlyForCallableAttributeIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(CallableAttributeDog).bark.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
 
 
 @pytest.mark.usefixtures('unstub')

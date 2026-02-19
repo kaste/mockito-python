@@ -22,6 +22,7 @@ from __future__ import annotations
 import inspect
 import operator
 import types
+import functools
 from collections import deque
 from contextlib import contextmanager
 
@@ -84,14 +85,24 @@ class wait_for_invocation:
         except AttributeError:
             return False
 
-        return (
+        if (
             inspect.isfunction(value)
             or inspect.isbuiltin(value)
             or isinstance(value, staticmethod)
             or isinstance(value, classmethod)
+            or isinstance(value, functools.partialmethod)
             or isinstance(value, types.MethodDescriptorType)
             or isinstance(value, types.WrapperDescriptorType)
             or isinstance(value, types.ClassMethodDescriptorType)
+        ):
+            return True
+
+        # Generic callable fallback, but keep custom descriptors/property-like
+        # attributes on the property stubbing path.
+        return (
+            callable(value)
+            and not inspect.isclass(value)
+            and not hasattr(value, '__get__')
         )
 
     def __getattr__(self, attr_name):

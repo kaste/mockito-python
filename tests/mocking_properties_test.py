@@ -379,6 +379,10 @@ class NonDescriptorAttribute:
     token = 0
 
 
+class NonDescriptorClassAttribute:
+    token = ValueError
+
+
 def test_property_call_original_missing_implementation_error_message():
     with pytest.raises(invocation.AnswerError) as exc:
         when(NonDescriptorAttribute).token.thenCallOriginalImplementation()
@@ -387,6 +391,15 @@ def test_property_call_original_missing_implementation_error_message():
         "'%s' has no original implementation for '%s'." %
         (NonDescriptorAttribute, 'token')
     )
+
+
+def test_class_attribute_value_is_not_treated_as_missing_callable_invocation():
+    assert NonDescriptorClassAttribute.token is ValueError
+
+    with when(NonDescriptorClassAttribute).token.thenReturn(23):
+        assert NonDescriptorClassAttribute.token == 23
+
+    assert NonDescriptorClassAttribute.token is ValueError
 
 
 class _CallableDescriptor:
