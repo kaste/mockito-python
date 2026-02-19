@@ -36,6 +36,8 @@ __tracebackhide__ = operator.methodcaller(
     invocation.InvocationError
 )
 
+_MISSING_ATTRIBUTE = object()
+
 
 class _Dummy:
     # We spell out `__call__` here for convenience. All other magic methods
@@ -144,7 +146,7 @@ class Mock:
         self.stubbed_invocations: deque[invocation.StubbedInvocation] = deque()
 
         self._original_methods: dict[str, object | None] = {}
-        self._methods_to_unstub: dict[str, object | None] = {}
+        self._methods_to_unstub: dict[str, object] = {}
         self._signatures_store: dict[str, signature.Signature | None] = {}
         self._property_access_context: \
             list[tuple[str, object | None, object]] = []
@@ -283,7 +285,7 @@ class Mock:
                 # the spec object and should therefore be restored by unstub
                 self._methods_to_unstub[method_name] = original_method
             else:
-                self._methods_to_unstub[method_name] = None
+                self._methods_to_unstub[method_name] = _MISSING_ATTRIBUTE
 
             self._original_methods[method_name] = original_method
             self.replace_method(method_name, original_method)
@@ -317,7 +319,7 @@ class Mock:
                 # the spec object and should therefore be restored by unstub
                 self._methods_to_unstub[method_name] = original_method
             else:
-                self._methods_to_unstub[method_name] = None
+                self._methods_to_unstub[method_name] = _MISSING_ATTRIBUTE
 
 
     def forget_stubbed_invocation(
@@ -340,15 +342,11 @@ class Mock:
             )
             self.restore_method(invocation.method_name, original_method)
 
-    def restore_method(
-        self, method_name: str, original_method: object | None
-    ) -> None:
-        # If original_method is None, we *added* it to mocked_obj, so we
-        # must delete it here.
-        if original_method:
-            self.set_method(method_name, original_method)
-        else:
+    def restore_method(self, method_name: str, original_method: object) -> None:
+        if original_method is _MISSING_ATTRIBUTE:
             delattr(self.mocked_obj, method_name)
+        else:
+            self.set_method(method_name, original_method)
 
     def unstub(self) -> None:
         while self._methods_to_unstub:

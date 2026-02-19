@@ -267,6 +267,18 @@ def test_reentrant_same_property_then_call_original_implementation():
         assert reentrant.p == 42
 
 
+def test_property_stubbing_restores_falsy_direct_class_attribute():
+    class FalsyDirectClassAttribute:
+        token = 0
+
+    assert FalsyDirectClassAttribute.token == 0
+
+    with when(FalsyDirectClassAttribute).token.thenReturn(23):
+        assert FalsyDirectClassAttribute.token == 23
+
+    assert FalsyDirectClassAttribute.token == 0
+
+
 class NonDescriptorAttribute:
     token = 0
 
