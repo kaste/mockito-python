@@ -231,7 +231,9 @@ class Mock:
                 try:
                     return inspect.getattr_static(self.spec, method_name), False
                 except AttributeError:
-                    return None, False
+                    # If static lookup misses (e.g. metaclass __getattr__),
+                    # fall back to dynamic lookup.
+                    pass
 
             # For instance specs, keep dynamic getattr so existing
             # bound-method/spying behavior stays unchanged.

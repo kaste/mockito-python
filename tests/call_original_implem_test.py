@@ -40,6 +40,19 @@ class HasFalsyCallable:
     call = FalsyCallable()
 
 
+class DynamicMethodMeta(type):
+    def __getattr__(cls, name):
+        if name == "dyn":
+            def _dyn_method(arg):
+                return f"dynamic {arg}"
+            return _dyn_method
+        raise AttributeError(name)
+
+
+class DynamicMethodClass(metaclass=DynamicMethodMeta):
+    pass
+
+
 class CallOriginalImplementationTest(TestBase):
 
     def testClassMethod(self):
@@ -103,3 +116,7 @@ class CallOriginalImplementationTest(TestBase):
     def testFalsyCallableOriginalImplementation(self):
         when(HasFalsyCallable).call().thenCallOriginalImplementation()
         assert HasFalsyCallable.call() == "falsy callable works"
+
+    def testDynamicClassMethodFromMetaclassThenCallOriginalImplementation(self):
+        when(DynamicMethodClass).dyn(Ellipsis).thenCallOriginalImplementation()
+        assert DynamicMethodClass.dyn("works") == "dynamic works"
