@@ -224,6 +224,47 @@ def test_instance_property_stubbing_fails_fast_with_guidance(unstub):
     )
 
 
+class _InstancePropertyWithSideEffects:
+    def __init__(self):
+        self.getter_calls = 0
+
+    @property
+    def p(self):
+        self.getter_calls += 1
+        return 42
+
+
+def test_instance_property_stubbing_does_not_execute_getter(unstub):
+    f = _InstancePropertyWithSideEffects()
+
+    with pytest.raises(InvocationError):
+        when(f).p.thenReturn(23)
+
+    assert f.getter_calls == 0
+
+
+class _ClassAccessRaisingDescriptor:
+    def __get__(self, obj, owner):
+        if obj is None:
+            raise RuntimeError("descriptor should not run during stubbing")
+        return 42
+
+
+class _ClassAccessRaisingDescriptorUser:
+    token = _ClassAccessRaisingDescriptor()
+
+
+def test_class_descriptor_raising_on_class_access_can_be_stubbed():
+    with pytest.raises(RuntimeError):
+        _ClassAccessRaisingDescriptorUser.token
+
+    with when(_ClassAccessRaisingDescriptorUser).token.thenReturn(23):
+        assert _ClassAccessRaisingDescriptorUser.token == 23
+
+    with pytest.raises(RuntimeError):
+        _ClassAccessRaisingDescriptorUser.token
+
+
 class NestedPropertyAccess:
     @property
     def q(self):

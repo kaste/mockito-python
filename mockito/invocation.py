@@ -520,6 +520,18 @@ class StubbedInvocation(MatchingInvocation):
                 "\nUnused stub: %s" % self)
 
 class StubbedPropertyAccess(StubbedInvocation):
+    def ensure_mocked_object_has_method(self, method_name: str) -> None:
+        if self.mock.spec is None:
+            return
+
+        try:
+            inspect.getattr_static(self.mock.spec, method_name)
+        except AttributeError:
+            raise InvocationError(
+                "You tried to stub a method '%s' the object (%s) doesn't "
+                "have." % (method_name, self.mock.mocked_obj)
+            )
+
     def ensure_signature_matches(self, method_name, args, kwargs):
         return True
 
