@@ -96,9 +96,22 @@ class wait_for_invocation:
                 f"expected an invocation of '{self.method_name}'"
             )
 
-        invoc = invocation.StubbedPropertyAccess(
-            self.theMock, self.method_name, **self.kwargs)()
-        return getattr(invoc, attr_name)
+        if attr_name not in self.ANSWER_SELECTOR_METHODS:
+            raise AttributeError(
+                "Unknown stubbing action '%s'. "
+                "Use one of: thenReturn, thenRaise, thenAnswer, "
+                "thenCallOriginalImplementation."
+                % (attr_name)
+            )
+
+        def answer_selector_method(*args, **kwargs):
+            # Avoid patching during attribute lookup so that a (faulty)
+            # `with when(F).p.thenReturn:` does *not* yet mutate F.
+            invoc = invocation.StubbedPropertyAccess(
+                self.theMock, self.method_name, **self.kwargs)()
+            return getattr(invoc, attr_name)(*args, **kwargs)
+
+        return answer_selector_method
 
 
 class _mocked_property:
