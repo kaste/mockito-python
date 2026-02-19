@@ -143,8 +143,12 @@ def test_property_access():
         assert F().p == 23
     assert F().p == 42
 
-    with pytest.raises(invocation.InvocationError):
+    with pytest.raises(invocation.InvocationError) as exc:
         when(F).fool.thenReturn(23)
+    assert str(exc.value) == (
+        "You tried to stub an attribute 'fool' the object (%s) doesn't have."
+        % F
+    )
     with pytest.raises(AttributeError):
         assert F().fool == 23  # type: ignore[attr-defined]
 

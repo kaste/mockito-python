@@ -528,7 +528,7 @@ class StubbedPropertyAccess(StubbedInvocation):
             inspect.getattr_static(self.mock.spec, method_name)
         except AttributeError:
             raise InvocationError(
-                "You tried to stub a method '%s' the object (%s) doesn't "
+                "You tried to stub an attribute '%s' the object (%s) doesn't "
                 "have." % (method_name, self.mock.mocked_obj)
             )
 
