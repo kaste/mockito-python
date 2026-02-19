@@ -532,14 +532,9 @@ class StubbedPropertyAccess(StubbedInvocation):
                 "have." % (method_name, self.mock.mocked_obj)
             )
 
-    def ensure_signature_matches(self, method_name, args, kwargs):
-        return True
-
     def __call__(self, *params, **named_params):
         if self.strict:
             self.ensure_mocked_object_has_method(self.method_name)
-            self.ensure_signature_matches(
-                self.method_name, params, named_params)
         self._remember_params(params, named_params)
 
         self.mock.stub_property(self.method_name)
