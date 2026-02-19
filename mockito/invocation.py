@@ -520,7 +520,7 @@ class StubbedInvocation(MatchingInvocation):
                 "\nUnused stub: %s" % self)
 
 class StubbedPropertyAccess(StubbedInvocation):
-    def ensure_mocked_object_has_method(self, method_name: str) -> None:
+    def ensure_mocked_object_has_attribute(self, method_name: str) -> None:
         if self.mock.spec is None:
             return
 
@@ -534,7 +534,7 @@ class StubbedPropertyAccess(StubbedInvocation):
 
     def __call__(self, *params, **named_params):
         if self.strict:
-            self.ensure_mocked_object_has_method(self.method_name)
+            self.ensure_mocked_object_has_attribute(self.method_name)
         self._remember_params(params, named_params)
 
         self.mock.stub_property(self.method_name)
