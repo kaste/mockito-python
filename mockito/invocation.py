@@ -595,7 +595,7 @@ class AnswerSelector(object):
             self.__then(self._property_descriptor_answer(answer))
             return self
 
-        if not answer:
+        if answer is None:
             raise AnswerError(
                 "'%s' has no original implementation for '%s'." %
                 (self.invocation.mock.mocked_obj, self.invocation.method_name)

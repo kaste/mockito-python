@@ -28,6 +28,18 @@ class Dog:
         return str(arg) + " woof"
 
 
+class FalsyCallable:
+    def __bool__(self):
+        return False
+
+    def __call__(self, *args, **kwargs):
+        return "falsy callable works"
+
+
+class HasFalsyCallable:
+    call = FalsyCallable()
+
+
 class CallOriginalImplementationTest(TestBase):
 
     def testClassMethod(self):
@@ -87,3 +99,7 @@ class CallOriginalImplementationTest(TestBase):
         dog = mock({"huge": True}, spec=Dog)
         when(dog).bark().thenCallOriginalImplementation()
         assert dog.bark() == "woof"
+
+    def testFalsyCallableOriginalImplementation(self):
+        when(HasFalsyCallable).call().thenCallOriginalImplementation()
+        assert HasFalsyCallable.call() == "falsy callable works"
