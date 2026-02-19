@@ -168,6 +168,18 @@ class TestMissingInvocationParentheses:
 
         assert str(exc.value) == "expected an invocation of 'get'"
 
+    def testWhenRaisesEarlyForBuiltinWrapperDescriptorIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(str).__len__.thenReturn(1)
+
+        assert str(exc.value) == "expected an invocation of '__len__'"
+
+    def testWhenRaisesEarlyForBuiltinClassMethodDescriptorIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(dict).fromkeys.thenReturn({})
+
+        assert str(exc.value) == "expected an invocation of 'fromkeys'"
+
     def testExpectRaisesEarlyForBuiltinMethodDescriptorIfMissing(self):
         with pytest.raises(InvocationError) as exc:
             expect(dict).get.thenReturn('Sure')

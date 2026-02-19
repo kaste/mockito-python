@@ -90,6 +90,8 @@ class wait_for_invocation:
             or isinstance(value, staticmethod)
             or isinstance(value, classmethod)
             or isinstance(value, types.MethodDescriptorType)
+            or isinstance(value, types.WrapperDescriptorType)
+            or isinstance(value, types.ClassMethodDescriptorType)
         )
 
     def __getattr__(self, attr_name):
