@@ -36,6 +36,7 @@ __tracebackhide__ = operator.methodcaller(
     "errisinstance",
     invocation.InvocationError
 )
+SUPPORTS_MARKCOROUTINEFUNCTION = hasattr(inspect, "markcoroutinefunction")
 
 _MISSING_ATTRIBUTE = object()
 
@@ -321,7 +322,10 @@ class Mock:
             except AttributeError:
                 pass
 
-        if _is_coroutine_method(original_method):
+        if (
+            _is_coroutine_method(original_method)
+            and SUPPORTS_MARKCOROUTINEFUNCTION
+        ):
             new_mocked_method = inspect.markcoroutinefunction(new_mocked_method)
 
         if inspect.ismethod(original_method):

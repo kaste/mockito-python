@@ -7,6 +7,14 @@ from mockito import expect, patch, when, when2
 
 
 pytestmark = pytest.mark.usefixtures("unstub")
+SUPPORTS_MARKCOROUTINEFUNCTION = hasattr(inspect, "markcoroutinefunction")
+
+
+def assert_coroutine_metadata_after_stubbing(callable_obj):
+    assert (
+        inspect.iscoroutinefunction(callable_obj)
+        == SUPPORTS_MARKCOROUTINEFUNCTION
+    )
 
 
 class AsyncWorker:
@@ -26,8 +34,8 @@ def test_when_preserves_coroutine_metadata_for_async_class_method():
 
     when(AsyncWorker).run("a").thenReturn("stubbed")
 
-    assert inspect.iscoroutinefunction(AsyncWorker.run)
-    assert inspect.iscoroutinefunction(worker.run)
+    assert_coroutine_metadata_after_stubbing(AsyncWorker.run)
+    assert_coroutine_metadata_after_stubbing(worker.run)
 
 
 def test_when_preserves_coroutine_metadata_for_async_function():
@@ -37,7 +45,7 @@ def test_when_preserves_coroutine_metadata_for_async_function():
 
     when(this_module).async_job("a").thenReturn("stubbed")
 
-    assert inspect.iscoroutinefunction(async_job)
+    assert_coroutine_metadata_after_stubbing(async_job)
 
 
 def test_when_preserves_coroutine_metadata_for_async_bound_method():
@@ -47,7 +55,7 @@ def test_when_preserves_coroutine_metadata_for_async_bound_method():
 
     when(worker).run("a").thenReturn("stubbed")
 
-    assert inspect.iscoroutinefunction(worker.run)
+    assert_coroutine_metadata_after_stubbing(worker.run)
 
 
 def test_when2_preserves_coroutine_metadata_for_async_bound_method():
@@ -57,7 +65,7 @@ def test_when2_preserves_coroutine_metadata_for_async_bound_method():
 
     when2(worker.run, "a").thenReturn("stubbed")
 
-    assert inspect.iscoroutinefunction(worker.run)
+    assert_coroutine_metadata_after_stubbing(worker.run)
 
 
 def test_when2_preserves_coroutine_metadata_for_async_function():
@@ -67,7 +75,7 @@ def test_when2_preserves_coroutine_metadata_for_async_function():
 
     when2(this_module.async_job, "a").thenReturn("stubbed")
 
-    assert inspect.iscoroutinefunction(async_job)
+    assert_coroutine_metadata_after_stubbing(async_job)
 
 
 def test_expect_preserves_coroutine_metadata_for_async_bound_method():
@@ -77,7 +85,7 @@ def test_expect_preserves_coroutine_metadata_for_async_bound_method():
 
     expect(worker, times=1).run("a").thenReturn("stubbed")
 
-    assert inspect.iscoroutinefunction(worker.run)
+    assert_coroutine_metadata_after_stubbing(worker.run)
 
 
 def test_expect_preserves_coroutine_metadata_for_async_function():
@@ -87,7 +95,7 @@ def test_expect_preserves_coroutine_metadata_for_async_function():
 
     expect(this_module, times=1).async_job("a").thenReturn("stubbed")
 
-    assert inspect.iscoroutinefunction(async_job)
+    assert_coroutine_metadata_after_stubbing(async_job)
 
 
 def test_patch_preserves_coroutine_metadata_for_async_bound_method():
@@ -97,7 +105,7 @@ def test_patch_preserves_coroutine_metadata_for_async_bound_method():
 
     patch(worker.run, lambda task_id: f"patched:{task_id}")
 
-    assert inspect.iscoroutinefunction(worker.run)
+    assert_coroutine_metadata_after_stubbing(worker.run)
 
 
 def test_patch_preserves_coroutine_metadata_for_async_function():
@@ -107,9 +115,13 @@ def test_patch_preserves_coroutine_metadata_for_async_function():
 
     patch(this_module.async_job, lambda task_id: f"patched:{task_id}")
 
-    assert inspect.iscoroutinefunction(async_job)
+    assert_coroutine_metadata_after_stubbing(async_job)
 
 
+@pytest.mark.skipif(
+    not SUPPORTS_MARKCOROUTINEFUNCTION,
+    reason="inspect.markcoroutinefunction is unavailable before Python 3.12",
+)
 def test_marked_coroutine_then_call_original_returns_sync_value():
     class MarkedAsyncWorker:
         def run(self, task_id):
