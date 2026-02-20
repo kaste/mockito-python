@@ -122,12 +122,11 @@ class IdentityMap(Generic[K, V]):
         self._store = [(k, v) for k, v in self._store if k is not key]
 
     def pop(self, key: K) -> V:
-        rv = self.get(key)
-        if rv is not None:
-            self.remove(key)
-            return rv
-        else:
-            raise KeyError()
+        for i, (k, value) in enumerate(self._store):
+            if k is key:
+                del self._store[i]
+                return value
+        raise KeyError()
 
     def pop_value(self, value: V) -> V:
         for i, (key, val) in enumerate(self._store):
