@@ -68,29 +68,11 @@ class wait_for_invocation:
         self.method_name = method_name
         self.kwargs = kwargs
 
-    def __call__(self, *args, **kwargs):
-        return invocation.StubbedInvocation(
-            self.theMock, self.method_name, **self.kwargs)(*args, **kwargs)
-
-    def _missing_invocation_for_callable(self, attr_name: str) -> bool:
-        if attr_name not in self.ANSWER_SELECTOR_METHODS:
-            return False
-
-        spec = self.theMock.spec
-        if spec is None:
-            return False
-
-        try:
-            value = inspect.getattr_static(spec, self.method_name)
-        except AttributeError:
-            if inspect.isclass(spec):
-                try:
-                    value = getattr(spec, self.method_name)
-                except AttributeError:
-                    return False
-            else:
-                return False
-
+    def should_continue_with_stubbed_invocation(
+        self,
+        value: object,
+        allow_classes: bool = False
+    ) -> bool:
         if (
             inspect.isfunction(value)
             or inspect.ismethod(value)
@@ -108,15 +90,33 @@ class wait_for_invocation:
         # attributes on the property stubbing path.
         return (
             callable(value)
-            and not inspect.isclass(value)
+            and (allow_classes or not inspect.isclass(value))
             and not hasattr(value, '__get__')
         )
 
+    def __call__(self, *args, **kwargs):
+        self.ensure_target_is_callable()
+        return invocation.StubbedInvocation(
+            self.theMock, self.method_name, **self.kwargs)(*args, **kwargs)
+
+    def ensure_target_is_callable(self) -> None:
+        target, was_in_spec = self.theMock._get_original_method_before_stub(
+            self.method_name
+        )
+
+        # Missing attributes can still be added in loose mode.
+        if not was_in_spec and target is None:
+            return
+
+        if self.should_continue_with_stubbed_invocation(
+            target, allow_classes=True
+        ):
+            return
+
+        raise invocation.InvocationError("'%s' is not callable." % self.method_name)
+
     def __getattr__(self, attr_name):
-        if self._missing_invocation_for_callable(attr_name):
-            raise invocation.InvocationError(
-                f"expected an invocation of '{self.method_name}'"
-            )
+        self.ensure_target_is_not_callable(attr_name)
 
         if attr_name not in self.ANSWER_SELECTOR_METHODS:
             raise AttributeError(
@@ -134,6 +134,30 @@ class wait_for_invocation:
             return getattr(invoc, attr_name)(*args, **kwargs)
 
         return answer_selector_method
+
+    def ensure_target_is_not_callable(self, attr_name: str) -> None:
+        if attr_name not in self.ANSWER_SELECTOR_METHODS:
+            return
+
+        spec = self.theMock.spec
+        if spec is None:
+            return
+
+        try:
+            value = inspect.getattr_static(spec, self.method_name)
+        except AttributeError:
+            if inspect.isclass(spec):
+                try:
+                    value = getattr(spec, self.method_name)
+                except AttributeError:
+                    return
+            else:
+                return
+
+        if self.should_continue_with_stubbed_invocation(value):
+            raise invocation.InvocationError(
+                f"expected an invocation of '{self.method_name}'"
+            )
 
 
 class _mocked_property:

@@ -13,6 +13,10 @@ class Dog(object):
         pass
 
 
+class Cat(object):
+    age = 7
+
+
 class ClassDog(object):
     @classmethod
     def bark(cls):
@@ -302,6 +306,18 @@ class TestEnsureAddedAttributesGetRemovedOnUnstub:
         with pytest.raises(AttributeError):
             dog.wggle
 
+
+@pytest.mark.usefixtures('unstub')
+class TestNonCallableAttributesCannotBeStubbedAsMethods:
+    def testExpectRaisesEarlyIfAttributeIsNotCallable(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(Cat).age()
+        assert str(exc.value) == "'age' is not callable."
+
+    def testWhenStrictFalseRaisesEarlyIfAttributeIsNotCallable(self):
+        with pytest.raises(InvocationError) as exc:
+            when(Cat, strict=False).age()
+        assert str(exc.value) == "'age' is not callable."
 
 @pytest.mark.usefixtures('unstub')
 class TestDottedPaths:
