@@ -617,13 +617,13 @@ class AnswerSelector(object):
         self.invocation = invocation
         self.discard_first_arg = \
             invocation.mock.eat_self(invocation.method_name)
-        self.is_coroutine = is_coroutine_method(
+        self.expects_awaitable = is_coroutine_method(
             invocation.mock.get_original_method(invocation.method_name)
         )
 
     def thenReturn(self, *return_values: Any) -> Self:
         for return_value in return_values or (None,):
-            if self.is_coroutine:
+            if self.expects_awaitable:
                 answer = return_awaitable(return_value)
             else:
                 answer = return_(return_value)
@@ -632,7 +632,7 @@ class AnswerSelector(object):
 
     def thenRaise(self, *exceptions: Exception | type[Exception]) -> Self:
         for exception in exceptions or (Exception,):
-            if self.is_coroutine:
+            if self.expects_awaitable:
                 answer = raise_awaitable(exception)
             else:
                 answer = raise_(exception)
@@ -644,7 +644,7 @@ class AnswerSelector(object):
             answer = callable
             if self.discard_first_arg:
                 answer = discard_self(answer)
-            if self.is_coroutine and not is_awaitable_when_called(callable):
+            if self.expects_awaitable and not is_awaitable_when_called(callable):
                 answer = as_awaitable(answer)
             self.__then(answer)
         return self
