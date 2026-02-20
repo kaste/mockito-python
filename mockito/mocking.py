@@ -534,6 +534,24 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):  # noqa: C901
             ):
                 raise AttributeError(method_name)
 
+            # If a descriptor exists on the dummy class, resolve it here so
+            # InvocationError from descriptor-backed stubs is not converted
+            # into a dynamic fallback attribute.
+            if method_name != "__call__":
+                try:
+                    class_attr = inspect.getattr_static(type(self), method_name)
+                except AttributeError:
+                    pass
+                else:
+                    if hasattr(class_attr, "__get__"):
+                        try:
+                            return class_attr.__get__(self, type(self))
+                        except AttributeError as error:
+                            if isinstance(error, invocation.InvocationError):
+                                raise
+                            # Keep dynamic-attribute behavior for descriptors that
+                            # deliberately signal missing via AttributeError.
+
             def ad_hoc_function(*args, **kwargs):
                 return remembered_invocation_builder(
                     theMock, method_name, *args, **kwargs)

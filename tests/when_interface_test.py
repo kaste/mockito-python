@@ -236,6 +236,24 @@ class TestMissingInvocationParentheses:
 
         assert str(exc.value) == "expected an invocation of 'bark'"
 
+    def testWhenMockAllowsAttributeStyleStubbingWithoutParentheses(self):
+        dummy = mock()
+
+        when(dummy).foo.thenReturn(23)
+
+        assert dummy.foo == 23
+        assert dummy.foo == 23
+
+    def testExpectMockAllowsAttributeStyleStubbingWithoutParentheses(self):
+        dummy = mock()
+
+        with pytest.raises(InvocationError) as exc:
+            with expect(dummy, times=1).foo.thenReturn(23):
+                assert dummy.foo == 23
+                dummy.foo
+
+        assert str(exc.value) == "\nWanted times: 1, actual times: 2"
+
 
 @pytest.mark.usefixtures('unstub')
 class TestPassAroundStrictness:
