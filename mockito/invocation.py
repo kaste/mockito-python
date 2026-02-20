@@ -24,15 +24,14 @@ import os
 import inspect
 import operator
 from collections import deque
+from typing import TYPE_CHECKING
 
 from . import matchers, signature
 from . import verification as verificationModule
 from .utils import contains_strict
 
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
-    from typing import Any, Callable, NoReturn, Self, TypeVar, TYPE_CHECKING
+    from typing import Any, Callable, NoReturn, Self, TypeVar
     from .mocking import Mock
     T = TypeVar('T')
 
@@ -637,15 +636,18 @@ class AnswerSelector(object):
         ):
             answer = answer.__func__
 
-        self.__then(answer)
+        # `answer` is runtime-validated by stubbing setup and optional
+        # unwrapping above, but mypy still sees `object` here.
+        self.__then(answer)  # type: ignore[arg-type]
         return self
 
-    def _property_descriptor_answer(self, descriptor: object) -> Callable:
+    def _property_descriptor_answer(self, descriptor: Any) -> Callable:
         def answer(*args: Any, **kwargs: Any) -> Any:
             obj, type_ = self.invocation.mock.get_current_property_access(
                 self.invocation.method_name
             )
-            return descriptor.__get__(obj, type_)
+            # Guarded by `hasattr(descriptor, '__get__')` in caller.
+            return descriptor.__get__(obj, type_)  # type: ignore[attr-defined]
 
         return answer
 

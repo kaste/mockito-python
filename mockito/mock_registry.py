@@ -39,7 +39,7 @@ class MockRegistry:
     iterates over them to unstub each stubbed method.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.mocks: IdentityMap[object, Mock] = IdentityMap()
         self._register_observers: list[weakref.WeakMethod] = []
 
