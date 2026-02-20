@@ -600,12 +600,16 @@ def discard_self(function: Callable[..., T]) -> Callable[..., T]:
 
 def as_awaitable(function: Callable[..., Any]) -> Callable[..., Any]:
     async def function_as_awaitable(*args, **kwargs) -> Any:
-        result = function(*args, **kwargs)
-        if inspect.isawaitable(result):
-            return await result
-        return result
+        return function(*args, **kwargs)
 
     return function_as_awaitable
+
+
+def is_awaitable_when_called(function: Callable[..., Any]) -> bool:
+    if inspect.iscoroutinefunction(function):
+        return True
+
+    return inspect.iscoroutinefunction(getattr(function, "__call__", None))
 
 
 class AnswerSelector(object):
@@ -640,7 +644,7 @@ class AnswerSelector(object):
             answer = callable
             if self.discard_first_arg:
                 answer = discard_self(answer)
-            if self.is_coroutine:
+            if self.is_coroutine and not is_awaitable_when_called(callable):
                 answer = as_awaitable(answer)
             self.__then(answer)
         return self
