@@ -126,6 +126,18 @@ class wait_for_invocation:
                 % (attr_name)
             )
 
+        if not inspect.isclass(self.theMock.mocked_obj):
+            raise invocation.InvocationError(
+                "Cannot stub property '%s' on an instance. "
+                "Use class-level stubbing instead: "
+                "when(%s).%s.thenReturn(...)."
+                % (
+                    self.method_name,
+                    type(self.theMock.mocked_obj).__name__,
+                    self.method_name,
+                )
+            )
+
         def answer_selector_method(*args, **kwargs):
             # Avoid patching during attribute lookup so that a (faulty)
             # `with when(F).p.thenReturn:` does *not* yet mutate F.
@@ -345,18 +357,6 @@ class Mock:
             self.replace_method(method_name, original_method)
 
     def stub_property(self, method_name: str) -> None:
-        if not inspect.isclass(self.mocked_obj):
-            raise invocation.InvocationError(
-                "Cannot stub property '%s' on an instance. "
-                "Use class-level stubbing instead: "
-                "when(%s).%s.thenReturn(...)."
-                % (
-                    method_name,
-                    type(self.mocked_obj).__name__,
-                    method_name,
-                )
-            )
-
         try:
             self._methods_to_unstub[method_name]
         except KeyError:
