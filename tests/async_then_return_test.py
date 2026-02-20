@@ -41,3 +41,23 @@ def test_when_thenReturn_on_async_function_returns_awaitable_result():
 
     assert inspect.isawaitable(pending)
     assert run(pending) == "stubbed"
+
+
+def test_when_without_then_on_async_method_returns_awaitable_none():
+    when(AsyncWorker).run("a")
+
+    worker = AsyncWorker()
+    pending = worker.run("a")
+
+    assert inspect.isawaitable(pending)
+    assert run(pending) is None
+
+
+def test_when_without_then_on_async_function_returns_awaitable_none():
+    this_module = sys.modules[__name__]
+    when(this_module).async_job("a")
+
+    pending = async_job("a")
+
+    assert inspect.isawaitable(pending)
+    assert run(pending) is None

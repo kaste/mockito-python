@@ -426,7 +426,13 @@ class StubbedInvocation(MatchingInvocation):
         if strict is not None:
             self.strict = strict
 
-        self.answers = CompositeAnswer()
+        self.refers_coroutine = is_coroutine_method(
+            mock.peek_original_method(method_name)
+        )
+        default_answer = (
+            return_awaitable(None) if self.refers_coroutine else return_(None)
+        )
+        self.answers = CompositeAnswer(default_answer=default_answer)
 
         #: Counts how many times this stub has been 'used'.
         #: A stub gets used, when a real invocation matches its argument
@@ -462,7 +468,7 @@ class StubbedInvocation(MatchingInvocation):
 
         self.mock.stub(self.method_name)
         self.mock.finish_stubbing(self)
-        return AnswerSelector(self)
+        return AnswerSelector(self, self.refers_coroutine)
 
     def forget_self(self) -> None:
         if self in self.mock.stubbed_invocations:
@@ -555,7 +561,7 @@ class StubbedPropertyAccess(StubbedInvocation):
 
         self.mock.stub_property(self.method_name)
         self.mock.finish_stubbing(self)
-        return AnswerSelector(self)
+        return AnswerSelector(self, self.refers_coroutine)
 
 
 
@@ -613,13 +619,11 @@ def is_awaitable_when_called(function: Callable[..., Any]) -> bool:
 
 
 class AnswerSelector(object):
-    def __init__(self, invocation: StubbedInvocation) -> None:
+    def __init__(self, invocation: StubbedInvocation, expects_awaitable: bool) -> None:
         self.invocation = invocation
         self.discard_first_arg = \
             invocation.mock.eat_self(invocation.method_name)
-        self.expects_awaitable = is_coroutine_method(
-            invocation.mock.get_original_method(invocation.method_name)
-        )
+        self.expects_awaitable = expects_awaitable
 
     def thenReturn(self, *return_values: Any) -> Self:
         for return_value in return_values or (None,):
@@ -714,9 +718,10 @@ class AnswerSelector(object):
 
 
 class CompositeAnswer(object):
-    def __init__(self) -> None:
+    def __init__(self, default_answer: Callable = return_(None)) -> None:
         #: Container for answers, which are just ordinary callables
         self.answers: deque[Callable] = deque()
+        self.default_answer = default_answer
 
         #: Counter for the maximum answers we ever had
         self.answer_count = 0
@@ -731,7 +736,7 @@ class CompositeAnswer(object):
 
     def answer(self, *args: Any, **kwargs: Any) -> Any:
         if len(self.answers) == 0:
-            return None
+            return self.default_answer(*args, **kwargs)
 
         if len(self.answers) == 1:
             a = self.answers[0]

@@ -50,3 +50,15 @@ def test_expect_times_async_method_fails_verification_when_under_called():
 
     with pytest.raises(VerificationError, match="Wanted times: 2, actual times: 1"):
         verifyExpectedInteractions(worker)
+
+
+def test_expect_times_async_method_without_then_returns_awaitable_none():
+    worker = AsyncWorker()
+    expect(worker, times=1).run("a")
+
+    pending = worker.run("a")
+
+    assert inspect.isawaitable(pending)
+    assert run(pending) is None
+
+    verifyExpectedInteractions(worker)
