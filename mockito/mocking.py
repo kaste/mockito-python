@@ -382,7 +382,7 @@ class Mock:
         assert invocation in self.stubbed_invocations
 
         if len(self.stubbed_invocations) == 1:
-            mock_registry.unstub(self.mocked_obj)
+            mock_registry.unstub_mock(self)
             return
 
         self.stubbed_invocations.remove(invocation)

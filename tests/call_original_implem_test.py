@@ -2,7 +2,7 @@
 import sys
 
 import pytest
-from mockito import mock, when
+from mockito import mock, when, verify, ArgumentError
 from mockito.invocation import AnswerError
 
 from . import module
@@ -107,6 +107,15 @@ class CallOriginalImplementationTest(TestBase):
             "'<class '%s'>' "
             "has no original implementation for 'bark'."
         ) % class_str_value
+
+    def testDumbMockFailedThenCallOriginalImplementationDoesNotLeakStub(self):
+        dog = mock()
+
+        with pytest.raises(AnswerError):
+            when(dog).bark().thenCallOriginalImplementation()
+
+        with pytest.raises(ArgumentError):
+            verify(dog).bark(Ellipsis)
 
     def testSpeccedMockHasOriginalImplementations(self):
         dog = mock({"huge": True}, spec=Dog)

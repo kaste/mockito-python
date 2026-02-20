@@ -93,6 +93,10 @@ class MockRegistry:
         else:
             mock.unstub()
 
+    def unstub_mock(self, mock: Mock) -> None:
+        self.mocks.pop_value(mock)
+        mock.unstub()
+
     def unstub_all(self) -> None:
         for mock in self.get_registered_mocks():
             mock.unstub()
@@ -121,6 +125,13 @@ class IdentityMap(object):
             return rv
         else:
             raise KeyError()
+
+    def pop_value(self, value):
+        for i, (key, val) in enumerate(self._store):
+            if val is value:
+                del self._store[i]
+                return val
+        raise KeyError()
 
     def get(self, key, default=None):
         for k, value in self._store:
