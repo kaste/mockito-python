@@ -466,7 +466,8 @@ class StubbedInvocation(MatchingInvocation):
         return AnswerSelector(self)
 
     def forget_self(self) -> None:
-        self.mock.forget_stubbed_invocation(self)
+        if self in self.mock.stubbed_invocations:
+            self.mock.forget_stubbed_invocation(self)
 
     def add_answer(self, answer: Callable) -> None:
         self.answers.add(answer)
@@ -608,6 +609,7 @@ class AnswerSelector(object):
         )
         if isinstance(self.invocation, StubbedPropertyAccess):
             if not hasattr(answer, '__get__'):
+                self.invocation.forget_self()
                 raise AnswerError(
                     "'%s' has no original implementation for '%s'." %
                     (
@@ -619,6 +621,7 @@ class AnswerSelector(object):
             return self
 
         if answer is None:
+            self.invocation.forget_self()
             raise AnswerError(
                 "'%s' has no original implementation for '%s'." %
                 (self.invocation.mock.mocked_obj, self.invocation.method_name)

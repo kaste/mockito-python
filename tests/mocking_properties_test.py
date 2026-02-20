@@ -393,6 +393,15 @@ def test_property_call_original_missing_implementation_error_message():
     )
 
 
+def test_property_call_original_missing_implementation_rolls_back_patch():
+    assert NonDescriptorAttribute.token == 0
+
+    with pytest.raises(invocation.AnswerError):
+        when(NonDescriptorAttribute).token.thenCallOriginalImplementation()
+
+    assert NonDescriptorAttribute.token == 0
+
+
 def test_class_attribute_value_is_not_treated_as_missing_callable_invocation():
     assert NonDescriptorClassAttribute.token is ValueError
 
