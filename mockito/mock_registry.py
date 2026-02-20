@@ -115,7 +115,10 @@ class IdentityMap(Generic[K, V]):
         self._store: list[tuple[K, V]] = []
 
     def __setitem__(self, key: K, value: V) -> None:
-        self.remove(key)
+        for i, (k, _) in enumerate(self._store):
+            if k is key:
+                self._store[i] = (key, value)
+                return
         self._store.append((key, value))
 
     def remove(self, key: K) -> None:
