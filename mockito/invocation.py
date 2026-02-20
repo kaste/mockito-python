@@ -524,13 +524,29 @@ class StubbedPropertyAccess(StubbedInvocation):
         if self.mock.spec is None:
             return
 
+        # Property stubbing is class-only; for instances `stub_property`
+        # raises a dedicated guidance error. Skip existence checks here so
+        # strict mode does not mask that message for dynamic instance attrs.
+        if not inspect.isclass(self.mock.mocked_obj):
+            return
+
         try:
             inspect.getattr_static(self.mock.spec, method_name)
+            return
         except AttributeError:
-            raise InvocationError(
-                "You tried to stub an attribute '%s' the object (%s) doesn't "
-                "have." % (method_name, self.mock.mocked_obj)
-            )
+            # Static lookup intentionally avoids descriptor execution, but it
+            # does not see dynamic class attrs from metaclass hooks.
+            if inspect.isclass(self.mock.spec):
+                try:
+                    getattr(self.mock.spec, method_name)
+                    return
+                except AttributeError:
+                    pass
+
+        raise InvocationError(
+            "You tried to stub an attribute '%s' the object (%s) doesn't "
+            "have." % (method_name, self.mock.mocked_obj)
+        )
 
     def __call__(self, *params, **named_params):
         if self.strict:

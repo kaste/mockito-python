@@ -41,6 +41,17 @@ class CallableAttributeDog(object):
     bark = _CallableAttribute()
 
 
+class DynamicCallableMeta(type):
+    def __getattr__(cls, name):
+        if name == "bark":
+            return lambda: "Wuff"
+        raise AttributeError(name)
+
+
+class DynamicCallableMetaDog(metaclass=DynamicCallableMeta):
+    pass
+
+
 class Unhashable(object):
     def update(self, **kwargs):
         pass
@@ -212,6 +223,12 @@ class TestMissingInvocationParentheses:
     def testWhenRaisesEarlyForCallableAttributeIfParenthesesAreMissing(self):
         with pytest.raises(InvocationError) as exc:
             when(CallableAttributeDog).bark.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testWhenRaisesEarlyForDynamicMetaclassCallableIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(DynamicCallableMetaDog).bark.thenReturn('Sure')
 
         assert str(exc.value) == "expected an invocation of 'bark'"
 

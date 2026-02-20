@@ -83,10 +83,17 @@ class wait_for_invocation:
         try:
             value = inspect.getattr_static(spec, self.method_name)
         except AttributeError:
-            return False
+            if inspect.isclass(spec):
+                try:
+                    value = getattr(spec, self.method_name)
+                except AttributeError:
+                    return False
+            else:
+                return False
 
         if (
             inspect.isfunction(value)
+            or inspect.ismethod(value)
             or inspect.isbuiltin(value)
             or isinstance(value, staticmethod)
             or isinstance(value, classmethod)

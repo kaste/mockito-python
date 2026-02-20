@@ -463,3 +463,68 @@ def test_inherited_descriptor_then_call_original_implementation():
     ).token.thenCallOriginalImplementation():
         assert _InheritedDescriptorChild.token == 42
         assert _InheritedDescriptorChild().token == 7
+
+
+class _DynamicMetaclassGetattr(type):
+    def __getattr__(cls, name):
+        if name == "query":
+            return 42
+        raise AttributeError(name)
+
+
+class _DynamicMetaclassGetattrUser(metaclass=_DynamicMetaclassGetattr):
+    pass
+
+
+def test_dynamic_metaclass_getattr_attribute_can_be_stubbed():
+    assert _DynamicMetaclassGetattrUser.query == 42
+
+    with when(_DynamicMetaclassGetattrUser).query.thenReturn(23):
+        assert _DynamicMetaclassGetattrUser.query == 23
+
+    assert _DynamicMetaclassGetattrUser.query == 42
+
+
+class _DynamicMetaclassGetattribute(type):
+    def __getattribute__(cls, name):
+        try:
+            return super().__getattribute__(name)
+        except AttributeError:
+            if name == "query":
+                return 84
+            raise
+
+
+class _DynamicMetaclassGetattributeUser(
+    metaclass=_DynamicMetaclassGetattribute
+):
+    pass
+
+
+def test_dynamic_metaclass_getattribute_attribute_can_be_stubbed():
+    assert _DynamicMetaclassGetattributeUser.query == 84
+
+    with when(_DynamicMetaclassGetattributeUser).query.thenReturn(23):
+        assert _DynamicMetaclassGetattributeUser.query == 23
+
+    assert _DynamicMetaclassGetattributeUser.query == 84
+
+
+class _DynamicInstanceAttrUser:
+    def __getattr__(self, name):
+        if name == "p":
+            return 42
+        raise AttributeError(name)
+
+
+def test_instance_dynamic_attribute_stubbing_fails_fast_with_guidance(unstub):
+    user = _DynamicInstanceAttrUser()
+
+    with pytest.raises(InvocationError) as exc:
+        when(user).p.thenReturn(23)
+
+    assert str(exc.value) == (
+        "Cannot stub property 'p' on an instance. "
+        "Use class-level stubbing instead: "
+        "when(_DynamicInstanceAttrUser).p.thenReturn(...)."
+    )
