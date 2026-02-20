@@ -468,7 +468,8 @@ class StubbedInvocation(MatchingInvocation):
 
         self.mock.stub(self.method_name)
         self.mock.finish_stubbing(self)
-        return AnswerSelector(self, self.refers_coroutine)
+        discard_first_arg = self.mock.eat_self(self.method_name)
+        return AnswerSelector(self, self.refers_coroutine, discard_first_arg)
 
     def forget_self(self) -> None:
         if self in self.mock.stubbed_invocations:
@@ -561,7 +562,7 @@ class StubbedPropertyAccess(StubbedInvocation):
 
         self.mock.stub_property(self.method_name)
         self.mock.finish_stubbing(self)
-        return AnswerSelector(self, self.refers_coroutine)
+        return AnswerSelector(self, self.refers_coroutine, False)
 
 
 
@@ -619,10 +620,14 @@ def is_awaitable_when_called(function: Callable[..., Any]) -> bool:
 
 
 class AnswerSelector(object):
-    def __init__(self, invocation: StubbedInvocation, expects_awaitable: bool) -> None:
+    def __init__(
+        self,
+        invocation: StubbedInvocation,
+        expects_awaitable: bool,
+        discard_first_arg: bool
+    ) -> None:
         self.invocation = invocation
-        self.discard_first_arg = \
-            invocation.mock.eat_self(invocation.method_name)
+        self.discard_first_arg = discard_first_arg
         self.expects_awaitable = expects_awaitable
 
     def thenReturn(self, *return_values: Any) -> Self:
