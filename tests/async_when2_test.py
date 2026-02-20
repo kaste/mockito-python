@@ -5,6 +5,7 @@ import sys
 import pytest
 
 from mockito import when2
+import mockito.mocking as mocking_module
 
 
 pytestmark = pytest.mark.usefixtures("unstub")
@@ -41,3 +42,18 @@ def test_when2_thenReturn_on_async_function_returns_awaitable_result():
 
     assert inspect.isawaitable(pending)
     assert run(pending) == "stubbed"
+
+
+def test_when2_restubbed_async_method_stays_awaitable_without_markcoroutinefunction(
+    monkeypatch
+):
+    monkeypatch.setattr(mocking_module, "SUPPORTS_MARKCOROUTINEFUNCTION", False)
+
+    worker = AsyncWorker()
+    when2(worker.run, "a").thenReturn("first")
+    when2(worker.run, "a")
+
+    pending = worker.run("a")
+
+    assert inspect.isawaitable(pending)
+    assert run(pending) is None

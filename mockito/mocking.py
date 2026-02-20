@@ -251,8 +251,11 @@ class Mock:
         return self._original_methods.get(method_name, None)
 
     def peek_original_method(self, method_name: str) -> object | None:
-        original_method, _ = self._get_original_method_before_stub(method_name)
-        return original_method
+        try:
+            return self._original_methods[method_name]
+        except KeyError:
+            original_method, _ = self._get_original_method_before_stub(method_name)
+            return original_method
 
     @contextmanager
     def property_access_context(
