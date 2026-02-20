@@ -429,6 +429,7 @@ class StubbedInvocation(MatchingInvocation):
         self.refers_coroutine = is_coroutine_method(
             mock.peek_original_method(method_name)
         )
+        self.discard_first_arg = mock.will_eat_self(method_name)
         default_answer = (
             return_awaitable(None) if self.refers_coroutine else return_(None)
         )
@@ -468,8 +469,7 @@ class StubbedInvocation(MatchingInvocation):
 
         self.mock.stub(self.method_name)
         self.mock.finish_stubbing(self)
-        discard_first_arg = self.mock.eat_self(self.method_name)
-        return AnswerSelector(self, self.refers_coroutine, discard_first_arg)
+        return AnswerSelector(self, self.refers_coroutine, self.discard_first_arg)
 
     def forget_self(self) -> None:
         if self in self.mock.stubbed_invocations:
@@ -562,7 +562,7 @@ class StubbedPropertyAccess(StubbedInvocation):
 
         self.mock.stub_property(self.method_name)
         self.mock.finish_stubbing(self)
-        return AnswerSelector(self, self.refers_coroutine, False)
+        return AnswerSelector(self, self.refers_coroutine, self.discard_first_arg)
 
 
 

@@ -437,6 +437,10 @@ class Mock:
             self._signatures_store[method_name] = sig
             return sig
 
+    def will_eat_self(self, method_name: str) -> bool:
+        original_method = self.peek_original_method(method_name)
+        return self._takes_implicit_self_or_cls(original_method)
+
     def eat_self(self, method_name: str) -> bool:
         """Returns if the method will have a prepended self/class arg on call
         """
@@ -444,17 +448,22 @@ class Mock:
             original_method = self._original_methods[method_name]
         except KeyError:
             return False
-        else:
-            # If original_method is None, we *added* it to mocked_obj
-            # and thus, it will eat self iff mocked_obj is a class.
-            return (
-                inspect.ismethod(original_method)
-                or (
-                    inspect.isclass(self.mocked_obj)
-                    and not isinstance(original_method, staticmethod)
-                    and not inspect.isclass(original_method)
-                )
+
+        return self._takes_implicit_self_or_cls(original_method)
+
+    def _takes_implicit_self_or_cls(
+        self, original_method: object | None
+    ) -> bool:
+        # If original_method is None, we *added* it to mocked_obj
+        # and thus, it will eat self iff mocked_obj is a class.
+        return (
+            inspect.ismethod(original_method)
+            or (
+                inspect.isclass(self.mocked_obj)
+                and not isinstance(original_method, staticmethod)
+                and not inspect.isclass(original_method)
             )
+        )
 
 
 def _is_coroutine_method(method: object | None) -> bool:
