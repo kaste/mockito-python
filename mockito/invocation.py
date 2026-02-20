@@ -80,6 +80,12 @@ class RealInvocation(Invocation, ABC):
 
 
 class RememberedInvocation(RealInvocation):
+    def __init__(
+        self, mock: Mock, method_name: str, discard_first_arg: bool = False
+    ) -> None:
+        super(RememberedInvocation, self).__init__(mock, method_name)
+        self.discard_first_arg = discard_first_arg
+
     def ensure_mocked_object_has_method(self, method_name: str) -> None:
         if not self.mock.has_method(method_name):
             raise InvocationError(
@@ -96,7 +102,7 @@ class RememberedInvocation(RealInvocation):
         signature.match_signature(sig, args, kwargs)
 
     def __call__(self, *params: Any, **named_params: Any) -> Any | None:
-        if self.mock.eat_self(self.method_name):
+        if self.discard_first_arg:
             params_without_first_arg = params[1:]
         else:
             params_without_first_arg = params

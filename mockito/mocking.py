@@ -50,9 +50,15 @@ class _Dummy:
 
 
 def remembered_invocation_builder(
-    mock: Mock, method_name: str, *args, **kwargs
+    mock: Mock,
+    method_name: str,
+    discard_first_arg: bool,
+    *args,
+    **kwargs
 ):
-    invoc = invocation.RememberedInvocation(mock, method_name)
+    invoc = invocation.RememberedInvocation(
+        mock, method_name, discard_first_arg=discard_first_arg
+    )
     return invoc(*args, **kwargs)
 
 
@@ -312,10 +318,12 @@ class Mock:
     def replace_method(
         self, method_name: str, original_method: object | None
     ) -> None:
+        discard_first_arg = self._takes_implicit_self_or_cls(original_method)
 
         def new_mocked_method(*args, **kwargs):
             return remembered_invocation_builder(
-                self, method_name, *args, **kwargs)
+                self, method_name, discard_first_arg, *args, **kwargs
+            )
 
         new_mocked_method.__name__ = method_name
         if original_method:
@@ -439,16 +447,6 @@ class Mock:
 
     def will_eat_self(self, method_name: str) -> bool:
         original_method = self.peek_original_method(method_name)
-        return self._takes_implicit_self_or_cls(original_method)
-
-    def eat_self(self, method_name: str) -> bool:
-        """Returns if the method will have a prepended self/class arg on call
-        """
-        try:
-            original_method = self._original_methods[method_name]
-        except KeyError:
-            return False
-
         return self._takes_implicit_self_or_cls(original_method)
 
     def _takes_implicit_self_or_cls(
@@ -581,7 +579,8 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):  # noqa: C901
 
             def ad_hoc_function(*args, **kwargs):
                 return remembered_invocation_builder(
-                    theMock, method_name, *args, **kwargs)
+                    theMock, method_name, False, *args, **kwargs
+                )
             ad_hoc_function.__name__ = method_name
             ad_hoc_function.__self__ = obj  # type: ignore[attr-defined]
             if spec:
