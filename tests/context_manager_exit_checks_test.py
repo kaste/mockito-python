@@ -42,6 +42,13 @@ class TestContextManagerExitStrategyForExpect:
             with expect(rex, times=2).waggle().thenReturn('Yup'):
                 rex.waggle()
 
+    def testUnderUsedExpectationErrorStillUnstubs(self):
+        rex = Dog()
+        with pytest.raises(VerificationError):
+            with expect(rex, times=2).waggle().thenReturn('Yup'):
+                rex.waggle()
+        assert rex.waggle() == 'Unsure'
+
     def testScreamIfOverUsed(self):
         rex = Dog()
         with pytest.raises(InvocationError):
@@ -56,6 +63,13 @@ class TestContextManagerExitStrategyForWhen:
         with pytest.raises(VerificationError):
             with when(rex).waggle().thenReturn('Yup'):
                 pass
+
+    def testUnusedStubErrorStillUnstubs(self):
+        rex = Dog()
+        with pytest.raises(VerificationError):
+            with when(rex).waggle().thenReturn('Yup'):
+                pass
+        assert rex.waggle() == 'Unsure'
 
     def testUseEnvSwitchToBypassUsageCheck(self, monkeypatch):
         monkeypatch.setenv("MOCKITO_CONTEXT_MANAGERS_CHECK_USAGE", "0")
