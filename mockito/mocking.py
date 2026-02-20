@@ -445,7 +445,7 @@ class Mock:
             self._signatures_store[method_name] = sig
             return sig
 
-    def will_eat_self(self, method_name: str) -> bool:
+    def will_have_self_or_cls(self, method_name: str) -> bool:
         original_method = self.peek_original_method(method_name)
         return self._takes_implicit_self_or_cls(original_method)
 

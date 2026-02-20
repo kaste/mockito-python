@@ -435,7 +435,7 @@ class StubbedInvocation(MatchingInvocation):
         self.refers_coroutine = is_coroutine_method(
             mock.peek_original_method(method_name)
         )
-        self.discard_first_arg = mock.will_eat_self(method_name)
+        self.discard_first_arg = mock.will_have_self_or_cls(method_name)
         default_answer = (
             return_awaitable(None) if self.refers_coroutine else return_(None)
         )
