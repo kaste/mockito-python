@@ -709,7 +709,7 @@ class AnswerSelector(object):
                 self.invocation.method_name
             )
             # Guarded by `hasattr(descriptor, '__get__')` in caller.
-            return descriptor.__get__(obj, type_)  # type: ignore[attr-defined]
+            return descriptor.__get__(obj, type_)
 
         return answer
 

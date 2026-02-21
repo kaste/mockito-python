@@ -49,7 +49,7 @@ from .verification import never
 
 try:
     # Prefer the generated version file written by hatch-vcs/setuptools-scm
-    from ._version import __version__  # type: ignore
+    from ._version import __version__
 except Exception:  # pragma: no cover - purely defensive fallback
     # Fallback for editable/dev scenarios before the version file exists
     __version__ = "0+unknown"

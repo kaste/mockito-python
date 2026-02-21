@@ -20,6 +20,7 @@
 
 from __future__ import annotations
 import operator
+from typing import Iterable
 
 from . import invocation
 from . import verification
@@ -434,7 +435,7 @@ def verifyExpectedInteractions(*objs):
     """
 
     if objs:
-        theMocks = map(_get_mock_or_raise, objs)
+        theMocks: Iterable[Mock] = map(_get_mock_or_raise, objs)
     else:
         theMocks = mock_registry.get_registered_mocks()
 
@@ -452,7 +453,7 @@ def verifyStubbedInvocationsAreUsed(*objs):
 
     """
     if objs:
-        theMocks = map(_get_mock_or_raise, objs)
+        theMocks: Iterable[Mock] = map(_get_mock_or_raise, objs)
     else:
         theMocks = mock_registry.get_registered_mocks()
 
