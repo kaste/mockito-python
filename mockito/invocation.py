@@ -80,6 +80,12 @@ class RealInvocation(Invocation, ABC):
 
 
 class RememberedInvocation(RealInvocation):
+    def __init__(
+        self, mock: Mock, method_name: str, discard_first_arg: bool = False
+    ) -> None:
+        super(RememberedInvocation, self).__init__(mock, method_name)
+        self.discard_first_arg = discard_first_arg
+
     def ensure_mocked_object_has_method(self, method_name: str) -> None:
         if not self.mock.has_method(method_name):
             raise InvocationError(
@@ -96,7 +102,7 @@ class RememberedInvocation(RealInvocation):
         signature.match_signature(sig, args, kwargs)
 
     def __call__(self, *params: Any, **named_params: Any) -> Any | None:
-        if self.mock.eat_self(self.method_name):
+        if self.discard_first_arg:
             params_without_first_arg = params[1:]
         else:
             params_without_first_arg = params
@@ -426,7 +432,14 @@ class StubbedInvocation(MatchingInvocation):
         if strict is not None:
             self.strict = strict
 
-        self.answers = CompositeAnswer()
+        self.refers_coroutine = is_coroutine_method(
+            mock.peek_original_method(method_name)
+        )
+        self.discard_first_arg = mock.will_have_self_or_cls(method_name)
+        default_answer = (
+            return_awaitable(None) if self.refers_coroutine else return_(None)
+        )
+        self.answers = CompositeAnswer(default_answer=default_answer)
 
         #: Counts how many times this stub has been 'used'.
         #: A stub gets used, when a real invocation matches its argument
@@ -462,7 +475,7 @@ class StubbedInvocation(MatchingInvocation):
 
         self.mock.stub(self.method_name)
         self.mock.finish_stubbing(self)
-        return AnswerSelector(self)
+        return AnswerSelector(self, self.refers_coroutine, self.discard_first_arg)
 
     def forget_self(self) -> None:
         if self in self.mock.stubbed_invocations:
@@ -555,7 +568,7 @@ class StubbedPropertyAccess(StubbedInvocation):
 
         self.mock.stub_property(self.method_name)
         self.mock.finish_stubbing(self)
-        return AnswerSelector(self)
+        return AnswerSelector(self, self.refers_coroutine, self.discard_first_arg)
 
 
 
@@ -564,8 +577,30 @@ def return_(value: T) -> Callable[..., T]:
         return value
     return answer
 
+
+def return_awaitable(value: T) -> Callable[..., Any]:
+    async def answer(*args, **kwargs) -> T:
+        return value
+    return answer
+
+
+def is_coroutine_method(method: Any) -> bool:
+    if isinstance(method, (staticmethod, classmethod)):
+        method = method.__func__
+
+    return inspect.iscoroutinefunction(method)
+
+
 def raise_(exception: Exception | type[Exception]) -> Callable[..., NoReturn]:
     def answer(*args, **kwargs) -> NoReturn:
+        raise exception
+    return answer
+
+
+def raise_awaitable(
+    exception: Exception | type[Exception]
+) -> Callable[..., Any]:
+    async def answer(*args, **kwargs) -> NoReturn:
         raise exception
     return answer
 
@@ -576,21 +611,46 @@ def discard_self(function: Callable[..., T]) -> Callable[..., T]:
     return function_without_self
 
 
+def as_awaitable(function: Callable[..., Any]) -> Callable[..., Any]:
+    async def function_as_awaitable(*args, **kwargs) -> Any:
+        return function(*args, **kwargs)
+
+    return function_as_awaitable
+
+
+def is_awaitable_when_called(function: Callable[..., Any]) -> bool:
+    if inspect.iscoroutinefunction(function):
+        return True
+
+    return inspect.iscoroutinefunction(getattr(function, "__call__", None))
+
+
 class AnswerSelector(object):
-    def __init__(self, invocation: StubbedInvocation) -> None:
+    def __init__(
+        self,
+        invocation: StubbedInvocation,
+        expects_awaitable: bool,
+        discard_first_arg: bool
+    ) -> None:
         self.invocation = invocation
-        self.discard_first_arg = \
-            invocation.mock.eat_self(invocation.method_name)
+        self.discard_first_arg = discard_first_arg
+        self.expects_awaitable = expects_awaitable
 
     def thenReturn(self, *return_values: Any) -> Self:
         for return_value in return_values or (None,):
-            answer = return_(return_value)
+            if self.expects_awaitable:
+                answer = return_awaitable(return_value)
+            else:
+                answer = return_(return_value)
             self.__then(answer)
         return self
 
     def thenRaise(self, *exceptions: Exception | type[Exception]) -> Self:
         for exception in exceptions or (Exception,):
-            answer = raise_(exception)
+            if self.expects_awaitable:
+                answer = raise_awaitable(exception)
+            else:
+                answer = raise_(exception)
             self.__then(answer)
         return self
 
@@ -599,6 +659,8 @@ class AnswerSelector(object):
             answer = callable
             if self.discard_first_arg:
                 answer = discard_self(answer)
+            if self.expects_awaitable and not is_awaitable_when_called(callable):
+                answer = as_awaitable(answer)
             self.__then(answer)
         return self
 
@@ -667,9 +729,10 @@ class AnswerSelector(object):
 
 
 class CompositeAnswer(object):
-    def __init__(self) -> None:
+    def __init__(self, default_answer: Callable = return_(None)) -> None:
         #: Container for answers, which are just ordinary callables
         self.answers: deque[Callable] = deque()
+        self.default_answer = default_answer
 
         #: Counter for the maximum answers we ever had
         self.answer_count = 0
@@ -684,7 +747,7 @@ class CompositeAnswer(object):
 
     def answer(self, *args: Any, **kwargs: Any) -> Any:
         if len(self.answers) == 0:
-            return None
+            return self.default_answer(*args, **kwargs)
 
         if len(self.answers) == 1:
             a = self.answers[0]

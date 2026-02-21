@@ -93,6 +93,16 @@ Signature checking::
     request.get(location='http://example.com/')  # TypeError
 
 
+Full async/await support::
+
+    # Avoid internet side effects.
+    async def http_get(location: str, session: aiohttp.ClientSession) -> str:
+        async with session.get(location, headers=headers, raise_for_status=True) as resp:
+            return await resp.text()
+
+    when(module_under_test).http_get('https://example.com', ...).thenReturn('Yep!')
+
+
 Read
 ----
 

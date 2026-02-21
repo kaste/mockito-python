@@ -36,6 +36,7 @@ __tracebackhide__ = operator.methodcaller(
     "errisinstance",
     invocation.InvocationError
 )
+SUPPORTS_MARKCOROUTINEFUNCTION = hasattr(inspect, "markcoroutinefunction")
 
 _MISSING_ATTRIBUTE = object()
 
@@ -49,9 +50,15 @@ class _Dummy:
 
 
 def remembered_invocation_builder(
-    mock: Mock, method_name: str, *args, **kwargs
+    mock: Mock,
+    method_name: str,
+    discard_first_arg: bool,
+    *args,
+    **kwargs
 ):
-    invoc = invocation.RememberedInvocation(mock, method_name)
+    invoc = invocation.RememberedInvocation(
+        mock, method_name, discard_first_arg=discard_first_arg
+    )
     return invoc(*args, **kwargs)
 
 
@@ -243,6 +250,13 @@ class Mock:
     def get_original_method(self, method_name: str) -> object | None:
         return self._original_methods.get(method_name, None)
 
+    def peek_original_method(self, method_name: str) -> object | None:
+        try:
+            return self._original_methods[method_name]
+        except KeyError:
+            original_method, _ = self._get_original_method_before_stub(method_name)
+            return original_method
+
     @contextmanager
     def property_access_context(
         self, method_name: str, obj: object | None, type_: object
@@ -307,24 +321,30 @@ class Mock:
     def replace_method(
         self, method_name: str, original_method: object | None
     ) -> None:
+        discard_first_arg = self._takes_implicit_self_or_cls(original_method)
 
         def new_mocked_method(*args, **kwargs):
             return remembered_invocation_builder(
-                self, method_name, *args, **kwargs)
+                self, method_name, discard_first_arg, *args, **kwargs
+            )
 
         new_mocked_method.__name__ = method_name
         if original_method:
             new_mocked_method.__doc__ = original_method.__doc__
-            new_mocked_method.__wrapped__ = original_method  # type: ignore[attr-defined]  # noqa: E501
+            new_mocked_method.__wrapped__ = original_method  # type: ignore[attr-defined]
             try:
                 new_mocked_method.__module__ = original_method.__module__
             except AttributeError:
                 pass
 
+        if (
+            _is_coroutine_method(original_method)
+            and SUPPORTS_MARKCOROUTINEFUNCTION
+        ):
+            new_mocked_method = inspect.markcoroutinefunction(new_mocked_method)
+
         if inspect.ismethod(original_method):
-            new_mocked_method = utils.newmethod(
-                new_mocked_method, self.mocked_obj
-            )
+            new_mocked_method = utils.newmethod(new_mocked_method, self.mocked_obj)
 
         if isinstance(original_method, staticmethod):
             new_mocked_method = staticmethod(new_mocked_method)
@@ -428,24 +448,32 @@ class Mock:
             self._signatures_store[method_name] = sig
             return sig
 
-    def eat_self(self, method_name: str) -> bool:
-        """Returns if the method will have a prepended self/class arg on call
-        """
-        try:
-            original_method = self._original_methods[method_name]
-        except KeyError:
-            return False
-        else:
-            # If original_method is None, we *added* it to mocked_obj
-            # and thus, it will eat self iff mocked_obj is a class.
-            return (
-                inspect.ismethod(original_method)
-                or (
-                    inspect.isclass(self.mocked_obj)
-                    and not isinstance(original_method, staticmethod)
-                    and not inspect.isclass(original_method)
-                )
+    def will_have_self_or_cls(self, method_name: str) -> bool:
+        original_method = self.peek_original_method(method_name)
+        return self._takes_implicit_self_or_cls(original_method)
+
+    def _takes_implicit_self_or_cls(
+        self, original_method: object | None
+    ) -> bool:
+        # If original_method is None, we *added* it to mocked_obj
+        # and thus, it will eat self iff mocked_obj is a class.
+        return (
+            inspect.ismethod(original_method)
+            or (
+                inspect.isclass(self.mocked_obj)
+                and not isinstance(original_method, staticmethod)
+                and not inspect.isclass(original_method)
             )
+        )
+
+
+def _is_coroutine_method(method: object | None) -> bool:
+    if isinstance(method, (staticmethod, classmethod)):
+        method = method.__func__
+    elif inspect.ismethod(method):
+        method = method.__func__
+
+    return inspect.iscoroutinefunction(method)
 
 
 class _OMITTED(object):
@@ -554,7 +582,8 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):  # noqa: C901
 
             def ad_hoc_function(*args, **kwargs):
                 return remembered_invocation_builder(
-                    theMock, method_name, *args, **kwargs)
+                    theMock, method_name, False, *args, **kwargs
+                )
             ad_hoc_function.__name__ = method_name
             ad_hoc_function.__self__ = obj  # type: ignore[attr-defined]
             if spec:

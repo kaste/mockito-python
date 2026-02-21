@@ -33,6 +33,12 @@ Release 2.0.0
 
 - The legacy in-order verification mode (``inorder.verify(...)``)
   is deprecated in favor of ``InOrder(...)``.
+- Added first-class async/await stubbing support: async callables now preserve
+  awaitable behavior for `thenReturn`, `thenRaise`, and `thenAnswer` (including
+  sync and async answer callables), with parity across `when`, `when2`,
+  `patch`, and `expect`.
+  Note that async introspection metadata (e.g. `inspect.iscoroutinefunction`)
+  for stub wrappers is currently implemented only on Python 3.12+.
 
 - Added first-class property/descriptor stubbing support, including class-level property
   stubbing via `when(F).p.thenReturn(...)` and `thenCallOriginalImplementation()` support for
