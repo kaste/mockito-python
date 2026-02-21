@@ -24,15 +24,14 @@ import os
 import inspect
 import operator
 from collections import deque
+from typing import TYPE_CHECKING
 
 from . import matchers, signature
 from . import verification as verificationModule
 from .utils import contains_strict
 
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
-    from typing import Any, Callable, NoReturn, Self, TypeVar, TYPE_CHECKING
+    from typing import Any, Callable, NoReturn, Self, TypeVar
     from .mocking import Mock
     T = TypeVar('T')
 
@@ -142,6 +141,14 @@ Stubbed invocations are:
             )
 
         return None
+
+
+class RememberedPropertyAccess(RememberedInvocation):
+    def ensure_mocked_object_has_method(self, method_name):
+        return True
+
+    def ensure_signature_matches(self, method_name, args, kwargs):
+        return True
 
 
 class RememberedProxyInvocation(RealInvocation):
@@ -458,7 +465,8 @@ class StubbedInvocation(MatchingInvocation):
         return AnswerSelector(self)
 
     def forget_self(self) -> None:
-        self.mock.forget_stubbed_invocation(self)
+        if self in self.mock.stubbed_invocations:
+            self.mock.forget_stubbed_invocation(self)
 
     def add_answer(self, answer: Callable) -> None:
         self.answers.add(answer)
@@ -511,6 +519,45 @@ class StubbedInvocation(MatchingInvocation):
             raise verificationModule.VerificationError(
                 "\nUnused stub: %s" % self)
 
+class StubbedPropertyAccess(StubbedInvocation):
+    def ensure_mocked_object_has_attribute(self, method_name: str) -> None:
+        if self.mock.spec is None:
+            return
+
+        # Property stubbing is class-only; for instances `stub_property`
+        # raises a dedicated guidance error. Skip existence checks here so
+        # strict mode does not mask that message for dynamic instance attrs.
+        if not inspect.isclass(self.mock.mocked_obj):
+            return
+
+        try:
+            inspect.getattr_static(self.mock.spec, method_name)
+            return
+        except AttributeError:
+            # Static lookup intentionally avoids descriptor execution, but it
+            # does not see dynamic class attrs from metaclass hooks.
+            if inspect.isclass(self.mock.spec):
+                try:
+                    getattr(self.mock.spec, method_name)
+                    return
+                except AttributeError:
+                    pass
+
+        raise InvocationError(
+            "You tried to stub an attribute '%s' the object (%s) doesn't "
+            "have." % (method_name, self.mock.mocked_obj)
+        )
+
+    def __call__(self, *params, **named_params):
+        if self.strict:
+            self.ensure_mocked_object_has_attribute(self.method_name)
+        self._remember_params(params, named_params)
+
+        self.mock.stub_property(self.method_name)
+        self.mock.finish_stubbing(self)
+        return AnswerSelector(self)
+
+
 
 def return_(value: T) -> Callable[..., T]:
     def answer(*args, **kwargs) -> T:
@@ -559,11 +606,26 @@ class AnswerSelector(object):
         answer = self.invocation.mock.get_original_method(
             self.invocation.method_name
         )
-        if not answer:
+        if isinstance(self.invocation, StubbedPropertyAccess):
+            if not hasattr(answer, '__get__'):
+                self.invocation.forget_self()
+                raise AnswerError(
+                    "'%s' has no original implementation for '%s'." %
+                    (
+                        self.invocation.mock.mocked_obj,
+                        self.invocation.method_name,
+                    )
+                )
+            self.__then(self._property_descriptor_answer(answer))
+            return self
+
+        if answer is None:
+            self.invocation.forget_self()
             raise AnswerError(
                 "'%s' has no original implementation for '%s'." %
                 (self.invocation.mock.mocked_obj, self.invocation.method_name)
             )
+
         if (
             # A classmethod is not callable
             # and a staticmethod is not callable in old version of python,
@@ -574,8 +636,20 @@ class AnswerSelector(object):
         ):
             answer = answer.__func__
 
-        self.__then(answer)
+        # `answer` is runtime-validated by stubbing setup and optional
+        # unwrapping above, but mypy still sees `object` here.
+        self.__then(answer)  # type: ignore[arg-type]
         return self
+
+    def _property_descriptor_answer(self, descriptor: Any) -> Callable:
+        def answer(*args: Any, **kwargs: Any) -> Any:
+            obj, type_ = self.invocation.mock.get_current_property_access(
+                self.invocation.method_name
+            )
+            # Guarded by `hasattr(descriptor, '__get__')` in caller.
+            return descriptor.__get__(obj, type_)  # type: ignore[attr-defined]
+
+        return answer
 
     def __then(self, answer: Callable) -> None:
         self.invocation.add_answer(answer)
@@ -584,10 +658,12 @@ class AnswerSelector(object):
         pass
 
     def __exit__(self, *exc_info) -> None:
-        self.invocation.verify()
-        if os.environ.get("MOCKITO_CONTEXT_MANAGERS_CHECK_USAGE", "1") == "1":
-            self.invocation.check_used()
-        self.invocation.forget_self()
+        try:
+            self.invocation.verify()
+            if os.environ.get("MOCKITO_CONTEXT_MANAGERS_CHECK_USAGE", "1") == "1":
+                self.invocation.check_used()
+        finally:
+            self.invocation.forget_self()
 
 
 class CompositeAnswer(object):

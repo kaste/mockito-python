@@ -1,4 +1,7 @@
 
+import math
+import functools
+
 import pytest
 
 from mockito import (when, when2, expect, verify, patch, mock, spy2,
@@ -8,6 +11,49 @@ from mockito.invocation import InvocationError
 class Dog(object):
     def bark(self):
         pass
+
+
+class Cat(object):
+    age = 7
+
+
+class ClassDog(object):
+    @classmethod
+    def bark(cls):
+        pass
+
+
+class StaticDog(object):
+    @staticmethod
+    def bark():
+        pass
+
+
+class PartialMethodDog(object):
+    def bark(self, sound):
+        return sound
+
+    bark_once = functools.partialmethod(bark, 'Wuff')
+
+
+class _CallableAttribute:
+    def __call__(self):
+        return "Wuff"
+
+
+class CallableAttributeDog(object):
+    bark = _CallableAttribute()
+
+
+class DynamicCallableMeta(type):
+    def __getattr__(cls, name):
+        if name == "bark":
+            return lambda: "Wuff"
+        raise AttributeError(name)
+
+
+class DynamicCallableMetaDog(metaclass=DynamicCallableMeta):
+    pass
 
 
 class Unhashable(object):
@@ -59,6 +105,154 @@ class TestAnswerShortcuts:
         with pytest.raises(Exception):
             dog.bark()
         assert dog.bark() == 42
+
+
+@pytest.mark.usefixtures('unstub')
+class TestMissingInvocationParentheses:
+
+    def testWhenRaisesEarlyIfMethodCallParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(Dog).bark.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testExpectRaisesEarlyIfMethodCallParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(Dog).bark.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testWhenRaisesEarlyForThenRaiseIfMethodCallParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(Dog).bark.thenRaise(RuntimeError('Boom'))
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testExpectRaisesEarlyForThenRaiseIfMethodCallParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(Dog).bark.thenRaise(RuntimeError('Boom'))
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testWhenRaisesEarlyForThenAnswerIfMethodCallParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(Dog).bark.thenAnswer(lambda: 'Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testExpectRaisesEarlyForThenAnswerIfMethodCallParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(Dog).bark.thenAnswer(lambda: 'Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testWhenRaisesEarlyForThenCallOriginalIfMethodCallParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(Dog).bark.thenCallOriginalImplementation()
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testExpectRaisesEarlyForThenCallOriginalIfMethodCallParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(Dog).bark.thenCallOriginalImplementation()
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testWhenRaisesEarlyForClassmethodIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(ClassDog).bark.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testExpectRaisesEarlyForClassmethodIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(ClassDog).bark.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testWhenRaisesEarlyForStaticmethodIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(StaticDog).bark.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testExpectRaisesEarlyForStaticmethodIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(StaticDog).bark.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testWhenRaisesEarlyForBuiltinFunctionIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(math).sin.thenReturn(0)
+
+        assert str(exc.value) == "expected an invocation of 'sin'"
+
+    def testExpectRaisesEarlyForBuiltinFunctionIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(math).sin.thenReturn(0)
+
+        assert str(exc.value) == "expected an invocation of 'sin'"
+
+    def testWhenRaisesEarlyForBuiltinMethodDescriptorIfMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(dict).get.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'get'"
+
+    def testWhenRaisesEarlyForBuiltinWrapperDescriptorIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(str).__len__.thenReturn(1)
+
+        assert str(exc.value) == "expected an invocation of '__len__'"
+
+    def testWhenRaisesEarlyForBuiltinClassMethodDescriptorIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(dict).fromkeys.thenReturn({})
+
+        assert str(exc.value) == "expected an invocation of 'fromkeys'"
+
+    def testExpectRaisesEarlyForBuiltinMethodDescriptorIfMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(dict).get.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'get'"
+
+    def testWhenRaisesEarlyForPartialmethodIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(PartialMethodDog).bark_once.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark_once'"
+
+    def testWhenRaisesEarlyForCallableAttributeIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(CallableAttributeDog).bark.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testWhenRaisesEarlyForDynamicMetaclassCallableIfParenthesesAreMissing(self):
+        with pytest.raises(InvocationError) as exc:
+            when(DynamicCallableMetaDog).bark.thenReturn('Sure')
+
+        assert str(exc.value) == "expected an invocation of 'bark'"
+
+    def testWhenMockAllowsAttributeStyleStubbingWithoutParentheses(self):
+        dummy = mock()
+
+        when(dummy).foo.thenReturn(23)
+
+        assert dummy.foo == 23
+        assert dummy.foo == 23
+
+    def testExpectMockAllowsAttributeStyleStubbingWithoutParentheses(self):
+        dummy = mock()
+
+        with pytest.raises(InvocationError) as exc:
+            with expect(dummy, times=1).foo.thenReturn(23):
+                assert dummy.foo == 23
+                dummy.foo
+
+        assert str(exc.value) == "\nWanted times: 1, actual times: 2"
 
 
 @pytest.mark.usefixtures('unstub')
@@ -130,6 +324,18 @@ class TestEnsureAddedAttributesGetRemovedOnUnstub:
         with pytest.raises(AttributeError):
             dog.wggle
 
+
+@pytest.mark.usefixtures('unstub')
+class TestNonCallableAttributesCannotBeStubbedAsMethods:
+    def testExpectRaisesEarlyIfAttributeIsNotCallable(self):
+        with pytest.raises(InvocationError) as exc:
+            expect(Cat).age()
+        assert str(exc.value) == "'age' is not callable."
+
+    def testWhenStrictFalseRaisesEarlyIfAttributeIsNotCallable(self):
+        with pytest.raises(InvocationError) as exc:
+            when(Cat, strict=False).age()
+        assert str(exc.value) == "'age' is not callable."
 
 @pytest.mark.usefixtures('unstub')
 class TestDottedPaths:

@@ -21,12 +21,14 @@
 from __future__ import annotations
 import inspect
 import operator
+import types
+import functools
 from collections import deque
+from contextlib import contextmanager
 
 from . import invocation, signature, utils
 from .mock_registry import mock_registry
 
-from typing import Callable
 
 __all__ = ['mock']
 
@@ -34,6 +36,8 @@ __tracebackhide__ = operator.methodcaller(
     "errisinstance",
     invocation.InvocationError
 )
+
+_MISSING_ATTRIBUTE = object()
 
 
 class _Dummy:
@@ -51,6 +55,146 @@ def remembered_invocation_builder(
     return invoc(*args, **kwargs)
 
 
+class wait_for_invocation:
+    ANSWER_SELECTOR_METHODS = {
+        'thenReturn',
+        'thenRaise',
+        'thenAnswer',
+        'thenCallOriginalImplementation',
+    }
+
+    def __init__(self, theMock, method_name, **kwargs):
+        self.theMock = theMock
+        self.method_name = method_name
+        self.kwargs = kwargs
+
+    def should_continue_with_stubbed_invocation(
+        self,
+        value: object,
+        allow_classes: bool = False
+    ) -> bool:
+        if (
+            inspect.isfunction(value)
+            or inspect.ismethod(value)
+            or inspect.isbuiltin(value)
+            or isinstance(value, staticmethod)
+            or isinstance(value, classmethod)
+            or isinstance(value, functools.partialmethod)
+            or isinstance(value, types.MethodDescriptorType)
+            or isinstance(value, types.WrapperDescriptorType)
+            or isinstance(value, types.ClassMethodDescriptorType)
+        ):
+            return True
+
+        # Generic callable fallback, but keep custom descriptors/property-like
+        # attributes on the property stubbing path.
+        return (
+            callable(value)
+            and (allow_classes or not inspect.isclass(value))
+            and not hasattr(value, '__get__')
+        )
+
+    def __call__(self, *args, **kwargs):
+        self.ensure_target_is_callable()
+        return invocation.StubbedInvocation(
+            self.theMock, self.method_name, **self.kwargs)(*args, **kwargs)
+
+    def ensure_target_is_callable(self) -> None:
+        target, was_in_spec = self.theMock._get_original_method_before_stub(
+            self.method_name
+        )
+
+        # Missing attributes can still be added in loose mode.
+        if not was_in_spec and target is None:
+            return
+
+        if self.should_continue_with_stubbed_invocation(
+            target, allow_classes=True
+        ):
+            return
+
+        raise invocation.InvocationError("'%s' is not callable." % self.method_name)
+
+    def __getattr__(self, attr_name):
+        self.ensure_target_is_not_callable(attr_name)
+
+        if attr_name not in self.ANSWER_SELECTOR_METHODS:
+            raise AttributeError(
+                "Unknown stubbing action '%s'. "
+                "Use one of: thenReturn, thenRaise, thenAnswer, "
+                "thenCallOriginalImplementation."
+                % (attr_name)
+            )
+
+        if not inspect.isclass(self.theMock.mocked_obj):
+            raise invocation.InvocationError(
+                "Cannot stub property '%s' on an instance. "
+                "Use class-level stubbing instead: "
+                "when(%s).%s.thenReturn(...)."
+                % (
+                    self.method_name,
+                    type(self.theMock.mocked_obj).__name__,
+                    self.method_name,
+                )
+            )
+
+        def answer_selector_method(*args, **kwargs):
+            # Avoid patching during attribute lookup so that a (faulty)
+            # `with when(F).p.thenReturn:` does *not* yet mutate F.
+            invoc = invocation.StubbedPropertyAccess(
+                self.theMock, self.method_name, **self.kwargs)()
+            return getattr(invoc, attr_name)(*args, **kwargs)
+
+        return answer_selector_method
+
+    def ensure_target_is_not_callable(self, attr_name: str) -> None:
+        if attr_name not in self.ANSWER_SELECTOR_METHODS:
+            return
+
+        spec = self.theMock.spec
+        if spec is None:
+            return
+
+        try:
+            value = inspect.getattr_static(spec, self.method_name)
+        except AttributeError:
+            if inspect.isclass(spec):
+                try:
+                    value = getattr(spec, self.method_name)
+                except AttributeError:
+                    return
+            else:
+                return
+
+        if self.should_continue_with_stubbed_invocation(value):
+            raise invocation.InvocationError(
+                f"expected an invocation of '{self.method_name}'"
+            )
+
+
+class _mocked_property:
+    def __init__(self, mock, method_name):
+        self.mock = mock
+        self.method_name = method_name
+
+    def __get__(self, obj, type):
+        # For property/descriptors, `thenCallOriginalImplementation()` must
+        # call `original_descriptor.__get__(obj, type)`. Unlike regular method
+        # stubs, these `obj/type` binding values are only available during this
+        # attribute access path, so we keep them in temporary context.
+        with self.mock.property_access_context(self.method_name, obj, type):
+            return invocation.RememberedPropertyAccess(
+                self.mock, self.method_name)()
+
+    def __set__(self, obj, value):
+        # Keep this wrapper a data descriptor so it wins over instance
+        # __dict__ during reads.
+        return None
+
+    def __delete__(self, obj):
+        return None
+
+
 class Mock:
     def __init__(
         self,
@@ -65,9 +209,11 @@ class Mock:
         self.invocations: list[invocation.RealInvocation] = []
         self.stubbed_invocations: deque[invocation.StubbedInvocation] = deque()
 
-        self._original_methods: dict[str, Callable | None] = {}
-        self._methods_to_unstub: dict[str, Callable | None] = {}
+        self._original_methods: dict[str, object | None] = {}
+        self._methods_to_unstub: dict[str, object] = {}
         self._signatures_store: dict[str, signature.Signature | None] = {}
+        self._property_access_context: \
+            list[tuple[str, object | None, object]] = []
 
         self._observers: list = []
 
@@ -94,14 +240,38 @@ class Mock:
     def clear_invocations(self) -> None:
         self.invocations = []
 
-    def get_original_method(self, method_name: str) -> Callable | None:
+    def get_original_method(self, method_name: str) -> object | None:
         return self._original_methods.get(method_name, None)
+
+    @contextmanager
+    def property_access_context(
+        self, method_name: str, obj: object | None, type_: object
+    ):
+        self._property_access_context.append((method_name, obj, type_))
+        try:
+            yield
+        finally:
+            self._property_access_context.pop()
+
+    def get_current_property_access(
+        self, method_name: str
+    ) -> tuple[object | None, object]:
+        for accessed_method_name, obj, type_ in reversed(
+            self._property_access_context
+        ):
+            if accessed_method_name == method_name:
+                return obj, type_
+
+        raise RuntimeError(
+            "Could not resolve property access context for '%s'."
+            % method_name
+        )
 
     # STUBBING
 
     def _get_original_method_before_stub(
         self, method_name: str
-    ) -> tuple[Callable | None, bool]:
+    ) -> tuple[object | None, bool]:
         """
         Looks up the original method on the `spec` object and returns it
         together with an indication of whether the method is found
@@ -116,9 +286,19 @@ class Mock:
         try:
             return self.spec.__dict__[method_name], True
         except (AttributeError, KeyError):
-            # Classes with defined `__slots__` and then no `__dict__` are not
-            # patchable but if we catch the `AttributeError` here, we get
-            # the better error message for the user.
+            # If the attr is not directly in __dict__, class specs should use
+            # static lookup so inherited descriptors are preserved as
+            # descriptors (instead of triggering __get__ via getattr).
+            if inspect.isclass(self.spec):
+                try:
+                    return inspect.getattr_static(self.spec, method_name), False
+                except AttributeError:
+                    # If static lookup misses (e.g. metaclass __getattr__),
+                    # fall back to dynamic lookup.
+                    pass
+
+            # For instance specs, keep dynamic getattr so existing
+            # bound-method/spying behavior stays unchanged.
             return getattr(self.spec, method_name, None), False
 
     def set_method(self, method_name: str, new_method: object) -> None:
@@ -171,10 +351,30 @@ class Mock:
                 # the spec object and should therefore be restored by unstub
                 self._methods_to_unstub[method_name] = original_method
             else:
-                self._methods_to_unstub[method_name] = None
+                self._methods_to_unstub[method_name] = _MISSING_ATTRIBUTE
 
             self._original_methods[method_name] = original_method
             self.replace_method(method_name, original_method)
+
+    def stub_property(self, method_name: str) -> None:
+        try:
+            self._methods_to_unstub[method_name]
+        except KeyError:
+            (
+                original_method,
+                was_in_spec
+            ) = self._get_original_method_before_stub(method_name)
+
+            self._original_methods[method_name] = original_method
+            self.set_method(method_name, _mocked_property(self, method_name))
+
+            if was_in_spec:
+                # This indicates the original method was found directly on
+                # the spec object and should therefore be restored by unstub
+                self._methods_to_unstub[method_name] = original_method
+            else:
+                self._methods_to_unstub[method_name] = _MISSING_ATTRIBUTE
+
 
     def forget_stubbed_invocation(
         self, invocation: invocation.StubbedInvocation
@@ -182,7 +382,7 @@ class Mock:
         assert invocation in self.stubbed_invocations
 
         if len(self.stubbed_invocations) == 1:
-            mock_registry.unstub(self.mocked_obj)
+            mock_registry.unstub_mock(self)
             return
 
         self.stubbed_invocations.remove(invocation)
@@ -196,15 +396,11 @@ class Mock:
             )
             self.restore_method(invocation.method_name, original_method)
 
-    def restore_method(
-        self, method_name: str, original_method: object | None
-    ) -> None:
-        # If original_method is None, we *added* it to mocked_obj, so we
-        # must delete it here.
-        if original_method:
-            self.set_method(method_name, original_method)
-        else:
+    def restore_method(self, method_name: str, original_method: object) -> None:
+        if original_method is _MISSING_ATTRIBUTE:
             delattr(self.mocked_obj, method_name)
+        else:
+            self.set_method(method_name, original_method)
 
     def unstub(self) -> None:
         while self._methods_to_unstub:
@@ -337,6 +533,24 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):  # noqa: C901
                 and method_name == "__{}__".format(method_name[2:-2])
             ):
                 raise AttributeError(method_name)
+
+            # If a descriptor exists on the dummy class, resolve it here so
+            # InvocationError from descriptor-backed stubs is not converted
+            # into a dynamic fallback attribute.
+            if method_name != "__call__":
+                try:
+                    class_attr = inspect.getattr_static(type(self), method_name)
+                except AttributeError:
+                    pass
+                else:
+                    if hasattr(class_attr, "__get__"):
+                        try:
+                            return class_attr.__get__(self, type(self))
+                        except AttributeError as error:
+                            if isinstance(error, invocation.InvocationError):
+                                raise
+                            # Keep dynamic-attribute behavior for descriptors that
+                            # deliberately signal missing via AttributeError.
 
             def ad_hoc_function(*args, **kwargs):
                 return remembered_invocation_builder(

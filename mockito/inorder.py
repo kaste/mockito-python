@@ -327,7 +327,7 @@ class InOrderVerifiableInvocation(VerifiableInvocation):
         super().__init__(mock, method_name, verification)
         self._inorder = inorder
 
-    def __call__(self, *params, **named_params):  # noqa: C901
+    def __call__(self, *params, **named_params) -> None:  # noqa: C901
         self._remember_params(params, named_params)
 
         ordered = self._inorder.ordered_invocations

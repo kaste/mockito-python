@@ -20,13 +20,16 @@
 
 from __future__ import annotations
 import weakref
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING, Callable, Generic, TypeVar
 
 if TYPE_CHECKING:
     from .mocking import Mock
 
 
 RegisterObserver = Callable[[object, "Mock"], None]
+K = TypeVar("K")
+V = TypeVar("V")
+T = TypeVar("T")
 
 
 class MockRegistry:
@@ -36,8 +39,8 @@ class MockRegistry:
     iterates over them to unstub each stubbed method.
     """
 
-    def __init__(self):
-        self.mocks = IdentityMap()
+    def __init__(self) -> None:
+        self.mocks: IdentityMap[object, Mock] = IdentityMap()
         self._register_observers: list[weakref.WeakMethod] = []
 
     def register(self, obj: object, mock: Mock) -> None:
@@ -93,6 +96,10 @@ class MockRegistry:
         else:
             mock.unstub()
 
+    def unstub_mock(self, mock: Mock) -> None:
+        self.mocks.pop_value(mock)
+        mock.unstub()
+
     def unstub_all(self) -> None:
         for mock in self.get_registered_mocks():
             mock.unstub()
@@ -103,41 +110,53 @@ class MockRegistry:
 
 
 # We have this dict like because we want non-hashable items in our registry.
-class IdentityMap(object):
-    def __init__(self):
-        self._store = []
+class IdentityMap(Generic[K, V]):
+    def __init__(self) -> None:
+        self._store: list[tuple[K, V]] = []
 
-    def __setitem__(self, key, value):
-        self.remove(key)
+    def __setitem__(self, key: K, value: V) -> None:
+        for i, (k, _) in enumerate(self._store):
+            if k is key:
+                self._store[i] = (key, value)
+                return
         self._store.append((key, value))
 
-    def remove(self, key):
-        self._store = [(k, v) for k, v in self._store if k is not key]
+    def remove(self, key: K) -> None:
+        for i, (k, _) in enumerate(self._store):
+            if k is key:
+                del self._store[i]
+                return
 
-    def pop(self, key):
-        rv = self.get(key)
-        if rv is not None:
-            self.remove(key)
-            return rv
-        else:
-            raise KeyError()
+    def pop(self, key: K) -> V:
+        for i, (k, value) in enumerate(self._store):
+            if k is key:
+                del self._store[i]
+                return value
+        raise KeyError()
 
-    def get(self, key, default=None):
+    def pop_value(self, value: V) -> V:
+        for i, (key, val) in enumerate(self._store):
+            if val is value:
+                del self._store[i]
+                return val
+        raise KeyError()
+
+    def get(self, key: K, default: T | None = None) -> V | T | None:
         for k, value in self._store:
             if k is key:
                 return value
         return default
 
-    def lookup(self, value, default=None):
+    def lookup(self, value: V, default: T | None = None) -> K | T | None:
         for key, v in self._store:
             if v is value:
                 return key
         return default
 
-    def values(self):
+    def values(self) -> list[V]:
         return [v for k, v in self._store]
 
-    def clear(self):
+    def clear(self) -> None:
         self._store[:] = []
 
 

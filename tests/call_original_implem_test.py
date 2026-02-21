@@ -2,7 +2,7 @@
 import sys
 
 import pytest
-from mockito import mock, when
+from mockito import mock, when, verify, ArgumentError
 from mockito.invocation import AnswerError
 
 from . import module
@@ -26,6 +26,31 @@ class Dog:
     @staticmethod
     def static_bark(arg):
         return str(arg) + " woof"
+
+
+class FalsyCallable:
+    def __bool__(self):
+        return False
+
+    def __call__(self, *args, **kwargs):
+        return "falsy callable works"
+
+
+class HasFalsyCallable:
+    call = FalsyCallable()
+
+
+class DynamicMethodMeta(type):
+    def __getattr__(cls, name):
+        if name == "dyn":
+            def _dyn_method(arg):
+                return f"dynamic {arg}"
+            return _dyn_method
+        raise AttributeError(name)
+
+
+class DynamicMethodClass(metaclass=DynamicMethodMeta):
+    pass
 
 
 class CallOriginalImplementationTest(TestBase):
@@ -83,7 +108,24 @@ class CallOriginalImplementationTest(TestBase):
             "has no original implementation for 'bark'."
         ) % class_str_value
 
+    def testDumbMockFailedThenCallOriginalImplementationDoesNotLeakStub(self):
+        dog = mock()
+
+        with pytest.raises(AnswerError):
+            when(dog).bark().thenCallOriginalImplementation()
+
+        with pytest.raises(ArgumentError):
+            verify(dog).bark(Ellipsis)
+
     def testSpeccedMockHasOriginalImplementations(self):
         dog = mock({"huge": True}, spec=Dog)
         when(dog).bark().thenCallOriginalImplementation()
         assert dog.bark() == "woof"
+
+    def testFalsyCallableOriginalImplementation(self):
+        when(HasFalsyCallable).call().thenCallOriginalImplementation()
+        assert HasFalsyCallable.call() == "falsy callable works"
+
+    def testDynamicClassMethodFromMetaclassThenCallOriginalImplementation(self):
+        when(DynamicMethodClass).dyn(Ellipsis).thenCallOriginalImplementation()
+        assert DynamicMethodClass.dyn("works") == "dynamic works"

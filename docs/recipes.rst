@@ -73,6 +73,44 @@ It's basically the same problem, but we need to add support for the context mana
         assert res.text == 'Ok'
 
 
+Properties and descriptors
+--------------------------
+
+We want to test the following code::
+
+    class Settings:
+        @property
+        def timeout(self):
+            return 30
+
+    def build_timeout_header(settings):
+        return {'X-Timeout': str(settings.timeout)}
+
+For property stubs, patch the class, not the instance::
+
+    from mockito import when
+
+    def test_timeout_header(unstub):
+        settings = Settings()
+
+        with when(Settings).timeout.thenReturn(5):
+            assert build_timeout_header(settings) == {'X-Timeout': '5'}
+
+        assert build_timeout_header(settings) == {'X-Timeout': '30'}
+
+You can also combine one-off values with the original property implementation::
+
+    def test_timeout_header_one_off_then_original(unstub):
+        settings = Settings()
+
+        with when(Settings).timeout.thenReturn(5).thenCallOriginalImplementation():
+            assert build_timeout_header(settings) == {'X-Timeout': '5'}
+            assert build_timeout_header(settings) == {'X-Timeout': '30'}
+
+Trying to stub a property on an instance is intentionally rejected with a clear error; use class-level stubbing
+instead (`when(Settings).timeout...`).
+
+
 Deepcopies
 ----------
 
@@ -101,9 +139,9 @@ And the constructors configuration is set on the class, not the instance.  Huh? 
 
     m = mock({"foo": [1]})  # <= this is set on the class, not the instance
 
-Don't rely on that latter "feature", initially the configurataion was meant to only set methods, and especially
-special, dunder methods, -- and properties.  If we get proper support for properties, we'll likely make a change
-here too.
+Don't rely on that latter "feature", initially the configuration was meant to only set methods, and especially
+special, dunder methods, -- and properties. Property support is available via `when(MyClass).prop...` too, but
+constructor dict values are still set on the class for compatibility.
 
 Btw, `copy` will *just work* for strict mocks and does not raise an error when not configured/expected.  This is
 just not implemented and considered not-worth-the-effort.

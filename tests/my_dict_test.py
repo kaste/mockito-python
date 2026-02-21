@@ -38,6 +38,15 @@ class TestIdentityMap:
         assert td.pop(key) == val
         assert td.values() == []
 
+    def testPopValue(self):
+        td = IdentityMap()
+        key = object()
+        val = object()
+        td[key] = val
+
+        assert td.pop_value(val) == val
+        assert td.values() == []
+
     def testClear(self):
         td = IdentityMap()
         key = object()

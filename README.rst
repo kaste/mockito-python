@@ -83,10 +83,13 @@ to your computer, then run ``uv sync`` in the root directory.  Example usage::
 
     uv run pytest
 
-For docs, install only the docs dependencies with::
+Note: development and docs tooling target Python >=3.12, while the library itself
+supports older Python versions at runtime.
+
+For docs (Python >=3.12), install only the docs dependencies with::
 
     uv sync --no-dev --group docs
 
-Or to install everything (all dependency groups), run::
+Or to install everything (all dependency groups, Python >=3.12), run::
 
     uv sync --all-groups
