@@ -92,6 +92,16 @@ Signature checking::
     # when calling
     request.get(location='http://example.com/')  # TypeError
 
+Property stubbing::
+
+    class Settings:
+        @property
+        def timeout(self):
+            return 10
+
+    with when(Settings).timeout.thenReturn(5):
+        assert Settings().timeout == 5
+
 
 Full async/await support::
 
