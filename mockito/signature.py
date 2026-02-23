@@ -39,7 +39,7 @@ def match_signature_allowing_placeholders(  # noqa: C901
     # way and reimplement something like `sig.bind` with our specific
     # need for `...`, `*args`, and `**kwargs` support.
 
-    if contains_strict(args, Ellipsis):
+    if args and args[-1] is Ellipsis and not kwargs:
         # Invariant: Ellipsis as the sole argument should just pass, regardless
         # if it actually can consume an arg or the function does not take any
         # arguments at all
@@ -47,7 +47,7 @@ def match_signature_allowing_placeholders(  # noqa: C901
             return
 
         has_kwargs = has_var_keyword(sig)
-        # Ellipsis is always the last arg in args; it matches all keyword
+        # Ellipsis is the last arg in args; then it matches all keyword
         # arguments as well. So the strategy here is to strip off all
         # the keyword arguments from the signature, and do a partial
         # bind with the rest.

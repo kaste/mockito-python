@@ -145,6 +145,24 @@ class TestCallMethodWithSignature:
         with pytest.raises(TypeError):
             rex.bark(**kwargs)
 
+    def testEllipsisWithUnexpectedKeywordIsRejectedAtStubTime(self):
+        rex = Dog()
+
+        with pytest.raises(TypeError):
+            when(rex).bark(Ellipsis, wuff='miau').thenReturn('wuff')
+
+    def testEllipsisWithDuplicateKeywordBindingIsRejectedAtStubTime(self):
+        rex = Dog()
+
+        with pytest.raises(TypeError):
+            when(rex).bark(Ellipsis, sound='miau').thenReturn('wuff')
+
+    def testEllipsisWithStarKwargsSentinelWithoutVarKwargsIsRejected(self):
+        rex = Dog()
+
+        with pytest.raises(TypeError):
+            when(rex).bark(Ellipsis, **kwargs).thenReturn('wuff')
+
 
 class TestEllipsises:
 
@@ -352,10 +370,12 @@ class TestEllipsises:
         sig(Ellipsis, then='Wuff'),
         sig(Ellipsis, 'Wuff', then='Waff'),
     ])
-    def testEllipsisMustBeLastThingRejections(self, call):
+    def testEllipsisInFixedPositions(self, call):
         rex = mock()
-        with pytest.raises(TypeError):
-            when(rex).bark(*call.args, **call.kwargs).thenReturn('Miau')
+        when(rex).bark(*call.args, **call.kwargs).thenReturn('Miau')
+
+        invocation_args = tuple('Miau' if arg is Ellipsis else arg for arg in call.args)
+        assert rex.bark(*invocation_args, **call.kwargs) == 'Miau'
 
 
     def testArgsMustUsedAsStarArg(self):
