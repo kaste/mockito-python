@@ -60,6 +60,7 @@ State-of-the-art, high-five argument matchers::
 
     # Use the Ellipsis, if you don't care
     when(deferred).defer(...).thenRaise(Timeout)
+    when(requests).get('https://example.com', headers=...)
 
     # Or **kwargs
     from mockito import kwargs  # or KWARGS
