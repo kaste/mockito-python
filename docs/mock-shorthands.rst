@@ -1,7 +1,7 @@
 mock() configuration and shorthands
 ===================================
 
-If you really dig mock driven development, you use dumb mock()s and don't patch
+If you really dig mock driven development, you use dumb ``mock()``s and don't patch
 real objects and modules all the time.
 
 The standard setup works as expected::
@@ -12,27 +12,35 @@ The standard setup works as expected::
     # Use it
     cat.meow()
 
-To get you up to speed, we have several shortcuts:
+To get you up to speed, we have several shortcuts.
+
+Attribute shortcut
+------------------
+
+::
 
     cat = mock({"age": 12})
     cat.age   # => 12
+
+Function shortcut
+------------------
 
 You can also define functions::
 
     cat = mock({"meow": lambda: "Miau!"})
     cat.meow()  # => "Miau!"
 
-Note that such a lambda without any arguments defined, accepts all possible arguments
-and always returns the same answer.  It is thus the same as saying
+Note that such a lambda, without any arguments defined, accepts all possible arguments
+and always returns the same answer.  It is thus the same as saying::
 
     when(cat).meow(...).thenReturn("Miau!")  # note the Ellipsis
 
-If you want to define async functions, use
+If you want to define async functions, use::
 
     response = mock({"async text": lambda: "Hi"})
     session = mock({"async get": lambda: response})
 
-To build up a complete `aiohttp` example,
+To build up a complete `aiohttp` example::
 
     import aiohttp
     from mockito import when, unstub
@@ -64,10 +72,10 @@ you also need to define the context/with handlers:
     use either ``mock({"__aenter__": ...})`` or
     ``mock({"async __aenter__": ...})``.
 
-For ``__aiter__``, we have a special shortcode:
+For ``__aiter__``, we have a special shortcode::
 
     numbers = mock({"__aiter__": [1, 2, 3]})  # install a function that wraps these values
-                                                # in an async iterator for easy use
+                                              # in an async iterator for easy use
 
     async for number in numbers:
         ...
@@ -84,14 +92,14 @@ You can also just mark a function async::
     })
     when(session).get(..., raise_for_status=True).thenReturn(resp)  # async! as marked before
 
-# This session can be used as return value for the global constructor, e.g.
-when(aiohttp).ClientSession().thenReturn(session)
+    # This session can be used as return value for the global constructor, e.g.
+    when(aiohttp).ClientSession().thenReturn(session)
 
-# and then passed around
-body = await fetch_text('https://example.com', session)
-assert body == 'Fake!'
+    # and then passed around
+    body = await fetch_text('https://example.com', session)
+    assert body == 'Fake!'
 
-We have the same shortcuts available for `__enter__` and `__iter__`.
+We have the same shortcuts available for `__enter__` and `__iter__`::
 
     mock({"__enter__": ...})  # installs a standard enter that return self
                               # and a standard exit handler returning None if nothing else is
@@ -99,9 +107,9 @@ We have the same shortcuts available for `__enter__` and `__iter__`.
 
     mock({"__iter__": [4, 5, 6]})  # install handler and wrap in an iterator
 
-Remember or note that when you rather use specced mock()s you're more or less limited by what the spec
-implements.  If you for example use `aiohttp.ClientSession` as the blueprint for your mock,
-we already know that `get` is async and you don't need to tell mockito so.
+Remember or note that when you rather use specced ``mock()``s you're more or less limited by what the spec
+implements.  If you for example use ``aiohttp.ClientSession`` as the blueprint for your mock,
+we already know that ``get`` is async and you don't need to tell mockito so::
 
     mock({
         "get": lambda: response   # Look up if ClientSession defines "async def get"
