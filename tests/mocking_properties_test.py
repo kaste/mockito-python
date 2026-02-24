@@ -153,21 +153,6 @@ def test_property_access():
         assert F().fool == 23  # type: ignore[attr-defined]
 
 
-def test_invalid_property_stubbing_does_not_change_property_behavior(unstub):
-    assert F().p == 42
-
-    with pytest.raises(AttributeError) as exc:
-        with when(F).p.thenRtu(12):
-            pass
-
-    assert str(exc.value) == (
-        "Unknown stubbing action 'thenRtu'. "
-        "Use one of: thenReturn, thenRaise, thenAnswer, "
-        "thenCallOriginalImplementation."
-    )
-    assert F().p == 42
-
-
 def test_hasattr_on_when_property_access_does_not_patch_target(unstub):
     assert F().p == 42
 

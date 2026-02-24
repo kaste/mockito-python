@@ -129,14 +129,6 @@ class wait_for_invocation:
     def __getattr__(self, attr_name):
         self.ensure_target_is_not_callable(attr_name)
 
-        if attr_name not in self.ANSWER_SELECTOR_METHODS:
-            raise AttributeError(
-                "Unknown stubbing action '%s'. "
-                "Use one of: thenReturn, thenRaise, thenAnswer, "
-                "thenCallOriginalImplementation."
-                % (attr_name)
-            )
-
         if not inspect.isclass(self.theMock.mocked_obj):
             raise invocation.InvocationError(
                 "Cannot stub property '%s' on an instance. "
