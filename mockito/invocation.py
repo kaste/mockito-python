@@ -675,29 +675,63 @@ class AnswerSelector(object):
         expects_awaitable: bool,
         discard_first_arg: bool
     ) -> None:
-        self.invocation = invocation
-        self.discard_first_arg = discard_first_arg
-        self.expects_awaitable = expects_awaitable
+        self.__impl = AnswerSelectorImpl(
+            invocation,
+            expects_awaitable=expects_awaitable,
+            discard_first_arg=discard_first_arg,
+        )
 
     def thenReturn(self, *return_values: Any) -> Self:
+        self.__impl.thenReturn(*return_values)
+        return self
+
+    def thenRaise(self, *exceptions: Exception | type[Exception]) -> Self:
+        self.__impl.thenRaise(*exceptions)
+        return self
+
+    def thenAnswer(self, *callables: Callable) -> Self:
+        self.__impl.thenAnswer(*callables)
+        return self
+
+    def thenCallOriginalImplementation(self) -> Self:
+        self.__impl.thenCallOriginalImplementation()
+        return self
+
+    def __enter__(self) -> None:
+        self.__impl.__enter__()
+
+    def __exit__(self, *exc_info) -> None:
+        self.__impl.__exit__(*exc_info)
+
+
+class AnswerSelectorImpl(object):
+    def __init__(
+        self,
+        invocation: StubbedInvocation,
+        expects_awaitable: bool,
+        discard_first_arg: bool,
+    ) -> None:
+        self.invocation = invocation
+        self.expects_awaitable = expects_awaitable
+        self.discard_first_arg = discard_first_arg
+
+    def thenReturn(self, *return_values: Any) -> None:
         for return_value in return_values or (None,):
             if self.expects_awaitable:
                 answer = return_awaitable(return_value)
             else:
                 answer = return_(return_value)
             self.__then(answer)
-        return self
 
-    def thenRaise(self, *exceptions: Exception | type[Exception]) -> Self:
+    def thenRaise(self, *exceptions: Exception | type[Exception]) -> None:
         for exception in exceptions or (Exception,):
             if self.expects_awaitable:
                 answer = raise_awaitable(exception)
             else:
                 answer = raise_(exception)
             self.__then(answer)
-        return self
 
-    def thenAnswer(self, *callables: Callable) -> Self:
+    def thenAnswer(self, *callables: Callable) -> None:
         for callable in callables or (return_(None),):
             answer = callable
             if self.discard_first_arg:
@@ -705,9 +739,8 @@ class AnswerSelector(object):
             if self.expects_awaitable and not is_awaitable_when_called(callable):
                 answer = as_awaitable(answer)
             self.__then(answer)
-        return self
 
-    def thenCallOriginalImplementation(self) -> Self:
+    def thenCallOriginalImplementation(self) -> None:
         answer = self.invocation.mock.get_original_method(
             self.invocation.method_name
         )
@@ -722,7 +755,7 @@ class AnswerSelector(object):
                     )
                 )
             self.__then(self._property_descriptor_answer(answer))
-            return self
+            return
 
         if answer is None:
             self.invocation.forget_self()
@@ -744,7 +777,6 @@ class AnswerSelector(object):
         # `answer` is runtime-validated by stubbing setup and optional
         # unwrapping above, but mypy still sees `object` here.
         self.__then(answer)  # type: ignore[arg-type]
-        return self
 
     def _property_descriptor_answer(self, descriptor: Any) -> Callable:
         def answer(*args: Any, **kwargs: Any) -> Any:
