@@ -188,6 +188,9 @@ class MatchingInvocation(Invocation, ABC):
     """
     @staticmethod
     def compare(p1, p2):
+        if p1 is Ellipsis:
+            return True
+
         if isinstance(p1, matchers.Matcher):
             if not p1.matches(p2):
                 return False
@@ -226,12 +229,6 @@ class MatchingInvocation(Invocation, ABC):
 
 
     def _remember_params(self, params: tuple, named_params: dict) -> None:
-        if (
-            contains_strict(params, Ellipsis)
-            and (params[-1] is not Ellipsis or named_params)
-        ):
-            raise TypeError('Ellipsis must be the last argument you specify.')
-
         if contains_strict(params, matchers.args):
             raise TypeError('args must be used as *args')
 
@@ -257,8 +254,11 @@ class MatchingInvocation(Invocation, ABC):
             return False
 
         for x, p1 in enumerate(self.params):
-            # assume Ellipsis is the last thing a user declares
-            if p1 is Ellipsis:
+            if (
+                p1 is Ellipsis
+                and x == len(self.params) - 1
+                and not self.named_params
+            ):
                 return True
 
             if p1 is matchers.ARGS_SENTINEL:
