@@ -110,6 +110,7 @@ Read
    :maxdepth: 1
 
    walk-through
+   mock-shorthands
    recipes
    the-functions
    any-and-ellipses

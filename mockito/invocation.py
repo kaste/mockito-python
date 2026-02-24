@@ -432,8 +432,9 @@ class StubbedInvocation(MatchingInvocation):
         if strict is not None:
             self.strict = strict
 
-        self.refers_coroutine = is_coroutine_method(
-            mock.peek_original_method(method_name)
+        self.refers_coroutine = (
+            is_coroutine_method(mock.peek_original_method(method_name))
+            or mock.is_marked_as_coroutine(method_name)
         )
         self.discard_first_arg = mock.will_have_self_or_cls(method_name)
         default_answer = (

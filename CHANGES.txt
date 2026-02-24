@@ -40,6 +40,16 @@ Release 2.0.0
   Note that async introspection metadata (e.g. `inspect.iscoroutinefunction`)
   for stub wrappers is currently implemented only on Python 3.12+.
 
+- Expanded `mock({...})` constructor shorthands:
+  - `"async <name>"` marks methods as async and supports either `...` or a function value.
+  - `{"__enter__": ...}` / `{"__aenter__": ...}` now install default matching
+    `__exit__` / `__aexit__` handlers when not provided.
+  - `{"__iter__": [..]}` and `{"__aiter__": [..]}` now normalize values into
+    proper iterator / async-iterator behavior.
+  - In constructor dict shorthands, zero-argument functions now widen to
+    accept arbitrary call arguments (e.g. `lambda: "ok"` behaves like
+    `lambda *a, **kw: "ok"`).
+
 - Added first-class property/descriptor stubbing support, including class-level property
   stubbing via `when(F).p.thenReturn(...)` and `thenCallOriginalImplementation()` support for
   property stubs (including chained answers like

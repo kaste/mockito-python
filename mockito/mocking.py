@@ -25,6 +25,7 @@ import types
 import functools
 from collections import deque
 from contextlib import contextmanager
+from typing import AsyncIterator, Callable, Iterable, Iterator, cast
 
 from . import invocation, signature, utils
 from .mock_registry import mock_registry
@@ -39,6 +40,9 @@ __tracebackhide__ = operator.methodcaller(
 SUPPORTS_MARKCOROUTINEFUNCTION = hasattr(inspect, "markcoroutinefunction")
 
 _MISSING_ATTRIBUTE = object()
+
+_CONFIG_ASYNC_PREFIX = "async "
+_ASYNC_BY_PROTOCOL_METHODS = {"__aenter__", "__aexit__", "__anext__"}
 
 
 class _Dummy:
@@ -223,6 +227,7 @@ class Mock:
             list[tuple[str, object | None, object]] = []
 
         self._observers: list = []
+        self._methods_marked_as_coroutine: set[str] = set()
 
     def attach(self, observer) -> None:
         if observer not in self._observers:
@@ -428,8 +433,15 @@ class Mock:
             self.restore_method(method_name, original_method)
         self.stubbed_invocations = deque()
         self.invocations = []
+        self._methods_marked_as_coroutine = set()
 
     # SPECCING
+
+    def mark_as_coroutine(self, method_name: str) -> None:
+        self._methods_marked_as_coroutine.add(method_name)
+
+    def is_marked_as_coroutine(self, method_name: str) -> bool:
+        return method_name in self._methods_marked_as_coroutine
 
     def has_method(self, method_name: str) -> bool:
         if self.spec is None:
@@ -609,11 +621,166 @@ def mock(config_or_spec=None, spec=None, strict=OMITTED):  # noqa: C901
     obj = Dummy()
     theMock = Mock(Dummy, strict=strict, spec=spec)
 
-    for n, v in config.items():
-        if inspect.isfunction(v):
-            invocation.StubbedInvocation(theMock, n)(Ellipsis).thenAnswer(v)
-        else:
-            setattr(Dummy, n, v)
+    normalized_names = {
+        _normalize_config_key(raw_name)[0]
+        for raw_name in config
+    }
+
+    for raw_name, value in config.items():
+        _configure_mock_from_shorthand(
+            theMock,
+            Dummy,
+            obj,
+            raw_name,
+            value,
+            normalized_names,
+        )
 
     mock_registry.register(obj, theMock)
     return obj
+
+
+def _configure_mock_from_shorthand(
+    theMock: Mock,
+    Dummy: type,
+    obj: object,
+    raw_name: str,
+    value: object,
+    configured_names: set[str],
+) -> None:
+    method_name, marked_async = _normalize_config_key(raw_name)
+    should_be_async = marked_async or method_name in _ASYNC_BY_PROTOCOL_METHODS
+
+    if method_name in {"__enter__", "__aenter__"} and value is Ellipsis:
+        _stub_from_shorthand(
+            theMock,
+            method_name,
+            return_value=obj,
+            force_async=(method_name == "__aenter__"),
+        )
+
+        companion_exit = "__aexit__" if method_name == "__aenter__" else "__exit__"
+        if companion_exit not in configured_names:
+            _stub_from_shorthand(
+                theMock,
+                companion_exit,
+                return_value=False,
+                force_async=(companion_exit == "__aexit__"),
+            )
+        return
+
+    if method_name == "__iter__":
+        iter_answer = _normalize_iter_answer(value)
+        _stub_from_shorthand(theMock, method_name, answer=iter_answer)
+        return
+
+    if method_name == "__aiter__":
+        aiter_answer = _normalize_aiter_answer(value)
+        _stub_from_shorthand(theMock, method_name, answer=aiter_answer)
+        return
+
+    if inspect.isfunction(value):
+        function_answer = _widen_zero_arg_callable(value)
+        _stub_from_shorthand(
+            theMock,
+            method_name,
+            answer=function_answer,
+            force_async=should_be_async,
+        )
+        return
+
+    if should_be_async:
+        if value is Ellipsis:
+            _stub_from_shorthand(theMock, method_name, force_async=True)
+            return
+
+        raise TypeError(
+            "Async shorthand '%s' expects a function value or Ellipsis. "
+            "Use `lambda: value` for fixed async return values."
+            % raw_name
+        )
+
+    setattr(Dummy, method_name, value)
+
+
+def _normalize_config_key(raw_name: str) -> tuple[str, bool]:
+    if raw_name.startswith(_CONFIG_ASYNC_PREFIX):
+        return raw_name[len(_CONFIG_ASYNC_PREFIX):], True
+    return raw_name, False
+
+
+def _stub_from_shorthand(
+    theMock: Mock,
+    method_name: str,
+    *,
+    answer: object = OMITTED,
+    return_value: object = OMITTED,
+    force_async: bool = False,
+) -> None:
+    if force_async:
+        theMock.mark_as_coroutine(method_name)
+
+    stubbed = invocation.StubbedInvocation(theMock, method_name)(Ellipsis)
+
+    if answer is not OMITTED:
+        stubbed.thenAnswer(answer)  # type: ignore[arg-type]
+    elif return_value is not OMITTED:
+        stubbed.thenReturn(return_value)
+
+
+def _widen_zero_arg_callable(function: object):
+    if not inspect.isfunction(function):
+        return function
+
+    try:
+        params = inspect.signature(function).parameters
+    except Exception:
+        return function
+
+    if params:
+        return function
+
+    def widened(*args, **kwargs):
+        return function()
+
+    widened.__name__ = function.__name__
+    widened.__doc__ = function.__doc__
+    return widened
+
+
+def _normalize_iter_answer(value) -> Callable[..., Iterator[object]]:
+    def answer(*args, **kwargs) -> Iterator[object]:
+        result = value(*args, **kwargs) if callable(value) else value
+        return iter(cast(Iterable[object], result))
+
+    return answer
+
+
+def _normalize_aiter_answer(value) -> Callable[..., AsyncIterator[object]]:
+    def answer(*args, **kwargs) -> AsyncIterator[object]:
+        result = value(*args, **kwargs) if callable(value) else value
+        return _normalize_aiter_result(result)
+
+    return answer
+
+
+def _normalize_aiter_result(value) -> AsyncIterator[object]:
+    if hasattr(value, "__anext__"):
+        return cast(AsyncIterator[object], value)
+
+    aiter = getattr(value, "__aiter__", None)
+    if callable(aiter):
+        candidate = aiter()
+        if hasattr(candidate, "__anext__"):
+            return cast(AsyncIterator[object], candidate)
+        raise TypeError(
+            "__aiter__() must return an async iterator implementing __anext__"
+        )
+
+    iterator = iter(cast(Iterable[object], value))
+
+    async def generator() -> AsyncIterator[object]:
+        for item in iterator:
+            yield item
+
+    return generator()
