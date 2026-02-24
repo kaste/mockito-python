@@ -576,13 +576,50 @@ class StubbedInvocation(MatchingInvocation):
     def get_continuation(self) -> Continuation:
         return self.mock.continuation_for(self)
 
-    def set_value_continuation(self) -> None:
+    def transition_to_value(self) -> None:
+        continuation = self.get_continuation()
+
+        if isinstance(continuation, ChainContinuation):
+            # Two examples where this branch is reached:
+            # 1) same selector, incompatible mode:
+            #       sel = when(cat).meow(); sel.purr(); sel.thenReturn(...)
+            #    continuation.invocation is `sel`'s invocation -> no rollback.
+            # 2) duplicate selector for an already chained signature:
+            #       when(cat).meow().purr(); when(cat).meow().thenReturn(...)
+            #    continuation.invocation is the earlier configured invocation ->
+            #    rollback provisional duplicate before raising.
+            self.rollback_if_not_configured_by(continuation)
+            raise InvocationError(
+                "'%s' is already configured for chained stubbing."
+                % self.method_name
+            )
+
         self.mock.set_continuation(ValueContinuation(self))
 
-    def set_chain_continuation(self, chain_mock: Mock) -> ChainContinuation:
-        rv = ChainContinuation(self, chain_mock)
-        self.mock.set_continuation(rv)
-        return rv
+    def transition_to_chain(self) -> ChainContinuation:
+        continuation = self.get_continuation()
+
+        if isinstance(continuation, ChainContinuation):
+            self.rollback_if_not_configured_by(continuation)
+            return continuation
+
+        if isinstance(continuation, ValueContinuation):
+            self.rollback_if_not_configured_by(continuation)
+            raise InvocationError(
+                "'%s' is already configured with a direct answer."
+                % self.method_name
+            )
+
+        chain_root, chain_mock = create_chain_mock()
+        answer = (
+            return_awaitable(chain_root)
+            if self.refers_coroutine
+            else return_(chain_root)
+        )
+        self.add_answer(answer)
+        continuation = ChainContinuation(self, chain_mock)
+        self.mock.set_continuation(continuation)
+        return continuation
 
     def pop_verification(self) -> verificationModule.VerificationMode | None:
         verification, self.verification = self.verification, None
@@ -677,6 +714,15 @@ class StubbedPropertyAccess(StubbedInvocation):
         self.mock.finish_stubbing(self)
         return AnswerSelector(self, self.refers_coroutine, self.discard_first_arg)
 
+
+
+def create_chain_mock() -> tuple[object, Mock]:
+    from .mocking import mock
+
+    chain_root = mock()
+    theMock = mock_registry.mock_for(chain_root)
+    assert theMock is not None, "Missing chain mock registry entry"
+    return chain_root, theMock
 
 
 def return_(value: T) -> Callable[..., T]:
@@ -856,7 +902,7 @@ class AnswerSelectorImpl(object):
         return answer
 
     def __then(self, answer: Callable) -> None:
-        self._ensure_value_mode()
+        self.invocation.transition_to_value()
         self.invocation.add_answer(answer)
 
     def __enter__(self) -> None:
@@ -872,7 +918,8 @@ class AnswerSelectorImpl(object):
 
     def chain(self, method_name: str) -> Callable[..., AnswerSelector]:
         def chain_invocation(*args: Any, **kwargs: Any) -> AnswerSelector:
-            continuation, verification = self._ensure_chain_mode()
+            continuation = self.invocation.transition_to_chain()
+            verification = self.invocation.pop_verification()
             stub = StubbedInvocation(
                 continuation.chain_mock,
                 method_name,
@@ -883,64 +930,6 @@ class AnswerSelectorImpl(object):
 
         return chain_invocation
 
-    def _ensure_value_mode(self) -> None:
-        continuation = self.invocation.get_continuation()
-
-        if isinstance(continuation, ChainContinuation):
-            # Two examples where this branch is reached:
-            # 1) same selector, incompatible mode:
-            #       sel = when(cat).meow()
-            #       sel.purr()
-            #       sel.thenReturn(...)   #  <== we're here
-            #    continuation.invocation is `sel`'s invocation -> do not rollback.
-            # 2) new duplicate selector for an already chained signature:
-            #       when(cat).meow().purr()
-            #       when(cat).meow().thenReturn(...)
-            #    continuation.invocation is the earlier configured invocation ->
-            #    rollback the provisional duplicate before raising.
-            self.invocation.rollback_if_not_configured_by(continuation)
-            raise InvocationError(
-                "'%s' is already configured for chained stubbing."
-                % self.invocation.method_name
-            )
-
-        self.invocation.set_value_continuation()
-
-    def _ensure_chain_mode(
-        self,
-    ) -> tuple[ChainContinuation, verificationModule.VerificationMode | None]:
-        continuation = self.invocation.get_continuation()
-
-        if isinstance(continuation, ChainContinuation):
-            verification = self.invocation.pop_verification()
-            self.invocation.rollback_if_not_configured_by(continuation)
-            return continuation, verification
-
-        if isinstance(continuation, ValueContinuation):
-            self.invocation.rollback_if_not_configured_by(continuation)
-            raise InvocationError(
-                "'%s' is already configured with a direct answer."
-                % self.invocation.method_name
-            )
-
-        verification = self.invocation.pop_verification()
-        chain_root, chain_mock = self._create_chain_mock()
-        if self.expects_awaitable:
-            answer = return_awaitable(chain_root)
-        else:
-            answer = return_(chain_root)
-
-        self.invocation.add_answer(answer)
-        continuation = self.invocation.set_chain_continuation(chain_mock)
-        return continuation, verification
-
-    def _create_chain_mock(self) -> tuple[object, Mock]:
-        from .mocking import mock
-
-        chain_root = mock()
-        theMock = mock_registry.mock_for(chain_root)
-        assert theMock is not None, "Missing chain mock registry entry"
-        return chain_root, theMock
 
 
 class CompositeAnswer(object):
