@@ -111,7 +111,6 @@ def test_sqlalchemy_2():
     with when(User).query.thenReturn(query_prop):
         assert User.query.filter_by(username='admin').first() == "A user"
 
-@pytest.mark.xfail(reason='Not implemented.')
 def test_sqlalchemy_3a():
     assert User.query == 42
     query_prop = mock()
@@ -119,8 +118,7 @@ def test_sqlalchemy_3a():
     with when(User).query.thenReturn(query_prop):
         assert User.query.filter_by(username='admin').first() == "A user"
 
-@pytest.mark.xfail(reason='Not implemented.')
-def test_sqlalchemy_3b(unstub):  # atm throws badly, ensure unstub manually
+def test_sqlalchemy_3b(unstub):
     assert User.query == 42
     with when(User).query.filter_by(...).first().thenReturn("A user"):
         assert User.query.filter_by(username='admin').first() == "A user"
@@ -156,7 +154,7 @@ def test_property_access():
 def test_hasattr_on_when_property_access_does_not_patch_target(unstub):
     assert F().p == 42
 
-    assert not hasattr(when(F).p, 'unknown_attribute')
+    assert hasattr(when(F).p, 'unknown_attribute')
 
     assert F().p == 42
 
