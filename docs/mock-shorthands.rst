@@ -49,7 +49,7 @@ To build up a complete `aiohttp` example::
         async with session.get(location, raise_for_status=True) as resp:
             return await resp.text()
 
-you also need to define the context/with handlers:
+you also need to define the context/with handlers::
 
     resp = mock({
         "__aenter__": ...,
