@@ -20,15 +20,17 @@
 
 from __future__ import annotations
 from abc import ABC
+from dataclasses import dataclass
 import os
 import inspect
 import operator
 from collections import deque
 from functools import cached_property
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 from . import matchers, signature
 from . import verification as verificationModule
+from .mock_registry import mock_registry
 from .utils import contains_strict
 
 if TYPE_CHECKING:
@@ -42,6 +44,26 @@ class InvocationError(AttributeError):
 
 class AnswerError(AttributeError):
     pass
+
+
+@dataclass(frozen=True)
+class UnconfiguredContinuation:
+    pass
+
+
+@dataclass(frozen=True)
+class ValueContinuation:
+    invocation: StubbedInvocation
+
+
+@dataclass(frozen=True)
+class ChainContinuation:
+    invocation: StubbedInvocation
+    chain_mock: Mock
+
+
+Continuation = Union[UnconfiguredContinuation, ValueContinuation, ChainContinuation]
+ConfiguredContinuation = Union[ValueContinuation, ChainContinuation]
 
 
 __tracebackhide__ = operator.methodcaller(
@@ -436,13 +458,21 @@ class StubbedInvocation(MatchingInvocation):
         mock: Mock,
         method_name: str,
         verification: verificationModule.VerificationMode | None = None,
-        strict: bool | None = None
+        strict: bool | None = None,
+        parent_invocation: StubbedInvocation | None = None,
     ) -> None:
         super(StubbedInvocation, self).__init__(mock, method_name)
 
         #: Holds the verification set up via `expect`.
         #: The verification will be verified implicitly, while using this stub.
         self.verification = verification
+
+        #: Parent chain invocation for context-managed cleanup propagation.
+        #:
+        #: When this invocation belongs to a child chain mock (e.g. `.purr()`
+        #: after `.meow()`), `forget_self()` may need to recursively forget the
+        #: parent chain root invocation if that child chain mock becomes empty.
+        self.parent_invocation = parent_invocation
 
         if strict is not None:
             self.strict = strict
@@ -523,6 +553,77 @@ class StubbedInvocation(MatchingInvocation):
     def forget_self(self) -> None:
         if self in self.mock.stubbed_invocations:
             self.mock.forget_stubbed_invocation(self)
+            self._maybe_forget_parent_chain_invocation()
+
+    def _maybe_forget_parent_chain_invocation(self) -> None:
+        if self.parent_invocation is None:
+            return
+
+        parent_continuation = self.parent_invocation.get_continuation()
+        if (
+            isinstance(parent_continuation, ChainContinuation)
+            and not parent_continuation.chain_mock.stubbed_invocations
+        ):
+            self.parent_invocation.forget_self()
+
+    def rollback_if_not_configured_by(
+        self,
+        continuation: ConfiguredContinuation,
+    ) -> None:
+        if continuation.invocation is not self:
+            self.forget_self()
+
+    def get_continuation(self) -> Continuation:
+        return self.mock.continuation_for(self)
+
+    def transition_to_value(self) -> None:
+        continuation = self.get_continuation()
+
+        if isinstance(continuation, ChainContinuation):
+            # Two examples where this branch is reached:
+            # 1) same selector, incompatible mode:
+            #       sel = when(cat).meow(); sel.purr(); sel.thenReturn(...)
+            #    continuation.invocation is `sel`'s invocation -> no rollback.
+            # 2) duplicate selector for an already chained signature:
+            #       when(cat).meow().purr(); when(cat).meow().thenReturn(...)
+            #    continuation.invocation is the earlier configured invocation ->
+            #    rollback provisional duplicate before raising.
+            self.rollback_if_not_configured_by(continuation)
+            raise InvocationError(
+                "'%s' is already configured for chained stubbing."
+                % self.method_name
+            )
+
+        self.mock.set_continuation(ValueContinuation(self))
+
+    def transition_to_chain(self) -> ChainContinuation:
+        continuation = self.get_continuation()
+
+        if isinstance(continuation, ChainContinuation):
+            self.rollback_if_not_configured_by(continuation)
+            return continuation
+
+        if isinstance(continuation, ValueContinuation):
+            self.rollback_if_not_configured_by(continuation)
+            raise InvocationError(
+                "'%s' is already configured with a direct answer."
+                % self.method_name
+            )
+
+        chain_root, chain_mock = create_chain_mock()
+        answer = (
+            return_awaitable(chain_root)
+            if self.refers_coroutine
+            else return_(chain_root)
+        )
+        self.add_answer(answer)
+        continuation = ChainContinuation(self, chain_mock)
+        self.mock.set_continuation(continuation)
+        return continuation
+
+    def pop_verification(self) -> verificationModule.VerificationMode | None:
+        verification, self.verification = self.verification, None
+        return verification
 
     def add_answer(self, answer: Callable) -> None:
         self.answers.add(answer)
@@ -615,6 +716,15 @@ class StubbedPropertyAccess(StubbedInvocation):
 
 
 
+def create_chain_mock() -> tuple[object, Mock]:
+    from .mocking import mock
+
+    chain_root = mock()
+    theMock = mock_registry.mock_for(chain_root)
+    assert theMock is not None, "Missing chain mock registry entry"
+    return chain_root, theMock
+
+
 def return_(value: T) -> Callable[..., T]:
     def answer(*args, **kwargs) -> T:
         return value
@@ -675,29 +785,66 @@ class AnswerSelector(object):
         expects_awaitable: bool,
         discard_first_arg: bool
     ) -> None:
-        self.invocation = invocation
-        self.discard_first_arg = discard_first_arg
-        self.expects_awaitable = expects_awaitable
+        self.__impl = AnswerSelectorImpl(
+            invocation,
+            expects_awaitable=expects_awaitable,
+            discard_first_arg=discard_first_arg,
+        )
 
     def thenReturn(self, *return_values: Any) -> Self:
+        self.__impl.thenReturn(*return_values)
+        return self
+
+    def thenRaise(self, *exceptions: Exception | type[Exception]) -> Self:
+        self.__impl.thenRaise(*exceptions)
+        return self
+
+    def thenAnswer(self, *callables: Callable) -> Self:
+        self.__impl.thenAnswer(*callables)
+        return self
+
+    def thenCallOriginalImplementation(self) -> Self:
+        self.__impl.thenCallOriginalImplementation()
+        return self
+
+    def __getattr__(self, method_name: str) -> Callable[..., AnswerSelector]:
+        return self.__impl.chain(method_name)
+
+    def __enter__(self) -> None:
+        self.__impl.__enter__()
+
+    def __exit__(self, *exc_info) -> None:
+        self.__impl.__exit__(*exc_info)
+
+
+class AnswerSelectorImpl(object):
+    def __init__(
+        self,
+        invocation: StubbedInvocation,
+        expects_awaitable: bool,
+        discard_first_arg: bool,
+    ) -> None:
+        self.invocation = invocation
+        self.expects_awaitable = expects_awaitable
+        self.discard_first_arg = discard_first_arg
+
+    def thenReturn(self, *return_values: Any) -> None:
         for return_value in return_values or (None,):
             if self.expects_awaitable:
                 answer = return_awaitable(return_value)
             else:
                 answer = return_(return_value)
             self.__then(answer)
-        return self
 
-    def thenRaise(self, *exceptions: Exception | type[Exception]) -> Self:
+    def thenRaise(self, *exceptions: Exception | type[Exception]) -> None:
         for exception in exceptions or (Exception,):
             if self.expects_awaitable:
                 answer = raise_awaitable(exception)
             else:
                 answer = raise_(exception)
             self.__then(answer)
-        return self
 
-    def thenAnswer(self, *callables: Callable) -> Self:
+    def thenAnswer(self, *callables: Callable) -> None:
         for callable in callables or (return_(None),):
             answer = callable
             if self.discard_first_arg:
@@ -705,9 +852,8 @@ class AnswerSelector(object):
             if self.expects_awaitable and not is_awaitable_when_called(callable):
                 answer = as_awaitable(answer)
             self.__then(answer)
-        return self
 
-    def thenCallOriginalImplementation(self) -> Self:
+    def thenCallOriginalImplementation(self) -> None:
         answer = self.invocation.mock.get_original_method(
             self.invocation.method_name
         )
@@ -722,7 +868,7 @@ class AnswerSelector(object):
                     )
                 )
             self.__then(self._property_descriptor_answer(answer))
-            return self
+            return
 
         if answer is None:
             self.invocation.forget_self()
@@ -744,7 +890,6 @@ class AnswerSelector(object):
         # `answer` is runtime-validated by stubbing setup and optional
         # unwrapping above, but mypy still sees `object` here.
         self.__then(answer)  # type: ignore[arg-type]
-        return self
 
     def _property_descriptor_answer(self, descriptor: Any) -> Callable:
         def answer(*args: Any, **kwargs: Any) -> Any:
@@ -757,6 +902,7 @@ class AnswerSelector(object):
         return answer
 
     def __then(self, answer: Callable) -> None:
+        self.invocation.transition_to_value()
         self.invocation.add_answer(answer)
 
     def __enter__(self) -> None:
@@ -769,6 +915,21 @@ class AnswerSelector(object):
                 self.invocation.check_used()
         finally:
             self.invocation.forget_self()
+
+    def chain(self, method_name: str) -> Callable[..., AnswerSelector]:
+        def chain_invocation(*args: Any, **kwargs: Any) -> AnswerSelector:
+            continuation = self.invocation.transition_to_chain()
+            verification = self.invocation.pop_verification()
+            stub = StubbedInvocation(
+                continuation.chain_mock,
+                method_name,
+                verification=verification,
+                parent_invocation=continuation.invocation,
+            )
+            return stub(*args, **kwargs)
+
+        return chain_invocation
+
 
 
 class CompositeAnswer(object):

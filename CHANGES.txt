@@ -55,6 +55,11 @@ Release 2.0.0
   property stubs (including chained answers like
   `thenReturn(...).thenCallOriginalImplementation()`). Stubbing instance properties now fails
   fast with clear guidance to use class-level stubbing (`when(F).p...`).
+
+- Added chained stubbing and expectations across call/property hops, e.g.
+  `when(cat).meow().purr().thenReturn(...)`, `when(User).query.filter_by(...).first()`, and
+  `expect(cat, times=1).meow().purr()`, including cleanup that preserves sibling chain branches.
+
 - Allow `...` in fixed argument positions as an ad-hoc `any` matcher.
   Trailing positional `...` keeps its existing "rest" semantics.
 

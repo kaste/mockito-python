@@ -129,14 +129,6 @@ class wait_for_invocation:
     def __getattr__(self, attr_name):
         self.ensure_target_is_not_callable(attr_name)
 
-        if attr_name not in self.ANSWER_SELECTOR_METHODS:
-            raise AttributeError(
-                "Unknown stubbing action '%s'. "
-                "Use one of: thenReturn, thenRaise, thenAnswer, "
-                "thenCallOriginalImplementation."
-                % (attr_name)
-            )
-
         if not inspect.isclass(self.theMock.mocked_obj):
             raise invocation.InvocationError(
                 "Cannot stub property '%s' on an instance. "
@@ -149,19 +141,16 @@ class wait_for_invocation:
                 )
             )
 
-        def answer_selector_method(*args, **kwargs):
+        def answer_selector_hop(*args, **kwargs):
             # Avoid patching during attribute lookup so that a (faulty)
             # `with when(F).p.thenReturn:` does *not* yet mutate F.
             invoc = invocation.StubbedPropertyAccess(
                 self.theMock, self.method_name, **self.kwargs)()
             return getattr(invoc, attr_name)(*args, **kwargs)
 
-        return answer_selector_method
+        return answer_selector_hop
 
     def ensure_target_is_not_callable(self, attr_name: str) -> None:
-        if attr_name not in self.ANSWER_SELECTOR_METHODS:
-            return
-
         spec = self.theMock.spec
         if spec is None:
             return
@@ -226,6 +215,11 @@ class Mock:
         self._property_access_context: \
             list[tuple[str, object | None, object]] = []
 
+        self._continuations: dict[
+            invocation.StubbedInvocation,
+            invocation.ConfiguredContinuation,
+        ] = {}
+
         self._observers: list = []
         self._methods_marked_as_coroutine: set[str] = set()
 
@@ -251,6 +245,43 @@ class Mock:
 
     def clear_invocations(self) -> None:
         self.invocations = []
+
+    def continuation_for(
+        self, invoc: invocation.StubbedInvocation
+    ) -> invocation.Continuation:
+        continuation = self._continuations.get(invoc)
+        if continuation is not None:
+            return continuation
+
+        for other in self._sameish_invocations(invoc):
+            configured_continuation = self._continuations.get(other)
+            if isinstance(configured_continuation, invocation.ValueContinuation):
+                return configured_continuation
+
+            if isinstance(configured_continuation, invocation.ChainContinuation):
+                # We do not keep mixed continuation modes (`Value` and `Chain`)
+                # alive at the same time. So the first chain continuation
+                # can be returned immediately.
+                return configured_continuation
+
+        return invocation.UnconfiguredContinuation()
+
+    def set_continuation(self, continuation: invocation.ConfiguredContinuation) -> None:
+        self._continuations[continuation.invocation] = continuation
+
+    def _sameish_invocations(
+        self, same: invocation.StubbedInvocation
+    ) -> list[invocation.StubbedInvocation]:
+        return [
+            invoc
+            for invoc in self.stubbed_invocations
+            if (
+                invoc is not same
+                and invoc.method_name == same.method_name
+                and invoc.matches(same)
+                and same.matches(invoc)
+            )
+        ]
 
     def get_original_method(self, method_name: str) -> object | None:
         return self._original_methods.get(method_name, None)
@@ -406,11 +437,8 @@ class Mock:
     ) -> None:
         assert invocation in self.stubbed_invocations
 
-        if len(self.stubbed_invocations) == 1:
-            mock_registry.unstub_mock(self)
-            return
-
         self.stubbed_invocations.remove(invocation)
+        self._continuations.pop(invocation, None)
 
         if not any(
             inv.method_name == invocation.method_name
@@ -420,6 +448,11 @@ class Mock:
                 invocation.method_name
             )
             self.restore_method(invocation.method_name, original_method)
+
+        if self.stubbed_invocations:
+            return
+
+        mock_registry.unstub_mock(self)
 
     def restore_method(self, method_name: str, original_method: object) -> None:
         if original_method is _MISSING_ATTRIBUTE:
@@ -434,6 +467,7 @@ class Mock:
         self.stubbed_invocations = deque()
         self.invocations = []
         self._methods_marked_as_coroutine = set()
+        self._continuations = {}
 
     # SPECCING
 
