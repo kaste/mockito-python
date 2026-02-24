@@ -56,6 +56,12 @@ Super easy to set up different answers.
                            .thenRaise(Timeout("I'm flaky")) \
                            .thenReturn(mock({'status': 200, 'text': 'Ok'}))
 
+State-of-the-art, high-five chaining::
+
+    # SQLAlchemy, fluently
+    with when(User).query.filter_by(...).first().thenReturn("A user"):
+        assert User.query.filter_by(username='admin').first() == "A user"
+
 State-of-the-art, high-five argument matchers::
 
     # Use the Ellipsis, if you don't care
