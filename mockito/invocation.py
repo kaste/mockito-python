@@ -24,6 +24,7 @@ import os
 import inspect
 import operator
 from collections import deque
+from functools import cached_property
 from typing import TYPE_CHECKING
 
 from . import matchers, signature
@@ -114,12 +115,11 @@ class RememberedInvocation(RealInvocation):
         self._remember_params(params_without_first_arg, named_params)
         self.mock.remember(self)
 
-        for matching_invocation in self.mock.stubbed_invocations:
-            if matching_invocation.matches(self):
-                matching_invocation.should_answer(self)
-                matching_invocation.capture_arguments(self)
-                return matching_invocation.answer_first(
-                    *params, **named_params)
+        matching_invocation = self._find_best_matching_stubbed_invocation()
+        if matching_invocation is not None:
+            matching_invocation.should_answer(self)
+            matching_invocation.capture_arguments(self)
+            return matching_invocation.answer_first(*params, **named_params)
 
         if self.strict:
             stubbed_invocations = [
@@ -147,6 +147,21 @@ Stubbed invocations are:
             )
 
         return None
+
+    def _find_best_matching_stubbed_invocation(self) -> StubbedInvocation | None:
+        candidates = [
+            candidate
+            for candidate in self.mock.stubbed_invocations
+            if candidate.matches(self)
+        ]
+
+        if not candidates:
+            return None
+
+        if len(candidates) == 1:
+            return candidates[0]
+
+        return max(candidates, key=lambda candidate: candidate.specificity_score)
 
 
 class RememberedPropertyAccess(RememberedInvocation):
@@ -477,6 +492,33 @@ class StubbedInvocation(MatchingInvocation):
         self.mock.stub(self.method_name)
         self.mock.finish_stubbing(self)
         return AnswerSelector(self, self.refers_coroutine, self.discard_first_arg)
+
+    @cached_property
+    def specificity_score(self) -> tuple[int, int]:
+        quality = 0
+
+        for value in self.params:
+            if value is not matchers.ARGS_SENTINEL:
+                quality += self._specificity_score(value)
+
+        for key, value in self.named_params.items():
+            if key is not matchers.KWARGS_SENTINEL:
+                quality += self._specificity_score(value)
+
+        coverage = len(self.params) + len(self.named_params)
+        return coverage, quality
+
+    def _specificity_score(self, value: object) -> int:
+        if value is Ellipsis:
+            return 0
+
+        if isinstance(value, matchers.Any) and value.wanted_type is None:
+            return 0
+
+        if isinstance(value, matchers.Matcher):
+            return 1
+
+        return 3
 
     def forget_self(self) -> None:
         if self in self.mock.stubbed_invocations:
