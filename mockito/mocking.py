@@ -151,9 +151,6 @@ class wait_for_invocation:
         return answer_selector_method
 
     def ensure_target_is_not_callable(self, attr_name: str) -> None:
-        if attr_name not in self.ANSWER_SELECTOR_METHODS:
-            return
-
         spec = self.theMock.spec
         if spec is None:
             return
