@@ -719,7 +719,7 @@ class StubbedPropertyAccess(StubbedInvocation):
 def create_chain_mock() -> tuple[object, Mock]:
     from .mocking import mock
 
-    chain_root = mock()
+    chain_root = mock(strict=True)
     theMock = mock_registry.mock_for(chain_root)
     assert theMock is not None, "Missing chain mock registry entry"
     return chain_root, theMock

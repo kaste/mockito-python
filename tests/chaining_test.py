@@ -200,3 +200,22 @@ def test_chain_matching_requires_candidate_matches_existing_direction():
     assert cat.meow(2).purr() == "two"
 
 
+def test_unexpected_chain_segment_arguments_raise_invocation_error_early():
+    cat = mock()
+
+    when(cat).meow().jump("bar").sleep().thenReturn("ok")
+
+    with pytest.raises(InvocationError) as exc:
+        cat.meow().jump("baz").sleep()
+
+    assert str(exc.value) == (
+        "\nCalled but not expected:\n"
+        "\n"
+        "    jump('baz')\n"
+        "\n"
+        "Stubbed invocations are:\n"
+        "\n"
+        "    jump('bar')\n"
+        "\n"
+    )
+
