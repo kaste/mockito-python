@@ -477,10 +477,7 @@ class StubbedInvocation(MatchingInvocation):
         if strict is not None:
             self.strict = strict
 
-        self.refers_coroutine = (
-            is_coroutine_method(mock.peek_original_method(method_name))
-            or mock.is_marked_as_coroutine(method_name)
-        )
+        self.refers_coroutine = mock.method_expects_awaitable(method_name)
         self.discard_first_arg = mock.will_have_self_or_cls(method_name)
         default_answer = (
             return_awaitable(None) if self.refers_coroutine else return_(None)
@@ -735,13 +732,6 @@ def return_awaitable(value: T) -> Callable[..., Any]:
     async def answer(*args, **kwargs) -> T:
         return value
     return answer
-
-
-def is_coroutine_method(method: Any) -> bool:
-    if isinstance(method, (staticmethod, classmethod)):
-        method = method.__func__
-
-    return inspect.iscoroutinefunction(method)
 
 
 def raise_(exception: Exception | type[Exception]) -> Callable[..., NoReturn]:
