@@ -409,6 +409,9 @@ def verification_has_lower_bound_of_zero(
     ):
         return True
 
+    if isinstance(verification, verificationModule.AtMost):
+        return True
+
     if (
         isinstance(verification, verificationModule.Between)
         and verification.wanted_from == 0
