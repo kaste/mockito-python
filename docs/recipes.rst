@@ -169,3 +169,30 @@ Yeah, I hate that but we need to be realistic.  Use ``between=(0,)`` like so::
             verifyStubbedInvocationsAreUsed()
             ensureNoUnverifiedInteractions()
 
+
+Speccing from ``typing.Protocol``
+---------------------------------
+
+If your production code uses ``typing.Protocol`` interfaces, you can use them
+as ``mock(spec=...)`` input directly::
+
+    from typing import Protocol
+    from mockito import mock, when
+
+    class Service(Protocol):
+        async def fetch(self, path: str) -> str:
+            ...
+
+        def close(self) -> bool:
+            ...
+
+    service = mock(Service)
+    when(service).fetch('/health').thenReturn('ok')
+    when(service).close().thenReturn(True)
+
+    assert await service.fetch('/health') == 'ok'  # async stays async
+    assert service.close() is True                  # sync stays sync
+
+Such mocks are strict by default, so unknown methods and invalid call signatures
+still fail early.
+
