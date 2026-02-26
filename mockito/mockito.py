@@ -26,7 +26,7 @@ from . import invocation
 from . import verification
 
 from .utils import deprecated, get_obj, get_obj_attr_tuple
-from .mocking import Mock, chain_segment
+from .mocking import Chain, Mock
 from .mock_registry import mock_registry
 from .verification import VerificationError
 
@@ -241,15 +241,11 @@ def when(obj, strict=True):
         obj = get_obj(obj)
 
     theMock = _get_mock(obj, strict=strict)
+    chain = Chain(theMock, {"strict": strict})
 
     class When(object):
         def __getattr__(self, method_name):
-            return chain_segment(
-                theMock,
-                tuple(),
-                method_name,
-                {"strict": strict},
-            )
+            return chain.new_segment(method_name)
 
     return When()
 
@@ -338,17 +334,14 @@ def expect(obj, strict=True,
     verification_fn = _get_wanted_verification(
         times=times, atleast=atleast, atmost=atmost, between=between)
 
+    chain = Chain(theMock, {
+        "verification": verification_fn,
+        "strict": strict,
+    })
+
     class Expect(object):
         def __getattr__(self, method_name):
-            return chain_segment(
-                theMock,
-                tuple(),
-                method_name,
-                {
-                    "verification": verification_fn,
-                    "strict": strict,
-                },
-            )
+            return chain.new_segment(method_name)
 
     return Expect()
 

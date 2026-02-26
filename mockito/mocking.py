@@ -92,18 +92,12 @@ class Chain:
     def __add__(self, segment: Segment) -> "Chain":
         return Chain(self.theMock, self.options, self.segments + (segment,))
 
+    def new_segment(self, name: str):
+        return _chain_segment(self, name)
+
     def rollback(self) -> None:
         for segment in reversed(self.segments):
             segment.invoc.forget_self()
-
-
-def chain_segment(
-    theMock: Mock,
-    segments: tuple[Segment, ...],
-    name: str,
-    options: dict[str, Any],
-):
-    return _chain_segment(Chain(theMock, options, segments), name)
 
 
 def _chain_segment(chain: Chain, name: str):
@@ -128,7 +122,7 @@ def _chain_segment(chain: Chain, name: str):
                 raise
 
             next_chain = chain + segment
-            return _chain_segment(next_chain, attr_name)
+            return next_chain.new_segment(attr_name)
 
         def __enter__(self):
             chain.rollback()
@@ -144,7 +138,7 @@ def _chain_segment(chain: Chain, name: str):
 def _wait_for_attr(chain: Chain):
     class WaitForAttr:
         def __getattr__(self, attr_name):
-            return _chain_segment(chain, attr_name)
+            return chain.new_segment(attr_name)
 
         __enter__ = chain.segments[-1].answer_selector.__enter__
         __exit__ = chain.segments[-1].answer_selector.__exit__
