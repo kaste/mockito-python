@@ -77,114 +77,101 @@ ANSWER_SELECTOR_METHODS = {
 
 
 @dataclass(frozen=True)
-class _ChainSegment:
+class Segment:
     name: str
     invoc: invocation.StubbedInvocation
     answer_selector: invocation.AnswerSelector
 
 
+@dataclass(frozen=True)
+class Chain:
+    theMock: Mock
+    segments: tuple[Segment, ...]
+    options: dict[str, Any]
+
+    def __add__(self, segment: Segment) -> "Chain":
+        return Chain(self.theMock, self.segments + (segment,), self.options)
+
+
 def chain_segment(
     theMock: Mock,
-    segments: tuple[_ChainSegment, ...],
+    segments: tuple[Segment, ...],
     name: str,
     options: dict[str, Any],
 ):
+    return _chain_segment(Chain(theMock, segments, options), name)
+
+
+def _chain_segment(chain: Chain, name: str):
     class SegmentFacade:
         def __call__(self, *args, **kwargs):
-            if segments and name in ANSWER_SELECTOR_METHODS:
-                getattr(segments[-1].answer_selector, name)(
+            if chain.segments and name in ANSWER_SELECTOR_METHODS:
+                getattr(chain.segments[-1].answer_selector, name)(
                     *args,
                     **kwargs,
                 )
-                return _wait_for_chain_attr(
-                    theMock,
-                    segments,
-                    options,
-                )
+                return _wait_for_chain_attr(chain)
 
-            segment = _materialize_method_segment(
-                theMock,
-                segments,
-                name,
-                options,
-                args,
-                kwargs,
-            )
-            return _wait_for_chain_attr(
-                theMock,
-                segments + (segment,),
-                options,
-            )
+            segment = _materialize_method_segment(chain, name, args, kwargs)
+            next_chain = chain + segment
+            return _wait_for_chain_attr(next_chain)
 
         def __getattr__(self, attr_name):
             try:
-                segment = _materialize_property_segment(
-                    theMock,
-                    segments,
-                    name,
-                    options,
-                )
+                segment = _materialize_property_segment(chain, name)
             except invocation.InvocationError:
-                _rollback_chain(segments)
+                _rollback_chain(chain.segments)
                 raise
 
-            return chain_segment(
-                theMock,
-                segments + (segment,),
-                attr_name,
-                options,
-            )
+            next_chain = chain + segment
+            return _chain_segment(next_chain, attr_name)
 
         def __enter__(self):
-            _rollback_chain(segments)
+            _rollback_chain(chain.segments)
             raise AttributeError('__enter__')
 
         def __exit__(self, *exc_info):
-            _rollback_chain(segments)
+            _rollback_chain(chain.segments)
             raise AttributeError('__exit__')
 
     return SegmentFacade()
 
 
-def _wait_for_chain_attr(
-    theMock: Mock,
-    segments: tuple[_ChainSegment, ...],
-    options: dict[str, Any],
-):
+def _wait_for_chain_attr(chain: Chain):
     class WaitForAttr:
         def __getattr__(self, attr_name):
-            return chain_segment(theMock, segments, attr_name, options)
+            return _chain_segment(chain, attr_name)
 
         def __enter__(self):
-            return segments[-1].answer_selector.__enter__()
+            return chain.segments[-1].answer_selector.__enter__()
 
         def __exit__(self, *exc_info):
-            return segments[-1].answer_selector.__exit__(*exc_info)
+            return chain.segments[-1].answer_selector.__exit__(*exc_info)
 
     return WaitForAttr()
 
 
-def _rollback_chain(segments: tuple[_ChainSegment, ...]) -> None:
+def _rollback_chain(segments: tuple[Segment, ...]) -> None:
     for segment in reversed(segments):
         segment.invoc.forget_self()
 
 
 def _materialize_method_segment(
-    theMock: Mock,
-    segments: tuple[_ChainSegment, ...],
+    chain: Chain,
     name: str,
-    options: dict[str, Any],
     args: tuple[Any, ...],
     kwargs: dict[str, Any],
-) -> _ChainSegment:
-    if not segments:
-        _ensure_target_is_callable(theMock, name)
+) -> Segment:
+    if not chain.segments:
+        _ensure_target_is_callable(chain.theMock, name)
 
-        invoc = invocation.StubbedInvocation(theMock, name, **options)
+        invoc = invocation.StubbedInvocation(chain.theMock, name, **chain.options)
         answer_selector = invoc(*args, **kwargs)
-        return _ChainSegment(name, invoc, answer_selector)
+        return Segment(name, invoc, answer_selector)
 
-    chain_mock, parent_invocation, verification = _transition_to_child_chain(segments)
+    chain_mock, parent_invocation, verification = _transition_to_child_chain(
+        chain.segments
+    )
     invoc = invocation.StubbedInvocation(
         chain_mock,
         name,
@@ -192,35 +179,39 @@ def _materialize_method_segment(
         parent_invocation=parent_invocation,
     )
     answer_selector = invoc(*args, **kwargs)
-    return _ChainSegment(name, invoc, answer_selector)
+    return Segment(name, invoc, answer_selector)
 
 
 def _materialize_property_segment(
-    theMock: Mock,
-    segments: tuple[_ChainSegment, ...],
+    chain: Chain,
     name: str,
-    options: dict[str, Any],
-) -> _ChainSegment:
-    if not segments:
-        _ensure_target_is_not_callable(theMock, name)
+) -> Segment:
+    if not chain.segments:
+        _ensure_target_is_not_callable(chain.theMock, name)
 
-        if not inspect.isclass(theMock.mocked_obj):
+        if not inspect.isclass(chain.theMock.mocked_obj):
             raise invocation.InvocationError(
                 "Cannot stub property '%s' on an instance. "
                 "Use class-level stubbing instead: "
                 "when(%s).%s.thenReturn(...)."
                 % (
                     name,
-                    type(theMock.mocked_obj).__name__,
+                    type(chain.theMock.mocked_obj).__name__,
                     name,
                 )
             )
 
-        invoc = invocation.StubbedPropertyAccess(theMock, name, **options)
+        invoc = invocation.StubbedPropertyAccess(
+            chain.theMock,
+            name,
+            **chain.options,
+        )
         answer_selector = invoc()
-        return _ChainSegment(name, invoc, answer_selector)
+        return Segment(name, invoc, answer_selector)
 
-    chain_mock, parent_invocation, verification = _transition_to_child_chain(segments)
+    chain_mock, parent_invocation, verification = _transition_to_child_chain(
+        chain.segments
+    )
     invoc = invocation.StubbedPropertyAccess(
         chain_mock,
         name,
@@ -228,11 +219,11 @@ def _materialize_property_segment(
         parent_invocation=parent_invocation,
     )
     answer_selector = invoc()
-    return _ChainSegment(name, invoc, answer_selector)
+    return Segment(name, invoc, answer_selector)
 
 
 def _transition_to_child_chain(
-    segments: tuple[_ChainSegment, ...],
+    segments: tuple[Segment, ...],
 ) -> tuple[
     Mock,
     invocation.StubbedInvocation,
