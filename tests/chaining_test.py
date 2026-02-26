@@ -106,7 +106,6 @@ def test_property_chaining_is_supported():
     assert cat.age.value() == 14
     assert cat.age.greater_than(12) is True
 
-@pytest.mark.xfail(reason="Not implemented")
 def test_deep_property_chain_with_method_leaf_is_supported():
     cat = mock()
 
@@ -115,7 +114,6 @@ def test_deep_property_chain_with_method_leaf_is_supported():
     assert cat.age.expected.to.be(14) is False
 
 
-@pytest.mark.xfail(reason="Not implemented")
 def test_deep_property_chain_with_property_leaf_is_supported():
     cat = mock()
 
@@ -124,7 +122,6 @@ def test_deep_property_chain_with_property_leaf_is_supported():
     assert cat.age.expected.to.value == 14
 
 
-@pytest.mark.xfail(reason="Not implemented")
 def test_deep_property_chain_method_and_property_leaf_can_coexist():
     cat = mock()
 
@@ -159,7 +156,6 @@ def test_unconfigured_context_manager_rewinds_2():
     assert cat.age() is None
 
 
-@pytest.mark.xfail(reason="Not implemented")
 def test_failed_call_original_rewinds_1():
     cat = mock()
     with pytest.raises(AnswerError):
@@ -168,7 +164,6 @@ def test_failed_call_original_rewinds_1():
     assert cat.age() is None
 
 
-@pytest.mark.xfail(reason="Not implemented")
 def test_failed_call_original_rewinds_2():
     cat = mock()
     with pytest.raises(AnswerError):
@@ -177,7 +172,6 @@ def test_failed_call_original_rewinds_2():
     assert cat.age() is None
 
 
-@pytest.mark.xfail(reason="Not implemented")
 def test_failed_call_original_on_deep_property_leaf_rolls_back_only_leaf():
     cat = mock()
 
@@ -195,7 +189,6 @@ def test_failed_call_original_on_deep_property_leaf_rolls_back_only_leaf():
     assert cat.age.expected.to.value == 14
 
 
-@pytest.mark.xfail(reason="Not implemented")
 def test_a():
     cat = mock()
     assert cat.our() is None
@@ -210,7 +203,6 @@ def test_a():
     assert cat.our() is None
 
 
-@pytest.mark.xfail(reason="Not implemented")
 def test_b():
     cat = mock()
     assert cat.our() is None
@@ -223,7 +215,6 @@ def test_b():
     assert cat.our() is None
 
 
-@pytest.mark.xfail(reason="Not implemented")
 def test_c():
     cat = mock()
     assert cat.our() is None
@@ -234,7 +225,6 @@ def test_c():
     assert cat.our() is None
 
 
-@pytest.mark.xfail(reason="Not implemented")
 def test_d():
     cat = mock()
     assert cat.our() is None
@@ -247,7 +237,6 @@ def test_d():
     assert cat.our.cat.named("spooky") is None
 
 
-@pytest.mark.xfail(reason="Not implemented")
 def test_e1():
     cat = mock()
     assert cat.our() is None
@@ -261,7 +250,6 @@ def test_e1():
     assert cat.our() is None
 
 
-@pytest.mark.xfail(reason="Not implemented")
 def test_e2():
     cat = mock()
     assert cat.our() is None
@@ -276,7 +264,6 @@ def test_e2():
     assert cat.our() is None
 
 
-@pytest.mark.xfail(reason="Not implemented")
 def test_e3():
     cat = mock()
     assert cat.our() is None

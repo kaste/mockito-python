@@ -26,7 +26,7 @@ from . import invocation
 from . import verification
 
 from .utils import deprecated, get_obj, get_obj_attr_tuple
-from .mocking import Mock, wait_for_invocation
+from .mocking import Mock, chain_segment
 from .mock_registry import mock_registry
 from .verification import VerificationError
 
@@ -244,7 +244,12 @@ def when(obj, strict=True):
 
     class When(object):
         def __getattr__(self, method_name):
-            return wait_for_invocation(theMock, method_name, strict=strict)
+            return chain_segment(
+                theMock,
+                tuple(),
+                method_name,
+                {"strict": strict},
+            )
 
     return When()
 
@@ -335,9 +340,15 @@ def expect(obj, strict=True,
 
     class Expect(object):
         def __getattr__(self, method_name):
-            return wait_for_invocation(
-                theMock, method_name, verification=verification_fn,
-                strict=strict)
+            return chain_segment(
+                theMock,
+                tuple(),
+                method_name,
+                {
+                    "verification": verification_fn,
+                    "strict": strict,
+                },
+            )
 
     return Expect()
 

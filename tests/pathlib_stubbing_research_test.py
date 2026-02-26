@@ -37,7 +37,6 @@ def test_pathlib_factory_can_return_path_doubles_with_parents_property():
     assert pathlib.Path("bar").parents == ["root", "bar"]
 
 
-@pytest.mark.xfail(reason="Not implemented", run=sys.version_info >= (3, 12))
 def test_pathlib_factory_can_stub_parents_property_per_path_via_chaining():
     when(pathlib).Path("foo").parents.thenReturn(["root", "foo"])
     when(pathlib).Path("bar").parents.thenReturn(["root", "bar"])
@@ -46,7 +45,6 @@ def test_pathlib_factory_can_stub_parents_property_per_path_via_chaining():
     assert pathlib.Path("bar").parents == ["root", "bar"]
 
 
-@pytest.mark.xfail(reason="Not implemented", run=sys.version_info >= (3, 12))
 def test_pathlib_factory_can_chain_through_parent_property_then_method():
     when(pathlib).Path("foo").parent.exists().thenReturn(True)
 

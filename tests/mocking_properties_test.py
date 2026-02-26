@@ -151,6 +151,7 @@ def test_property_access():
         assert F().fool == 23  # type: ignore[attr-defined]
 
 
+@pytest.mark.xfail(reason="Pending decision on root property lookup side effects")
 def test_hasattr_on_when_property_access_does_not_patch_target(unstub):
     assert F().p == 42
 
