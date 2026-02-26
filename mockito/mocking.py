@@ -86,11 +86,11 @@ class Segment:
 @dataclass(frozen=True)
 class Chain:
     theMock: Mock
-    segments: tuple[Segment, ...]
     options: dict[str, Any]
+    segments: tuple[Segment, ...] = ()
 
     def __add__(self, segment: Segment) -> "Chain":
-        return Chain(self.theMock, self.segments + (segment,), self.options)
+        return Chain(self.theMock, self.options, self.segments + (segment,))
 
     def rollback(self) -> None:
         for segment in reversed(self.segments):
@@ -103,7 +103,7 @@ def chain_segment(
     name: str,
     options: dict[str, Any],
 ):
-    return _chain_segment(Chain(theMock, segments, options), name)
+    return _chain_segment(Chain(theMock, options, segments), name)
 
 
 def _chain_segment(chain: Chain, name: str):
