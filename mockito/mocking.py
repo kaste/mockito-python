@@ -92,6 +92,10 @@ class Chain:
     def __add__(self, segment: Segment) -> "Chain":
         return Chain(self.theMock, self.segments + (segment,), self.options)
 
+    def rollback(self) -> None:
+        for segment in reversed(self.segments):
+            segment.invoc.forget_self()
+
 
 def chain_segment(
     theMock: Mock,
@@ -120,18 +124,18 @@ def _chain_segment(chain: Chain, name: str):
             try:
                 segment = _materialize_property_segment(chain, name)
             except invocation.InvocationError:
-                _rollback_chain(chain.segments)
+                chain.rollback()
                 raise
 
             next_chain = chain + segment
             return _chain_segment(next_chain, attr_name)
 
         def __enter__(self):
-            _rollback_chain(chain.segments)
+            chain.rollback()
             raise AttributeError('__enter__')
 
         def __exit__(self, *exc_info):
-            _rollback_chain(chain.segments)
+            chain.rollback()
             raise AttributeError('__exit__')
 
     return SegmentFacade()
@@ -149,11 +153,6 @@ def _wait_for_chain_attr(chain: Chain):
             return chain.segments[-1].answer_selector.__exit__(*exc_info)
 
     return WaitForAttr()
-
-
-def _rollback_chain(segments: tuple[Segment, ...]) -> None:
-    for segment in reversed(segments):
-        segment.invoc.forget_self()
 
 
 def _materialize_method_segment(
