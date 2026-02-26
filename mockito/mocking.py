@@ -77,13 +77,6 @@ ANSWER_SELECTOR_METHODS = {
 
 
 @dataclass(frozen=True)
-class Segment:
-    name: str
-    invoc: invocation.StubbedInvocation
-    answer_selector: invocation.AnswerSelector
-
-
-@dataclass(frozen=True)
 class Chain:
     theMock: Mock
     options: dict[str, Any]
@@ -98,6 +91,13 @@ class Chain:
     def rollback(self) -> None:
         for segment in reversed(self.segments):
             segment.invoc.forget_self()
+
+
+@dataclass(frozen=True)
+class Segment:
+    name: str
+    invoc: invocation.StubbedInvocation
+    answer_selector: invocation.AnswerSelector
 
 
 def _chain_segment(chain: Chain, name: str):
