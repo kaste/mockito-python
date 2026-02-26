@@ -1,7 +1,7 @@
 import pytest
 
-from mockito import expect, mock, verify, when
-from mockito.invocation import InvocationError
+from mockito import expect, mock, verify, unstub, when
+from mockito.invocation import AnswerError, InvocationError
 
 
 pytestmark = pytest.mark.usefixtures("unstub")
@@ -105,6 +105,265 @@ def test_property_chaining_is_supported():
 
     assert cat.age.value() == 14
     assert cat.age.greater_than(12) is True
+
+@pytest.mark.xfail(reason="Not implemented")
+def test_deep_property_chain_with_method_leaf_is_supported():
+    cat = mock()
+
+    when(cat).age.expected.to.be(14).thenReturn(False)
+
+    assert cat.age.expected.to.be(14) is False
+
+
+@pytest.mark.xfail(reason="Not implemented")
+def test_deep_property_chain_with_property_leaf_is_supported():
+    cat = mock()
+
+    when(cat).age.expected.to.value.thenReturn(14)
+
+    assert cat.age.expected.to.value == 14
+
+
+@pytest.mark.xfail(reason="Not implemented")
+def test_deep_property_chain_method_and_property_leaf_can_coexist():
+    cat = mock()
+
+    when(cat).age.expected.to.be(14).thenReturn(False)
+    when(cat).age.expected.to.value.thenReturn(14)
+
+    assert cat.age.expected.to.be(14) is False
+    assert cat.age.expected.to.value == 14
+
+
+def test_unconfigured_context_manager_rewinds_1():
+    cat = mock()
+
+    assert cat.age() is None
+
+    with pytest.raises((TypeError, AttributeError)):
+        with when(cat).age.expected.to.thenReturn:
+            pass
+
+    assert cat.age() is None
+
+
+def test_unconfigured_context_manager_rewinds_2():
+    cat = mock()
+
+    assert cat.age() is None
+
+    with pytest.raises((TypeError, AttributeError)):
+        with when(cat).age.expected.to.leaf:
+            pass
+
+    assert cat.age() is None
+
+
+@pytest.mark.xfail(reason="Not implemented")
+def test_failed_call_original_rewinds_1():
+    cat = mock()
+    with pytest.raises(AnswerError):
+        when(cat).age.expected.to.value.thenCallOriginalImplementation()
+
+    assert cat.age() is None
+
+
+@pytest.mark.xfail(reason="Not implemented")
+def test_failed_call_original_rewinds_2():
+    cat = mock()
+    with pytest.raises(AnswerError):
+        when(cat).age.expected.to.be(14).thenCallOriginalImplementation()
+
+    assert cat.age() is None
+
+
+@pytest.mark.xfail(reason="Not implemented")
+def test_failed_call_original_on_deep_property_leaf_rolls_back_only_leaf():
+    cat = mock()
+
+    when(cat).age.expected.to.be(14).thenReturn(False)
+    when(cat).age.expected.to.value.thenReturn(14)
+
+    with pytest.raises(AnswerError) as exc:
+        when(cat).age.expected.to.value.thenCallOriginalImplementation()
+
+    assert str(exc.value) == (
+        "'<class 'mockito.mocking.mock.<locals>.Dummy'>' "
+        "has no original implementation for 'value'."
+    )
+    assert cat.age.expected.to.be(14) is False
+    assert cat.age.expected.to.value == 14
+
+
+@pytest.mark.xfail(reason="Not implemented")
+def test_a():
+    cat = mock()
+    assert cat.our() is None
+
+    with when(cat).our.cat.named("spooky").is_very.brave.thenReturn(True):
+        assert cat.our.cat.named("spooky").is_very.brave is True
+
+    assert cat.our() is None
+    with when(cat).our.cat.named("spooky").is_very.brave.thenReturn(True):
+        assert cat.our.cat.named("spooky").is_very.brave is True
+
+    assert cat.our() is None
+
+
+@pytest.mark.xfail(reason="Not implemented")
+def test_b():
+    cat = mock()
+    assert cat.our() is None
+
+    with pytest.raises(AnswerError):
+        with when(cat).our.cat.named("spooky") \
+                .is_very.brave.thenCallOriginalImplementation():
+            ...
+
+    assert cat.our() is None
+
+
+@pytest.mark.xfail(reason="Not implemented")
+def test_c():
+    cat = mock()
+    assert cat.our() is None
+
+    with pytest.raises(AnswerError):
+        when(cat).our.cat.named("spooky").is_very.brave.thenCallOriginalImplementation()
+
+    assert cat.our() is None
+
+
+@pytest.mark.xfail(reason="Not implemented")
+def test_d():
+    cat = mock()
+    assert cat.our() is None
+
+    when(cat).our.cat.named("spooky")
+    with pytest.raises(AnswerError):
+        when(cat).our.cat.named("spooky").is_very.brave.thenCallOriginalImplementation()
+
+    assert cat.our
+    assert cat.our.cat.named("spooky") is None
+
+
+@pytest.mark.xfail(reason="Not implemented")
+def test_e1():
+    cat = mock()
+    assert cat.our() is None
+
+    with when(cat).our.cat.named("spooky") \
+            .is_very.brave.thenReturn(True).thenReturn(False):
+        assert cat.our.cat.named("spooky").is_very.brave is True
+        assert cat.our.cat.named("spooky").is_very.brave is False
+        assert cat.our.cat.named("spooky").is_very.brave is False
+
+    assert cat.our() is None
+
+
+@pytest.mark.xfail(reason="Not implemented")
+def test_e2():
+    cat = mock()
+    assert cat.our() is None
+
+    when(cat).our.cat.named("spooky")
+    assert cat.our.cat.named("spooky") is None
+
+    when(cat).our.cat.named("spooky").is_very.brave.thenReturn(True).thenReturn(False)
+    assert cat.our.cat.named("spooky") is not None
+
+    unstub(cat)
+    assert cat.our() is None
+
+
+@pytest.mark.xfail(reason="Not implemented")
+def test_e3():
+    cat = mock()
+    assert cat.our() is None
+
+    when(cat).our.cat.named("spooky").is_very.brave.thenReturn(True).thenReturn(False)
+    assert cat.our.cat.named("spooky") is not None
+
+    unstub(cat.our.cat)
+    with pytest.raises(AttributeError):
+        assert cat.our.cat.named("spooky") is not None
+
+
+def test_f():
+    cat = mock()
+    assert cat.our() is None
+
+    with pytest.raises(AttributeError):
+        with when(cat).our.cat.named("spooky") \
+                .is_very.brave.thenReturn(True).otherwise.null:
+            ...
+
+    assert cat.our() is None
+
+
+def test_g1():   # for illustration
+    cat = mock(strict=False)
+    assert hasattr(cat, "your") is True
+    assert cat.your  # okay, not strict
+
+
+def test_g1b():   # for illustration
+    cat = mock(strict=False)
+    expect(cat).your  # <== doesn't change anything
+    assert hasattr(cat, "your") is True
+    assert cat.your
+
+
+def test_g2():   # for illustration
+    cat = mock(strict=True)
+    assert hasattr(cat, "your") is False
+    with pytest.raises(AttributeError):
+        assert cat.your   # 'your' is not configured
+
+
+def test_g2b():   # for illustration
+    cat = mock(strict=True)
+    expect(cat).your  # <== doesn't change anything
+    assert hasattr(cat, "your") is False
+    with pytest.raises(AttributeError):
+        assert cat.your   # 'your' is not configured
+
+
+@pytest.mark.xfail(reason="Needs decision")
+def test_g3_non_strict_chain_child_stays_non_strict():
+    cat = mock(strict=False)
+
+    when(cat).our.cat.named("spooky").is_spooky
+
+    spooky = cat.our.cat.named("spooky")
+    assert spooky is not None
+    assert hasattr(spooky, "is_spooky") is True
+    assert spooky.is_spooky
+
+
+@pytest.mark.xfail(reason="Not implemented")
+def test_g4_strict_chain_child_stays_strict():
+    cat = mock(strict=True)
+
+    when(cat).our.cat.named("spooky").is_spooky
+
+    spooky = cat.our.cat.named("spooky")
+    assert spooky is not None
+    assert hasattr(spooky, "is_spooky") is False
+    with pytest.raises(AttributeError):  # 'Dummy' has no attribute 'is_spooky' ...
+        assert spooky.is_spooky
+
+
+@pytest.mark.xfail(reason="Not implemented")
+def test_g5_ensure_we_unwind_to_previous_state():
+    cat = mock()
+    expect(cat).our.cat.named("spooky")
+    assert cat.our.cat.named("spooky") is None
+
+    with expect(cat).our.cat.named("spooky").is_spooky:
+        assert cat.our.cat.named("spooky") is not None
+
+    assert cat.our.cat.named("spooky") is None
 
 
 def test_context_manager_unwinds_method_chains_of_any_length():
