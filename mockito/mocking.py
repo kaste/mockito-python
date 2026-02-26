@@ -452,7 +452,7 @@ class Mock:
         if self.stubbed_invocations:
             return
 
-        mock_registry.unstub_mock(self)
+        mock_registry.unstub(self.mocked_obj)
 
     def restore_method(self, method_name: str, original_method: object) -> None:
         if original_method is _MISSING_ATTRIBUTE:

@@ -2,8 +2,9 @@
 import sys
 
 import pytest
-from mockito import mock, when, verify, ArgumentError
+from mockito import mock, when, verify
 from mockito.invocation import AnswerError
+from mockito.verification import VerificationError
 
 from . import module
 from .test_base import TestBase
@@ -110,12 +111,14 @@ class CallOriginalImplementationTest(TestBase):
 
     def testDumbMockFailedThenCallOriginalImplementationDoesNotLeakStub(self):
         dog = mock()
+        with pytest.raises(VerificationError):
+            verify(dog).bark()
 
         with pytest.raises(AnswerError):
             when(dog).bark().thenCallOriginalImplementation()
 
-        with pytest.raises(ArgumentError):
-            verify(dog).bark(Ellipsis)
+        with pytest.raises(VerificationError):
+            verify(dog).bark()
 
     def testSpeccedMockHasOriginalImplementations(self):
         dog = mock({"huge": True}, spec=Dog)
