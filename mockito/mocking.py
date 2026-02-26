@@ -146,11 +146,8 @@ def _wait_for_attr(chain: Chain):
         def __getattr__(self, attr_name):
             return _chain_segment(chain, attr_name)
 
-        def __enter__(self):
-            return chain.segments[-1].answer_selector.__enter__()
-
-        def __exit__(self, *exc_info):
-            return chain.segments[-1].answer_selector.__exit__(*exc_info)
+        __enter__ = chain.segments[-1].answer_selector.__enter__
+        __exit__ = chain.segments[-1].answer_selector.__exit__
 
     return WaitForAttr()
 
