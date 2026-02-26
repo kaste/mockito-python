@@ -114,11 +114,11 @@ def _chain_segment(chain: Chain, name: str):
                     *args,
                     **kwargs,
                 )
-                return _wait_for_chain_attr(chain)
+                return _wait_for_attr(chain)
 
             segment = _materialize_method_segment(chain, name, args, kwargs)
             next_chain = chain + segment
-            return _wait_for_chain_attr(next_chain)
+            return _wait_for_attr(next_chain)
 
         def __getattr__(self, attr_name):
             try:
@@ -141,7 +141,7 @@ def _chain_segment(chain: Chain, name: str):
     return SegmentFacade()
 
 
-def _wait_for_chain_attr(chain: Chain):
+def _wait_for_attr(chain: Chain):
     class WaitForAttr:
         def __getattr__(self, attr_name):
             return _chain_segment(chain, attr_name)
