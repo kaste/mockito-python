@@ -36,6 +36,29 @@ def test_multiple_chain_branches_on_same_root_are_supported():
     assert cat_that_meowed.roll() == "playful"
 
 
+def test_unstub_child_chain_then_reconfigure_does_not_leave_stale_root_stub():
+    cat = mock()
+
+    when(cat).meow().purr().sleep().thenReturn("base")
+    when(cat).meow().purr().sleep().thenReturn("override")
+
+    with when(cat).meow().purr():
+        cat.meow().purr()
+
+    with pytest.raises(InvocationError) as exc:
+        with when(cat).meow().purr().thenReturn("tmp"):
+            cat.meow().purr()
+
+    assert str(exc.value) == "'purr' is already configured for chained stubbing."
+
+    unstub(cat.meow())
+
+    with when(cat).meow().purr().thenReturn("tmp"):
+        assert cat.meow().purr() == "tmp"
+
+    assert cat.meow() is None
+
+
 def test_expectation_on_chain_applies_to_leaf():
     cat = mock()
 
