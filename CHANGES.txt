@@ -63,14 +63,6 @@ Release 2.0.0
 - Allow `...` in fixed argument positions as an ad-hoc `any` matcher.
   Trailing positional `...` keeps its existing "rest" semantics.
 
-- *BREAKING*: Stubs for the same method are now sorted by specificity.
-  Refer https://github.com/kaste/mockito-python/pull/110
-
-  Same-ish are for example
-    ```
-    when(os.path).exists(...).thenCallOriginalImplementation()
-    when(os.path).exists('.flake8').thenReturn(False)
-    ```
 
 Release 1.5.5 (November 17, 2025)
 ---------------------------------
