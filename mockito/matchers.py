@@ -458,6 +458,11 @@ def captor(matcher=None):
         arg = captor(any(str))
         arg = captor(contains("foo"))
 
+    captor can also be used to capture rest arguments::
+
+        args = captor()
+        kwargs = captor()
+        when(mock).do(*args, **kwargs)
     """
     return ArgumentCaptor(matcher)
 
