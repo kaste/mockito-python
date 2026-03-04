@@ -38,6 +38,9 @@ def match_signature_allowing_placeholders(  # noqa: C901
     # way and reimplement something like `sig.bind` with our specific
     # need for `...`, `*args`, and `**kwargs` support.
 
+    if len(args) == 1 and matchers.is_call_captor(args[0]) and not kwargs:
+        return
+
     if args and args[-1] is Ellipsis and not kwargs:
         # Invariant: Ellipsis as the sole argument should just pass, regardless
         # if it actually can consume an arg or the function does not take any

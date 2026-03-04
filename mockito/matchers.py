@@ -73,6 +73,7 @@ __all__ = [
     'contains',
     'matches',
     'captor',
+    'call_captor',
     'times',
     'args', 'ARGS',
     'kwargs', 'KWARGS'
@@ -292,6 +293,23 @@ class ArgumentCaptor(Matcher, Capturing):
         )
 
 
+class CallCaptor:
+    def __init__(self):
+        self.all_values = []
+
+    @property
+    def value(self):
+        if not self.all_values:
+            raise MatcherError("No call value was captured!")
+        return self.all_values[-1]
+
+    def capture_call(self, args, kwargs):
+        self.all_values.append((tuple(args), dict(kwargs)))
+
+    def __repr__(self):
+        return "<CallCaptor: values=%s>" % self.all_values
+
+
 class CaptorArgsSentinel:
     def __init__(self, captor):
         self.captor = captor
@@ -318,6 +336,10 @@ class CaptorKwargsSentinel:
 
     def __repr__(self):
         return "<CaptorKwargsSentinel: %r>" % self.captor
+
+
+def is_call_captor(value):
+    return isinstance(value, CallCaptor)
 
 
 def is_captor_args_sentinel(value):
@@ -465,6 +487,20 @@ def captor(matcher=None):
         when(mock).do(*args, **kwargs)
     """
     return ArgumentCaptor(matcher)
+
+
+def call_captor():
+    """Returns a call captor that captures ``(args, kwargs)`` tuples.
+
+    Example::
+
+        call = call_captor()
+        when(mock).do(call).thenReturn("ok")
+        mock.do(1, 2, x=3)
+        assert call.value == ((1, 2), {"x": 3})
+
+    """
+    return CallCaptor()
 
 
 def times(count):

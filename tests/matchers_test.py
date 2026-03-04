@@ -21,7 +21,7 @@ from mockito.matchers import MatcherError
 from .test_base import TestBase
 from mockito import mock, verify, when
 from mockito.matchers import and_, or_, not_, eq, neq, lt, lte, gt, gte, \
-    any_, arg_that, contains, matches, captor, ANY, ARGS, KWARGS
+    any_, arg_that, contains, matches, captor, call_captor, ANY, ARGS, KWARGS
 import re
 
 
@@ -374,3 +374,43 @@ class ArgumentCaptorTest(TestBase):
         verify(m, times=0).do(c, 11)
 
         assert c.all_values == ["anything"]
+
+
+class CallCaptorTest(TestBase):
+    def test_captures_full_call_for_stubbing(self):
+        m = mock()
+        call = call_captor()
+
+        when(m).do(call).thenReturn("ok")
+
+        assert m.do(1, 2, x=3) == "ok"
+        assert call.value == ((1, 2), {"x": 3})
+
+    def test_captures_full_call_while_verifying(self):
+        m = mock()
+        call = call_captor()
+
+        m.do(1, 2, x=3)
+        verify(m).do(call)
+
+        assert call.value == ((1, 2), {"x": 3})
+
+    def test_captures_multiple_calls(self):
+        m = mock()
+        call = call_captor()
+
+        m.do(1)
+        m.do(a=2)
+        verify(m, times=2).do(call)
+
+        assert call.all_values == [((1,), {}), ((), {"a": 2})]
+
+    def test_requires_sole_argument_usage(self):
+        m = mock()
+        call = call_captor()
+
+        with self.assertRaises(TypeError):
+            when(m).do(call, 1)
+
+        with self.assertRaises(TypeError):
+            when(m).do(x=call)
