@@ -232,6 +232,10 @@ class MatchingInvocation(Invocation, ABC):
 
         """
         for x, p1 in enumerate(self.params):
+            if matchers.is_captor_args_sentinel(p1):
+                p1.capture_value(tuple(invocation.params[x:]))
+                break
+
             if isinstance(p1, matchers.Capturing):
                 try:
                     p2 = invocation.params[x]
@@ -284,6 +288,11 @@ class MatchingInvocation(Invocation, ABC):
                 return True
 
             if p1 is matchers.ARGS_SENTINEL:
+                break
+
+            if matchers.is_captor_args_sentinel(p1):
+                if not p1.matches(invocation.params[x:]):
+                    return False
                 break
 
             try:

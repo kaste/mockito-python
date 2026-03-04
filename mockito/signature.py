@@ -1,6 +1,5 @@
 from __future__ import annotations
 from . import matchers
-from .utils import contains_strict
 
 import functools
 import inspect
@@ -61,7 +60,7 @@ def match_signature_allowing_placeholders(  # noqa: C901
     else:
         # `*args` should at least match one arg (t.i. not `*[]`), so we
         # keep it here. The value and its type is irrelevant in python.
-        args_provided = contains_strict(args, matchers.ARGS_SENTINEL)
+        args_provided = any(matchers.is_args_sentinel(arg) for arg in args)
 
         # If we find the `**kwargs` sentinel we must remove it, bc its
         # name cannot be matched against the sig.

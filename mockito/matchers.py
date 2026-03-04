@@ -266,6 +266,9 @@ class ArgumentCaptor(Matcher, Capturing):
             return
         return True
 
+    def __iter__(self):
+        yield CaptorArgsSentinel(self)
+
     @property
     def value(self):
         if not self.all_values:
@@ -279,6 +282,28 @@ class ArgumentCaptor(Matcher, Capturing):
         return "<ArgumentCaptor: matcher=%s values=%s>" % (
             repr(self.matcher), self.all_values,
         )
+
+
+class CaptorArgsSentinel:
+    def __init__(self, captor):
+        self.captor = captor
+
+    def matches(self, args):
+        return all(self.captor.matches(arg) for arg in args)
+
+    def capture_value(self, value):
+        self.captor.capture_value(value)
+
+    def __repr__(self):
+        return "<CaptorArgsSentinel: %r>" % self.captor
+
+
+def is_captor_args_sentinel(value):
+    return isinstance(value, CaptorArgsSentinel)
+
+
+def is_args_sentinel(value):
+    return value is ARGS_SENTINEL or is_captor_args_sentinel(value)
 
 
 def any(wanted_type=None):
