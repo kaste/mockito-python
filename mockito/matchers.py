@@ -269,6 +269,14 @@ class ArgumentCaptor(Matcher, Capturing):
     def __iter__(self):
         yield CaptorArgsSentinel(self)
 
+    def keys(self):
+        return [KWARGS_SENTINEL]
+
+    def __getitem__(self, key):
+        if key is not KWARGS_SENTINEL and key != KWARGS_SENTINEL:
+            raise KeyError(key)
+        return CaptorKwargsSentinel(self)
+
     @property
     def value(self):
         if not self.all_values:
@@ -298,8 +306,26 @@ class CaptorArgsSentinel:
         return "<CaptorArgsSentinel: %r>" % self.captor
 
 
+class CaptorKwargsSentinel:
+    def __init__(self, captor):
+        self.captor = captor
+
+    def matches(self, kwargs):
+        return all(self.captor.matches(value) for value in kwargs.values())
+
+    def capture_value(self, value):
+        self.captor.capture_value(value)
+
+    def __repr__(self):
+        return "<CaptorKwargsSentinel: %r>" % self.captor
+
+
 def is_captor_args_sentinel(value):
     return isinstance(value, CaptorArgsSentinel)
+
+
+def is_captor_kwargs_sentinel(value):
+    return isinstance(value, CaptorKwargsSentinel)
 
 
 def is_args_sentinel(value):

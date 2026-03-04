@@ -72,6 +72,9 @@ Release 2.0.0
   when(freud).says(*args).thenReturn("Yes.")
   assert freud.says("Are", "you", "dreaming?") == "Yes."
   assert args.value == ("Are", "you", "dreaming?")
+  # or
+  kwargs = captor()
+  when(freud).does(**kwargs).thenReturn(False)
   ```
 
 

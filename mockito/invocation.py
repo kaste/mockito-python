@@ -220,7 +220,7 @@ class MatchingInvocation(Invocation, ABC):
             return False
         return True
 
-    def capture_arguments(self, invocation: RealInvocation) -> None:
+    def capture_arguments(self, invocation: RealInvocation) -> None:  # noqa: C901
         """Capture arguments of `invocation` into "capturing" matchers of self.
 
         This is used in conjunction with "capturing" matchers like
@@ -244,7 +244,25 @@ class MatchingInvocation(Invocation, ABC):
 
                 p1.capture_value(p2)
 
+        # Explicit keyword matchers (excluding the **kwargs rest placeholder).
+        # We use these keys to derive the remaining kwargs for rest-capture.
+        fixed_named_keys = {
+            key
+            for key in self.named_params
+            if key is not matchers.KWARGS_SENTINEL
+        }
         for key, p1 in self.named_params.items():
+            if (
+                key is matchers.KWARGS_SENTINEL
+                and matchers.is_captor_kwargs_sentinel(p1)
+            ):
+                p1.capture_value({
+                    k: v
+                    for k, v in invocation.named_params.items()
+                    if k not in fixed_named_keys
+                })
+                continue
+
             if isinstance(p1, matchers.Capturing):
                 try:
                     p2 = invocation.named_params[key]
@@ -306,11 +324,26 @@ class MatchingInvocation(Invocation, ABC):
             if len(self.params) != len(invocation.params):
                 return False
 
+        # Explicit keyword matchers (excluding the **kwargs rest placeholder).
+        # We use these keys to derive the remaining kwargs for rest-matching.
+        fixed_named_keys = {
+            key
+            for key in self.named_params
+            if key is not matchers.KWARGS_SENTINEL
+        }
         for key, p1 in sorted(
             self.named_params.items(),
             key=lambda k_v: 1 if k_v[0] is matchers.KWARGS_SENTINEL else 0
         ):
             if key is matchers.KWARGS_SENTINEL:
+                if matchers.is_captor_kwargs_sentinel(p1):
+                    rest_kwargs = {
+                        k: v
+                        for k, v in invocation.named_params.items()
+                        if k not in fixed_named_keys
+                    }
+                    if not p1.matches(rest_kwargs):
+                        return False
                 break
 
             try:
