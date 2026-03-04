@@ -28,6 +28,12 @@ from . import verification
 from .utils import deprecated, get_obj, get_obj_attr_tuple
 from .mocking import Chain, Mock
 from .mock_registry import mock_registry
+from .patching import (
+    patch_attribute,
+    patch_dictionary,
+    unstub_all_patches,
+    unstub_patches_matching,
+)
 from .verification import VerificationError
 
 
@@ -304,6 +310,71 @@ def patch(fn, attr_or_replacement, replacement=None):
             theMock, name, strict=False)(Ellipsis).thenAnswer(replacement)
 
 
+def patch_attr(obj_or_path, attr_or_replacement, replacement=OMITTED):
+    """Patch/replace an attribute with a concrete value.
+
+    Unlike :func:`patch`, this does *not* record interactions and does not
+    expose verification. It is intended for simple attribute replacement like
+    ``sys.stdout`` or ``sys.argv``.
+
+    Two ways to call this. Either::
+
+        patch_attr('sys.stdout', StringIO())  # two arguments
+        # OR
+        patch_attr(sys, 'stdout', StringIO())  # three arguments
+
+    ``with`` context management is supported and restores the original value
+    on ``__exit__``. ``__enter__`` returns the replacement object.
+
+    .. note:: You must :func:`unstub` after patching, or use `with`
+        statement.
+
+    """
+    if replacement is OMITTED:
+        replacement = attr_or_replacement
+        obj, name = get_obj_attr_tuple(obj_or_path)
+    else:
+        obj, name = obj_or_path, attr_or_replacement
+
+    return patch_attribute(obj, name, replacement)
+
+
+def patch_dict(mapping_or_path, values=None, *, clear=False, remove=None, **kwargs):
+    """Patch/update a dict-like object in place.
+
+    This is a convenience function for test-time dictionary patching,
+    especially for mutable global maps like ``os.environ``.
+
+    Usage::
+
+        patch_dict(os.environ, {'USER': 'foo'})
+        patch_dict(os.environ, [('USER', 'foo')])
+        patch_dict(os.environ, USER='foo')
+        patch_dict(os.environ, remove={'USER', 'PATH'})
+        patch_dict(os.environ, remove=all)
+        patch_dict(os.environ, clear=True)
+        patch_dict('os.environ', {'USER': 'foo'})
+
+    ``with`` context management is supported and restores the original mapping
+    state on ``__exit__``. ``__enter__`` returns the patched mapping.
+
+    ``values`` can be any value accepted by ``dict(values)``.
+    ``kwargs`` are merged into ``values`` and take precedence.
+
+    .. note:: You must :func:`unstub` after patching, or use `with`
+        statement.
+
+    """
+    mapping = (
+        get_obj(mapping_or_path)
+        if isinstance(mapping_or_path, str)
+        else mapping_or_path
+    )
+
+    updates = dict(values or ())
+    updates.update(kwargs)
+    return patch_dictionary(mapping, updates, clear=clear, remove=remove)
+
 
 def expect(obj, strict=True,
            times=None, atleast=None, atmost=None, between=None):
@@ -348,7 +419,7 @@ def expect(obj, strict=True,
 
 
 def unstub(*objs):
-    """Unstubs all stubbed methods and functions
+    """Unstubs all stubbed methods, functions, and patched attributes.
 
     If you don't pass in any argument, *all* registered mocks and
     patched modules, classes etc. will be unstubbed.
@@ -363,8 +434,10 @@ def unstub(*objs):
             if isinstance(obj, str):
                 obj = get_obj(obj)
             mock_registry.unstub(obj)
+            unstub_patches_matching(obj)
     else:
         mock_registry.unstub_all()
+        unstub_all_patches()
 
 
 def forget_invocations(*objs):

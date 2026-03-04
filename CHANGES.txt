@@ -82,6 +82,10 @@ Release 2.0.0
       mock.do(1, 2, x=3)
       assert call.value == ((1, 2), {"x": 3})
 
+- Added `patch_attr` and `patch_dict` for non-callable monkeypatch-style use cases
+  (e.g. `sys.stdout`, `sys.argv`, and environment/config dictionaries) with
+  context-manager support and restoration through `unstub`.
+
 
 
 
