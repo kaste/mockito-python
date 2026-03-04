@@ -253,6 +253,7 @@ class TestEnsureStubsAreUsed:
     class TestPassIfExplicitlyVerified:
         @pytest.mark.parametrize('verification', [
             {'times': 0},
+            {'atmost': 3},
             {'between': [0, 3]}
         ])
         def testPassIfExplicitlyVerified(self, verification):
@@ -303,6 +304,7 @@ class TestEnsureStubsAreUsed:
     class TestPassIfImplicitlyVerifiedViaExpect:
         @pytest.mark.parametrize('verification', [
             {'times': 0},
+            {'atmost': 3},
             {'between': [0, 3]}
         ])
         def testPassIfImplicitlyVerified(self, verification):

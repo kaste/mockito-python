@@ -25,7 +25,6 @@ import os
 import inspect
 import operator
 from collections import deque
-from functools import cached_property
 from typing import TYPE_CHECKING, Union
 
 from . import matchers, signature
@@ -137,11 +136,12 @@ class RememberedInvocation(RealInvocation):
         self._remember_params(params_without_first_arg, named_params)
         self.mock.remember(self)
 
-        matching_invocation = self._find_best_matching_stubbed_invocation()
-        if matching_invocation is not None:
-            matching_invocation.should_answer(self)
-            matching_invocation.capture_arguments(self)
-            return matching_invocation.answer_first(*params, **named_params)
+        for matching_invocation in self.mock.stubbed_invocations:
+            if matching_invocation.matches(self):
+                matching_invocation.should_answer(self)
+                matching_invocation.capture_arguments(self)
+                return matching_invocation.answer_first(
+                    *params, **named_params)
 
         if self.strict:
             stubbed_invocations = [
@@ -169,21 +169,6 @@ Stubbed invocations are:
             )
 
         return None
-
-    def _find_best_matching_stubbed_invocation(self) -> StubbedInvocation | None:
-        candidates = [
-            candidate
-            for candidate in self.mock.stubbed_invocations
-            if candidate.matches(self)
-        ]
-
-        if not candidates:
-            return None
-
-        if len(candidates) == 1:
-            return candidates[0]
-
-        return max(candidates, key=lambda candidate: candidate.specificity_score)
 
 
 class RememberedPropertyAccess(RememberedInvocation):
@@ -409,6 +394,9 @@ def verification_has_lower_bound_of_zero(
     ):
         return True
 
+    if isinstance(verification, verificationModule.AtMost):
+        return True
+
     if (
         isinstance(verification, verificationModule.Between)
         and verification.wanted_from == 0
@@ -477,10 +465,7 @@ class StubbedInvocation(MatchingInvocation):
         if strict is not None:
             self.strict = strict
 
-        self.refers_coroutine = (
-            is_coroutine_method(mock.peek_original_method(method_name))
-            or mock.is_marked_as_coroutine(method_name)
-        )
+        self.refers_coroutine = mock.method_expects_awaitable(method_name)
         self.discard_first_arg = mock.will_have_self_or_cls(method_name)
         default_answer = (
             return_awaitable(None) if self.refers_coroutine else return_(None)
@@ -522,33 +507,6 @@ class StubbedInvocation(MatchingInvocation):
         self.mock.stub(self.method_name)
         self.mock.finish_stubbing(self)
         return AnswerSelector(self, self.refers_coroutine, self.discard_first_arg)
-
-    @cached_property
-    def specificity_score(self) -> tuple[int, int]:
-        quality = 0
-
-        for value in self.params:
-            if value is not matchers.ARGS_SENTINEL:
-                quality += self._specificity_score(value)
-
-        for key, value in self.named_params.items():
-            if key is not matchers.KWARGS_SENTINEL:
-                quality += self._specificity_score(value)
-
-        coverage = len(self.params) + len(self.named_params)
-        return coverage, quality
-
-    def _specificity_score(self, value: object) -> int:
-        if value is Ellipsis:
-            return 0
-
-        if isinstance(value, matchers.Any) and value.wanted_type is None:
-            return 0
-
-        if isinstance(value, matchers.Matcher):
-            return 1
-
-        return 3
 
     def forget_self(self) -> None:
         if self in self.mock.stubbed_invocations:
@@ -719,7 +677,7 @@ class StubbedPropertyAccess(StubbedInvocation):
 def create_chain_mock() -> tuple[object, Mock]:
     from .mocking import mock
 
-    chain_root = mock()
+    chain_root = mock(strict=True)
     theMock = mock_registry.mock_for(chain_root)
     assert theMock is not None, "Missing chain mock registry entry"
     return chain_root, theMock
@@ -735,13 +693,6 @@ def return_awaitable(value: T) -> Callable[..., Any]:
     async def answer(*args, **kwargs) -> T:
         return value
     return answer
-
-
-def is_coroutine_method(method: Any) -> bool:
-    if isinstance(method, (staticmethod, classmethod)):
-        method = method.__func__
-
-    return inspect.iscoroutinefunction(method)
 
 
 def raise_(exception: Exception | type[Exception]) -> Callable[..., NoReturn]:

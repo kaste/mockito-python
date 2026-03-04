@@ -525,9 +525,10 @@ def test_in_order_verify_zero_lower_bound_does_not_fail_on_empty_queue(
     "verify_kwargs",
     [
         {"times": 0},
+        {"atmost": 2},
         {"between": (0, 2)},
     ],
-    ids=["times_0", "between_0_2"],
+    ids=["times_0", "atmost_2", "between_0_2"],
 )
 def test_in_order_verify_zero_lower_bound_does_not_fail_when_all_calls_are_consumed(
     verify_kwargs,
@@ -549,9 +550,10 @@ def test_in_order_verify_zero_lower_bound_does_not_fail_when_all_calls_are_consu
     "verify_kwargs",
     [
         {"times": 0},
+        {"atmost": 2},
         {"between": (0, 2)},
     ],
-    ids=["times_0", "between_0_2"],
+    ids=["times_0", "atmost_2", "between_0_2"],
 )
 def test_in_order_zero_verify_marks_stub_as_checked_for_follow_up_global_verifications(
     verify_kwargs,

@@ -374,7 +374,7 @@ class Mock:
                 pass
 
         if (
-            _is_coroutine_method(original_method)
+            self.method_expects_awaitable(method_name, original_method)
             and SUPPORTS_MARKCOROUTINEFUNCTION
         ):
             new_mocked_method = inspect.markcoroutinefunction(new_mocked_method)
@@ -452,7 +452,7 @@ class Mock:
         if self.stubbed_invocations:
             return
 
-        mock_registry.unstub_mock(self)
+        mock_registry.unstub(self.mocked_obj)
 
     def restore_method(self, method_name: str, original_method: object) -> None:
         if original_method is _MISSING_ATTRIBUTE:
@@ -476,6 +476,23 @@ class Mock:
 
     def is_marked_as_coroutine(self, method_name: str) -> bool:
         return method_name in self._methods_marked_as_coroutine
+
+    def method_expects_awaitable(
+        self,
+        method_name: str,
+        original_method: object | None = None,
+    ) -> bool:
+        if original_method is None:
+            original_method = self.peek_original_method(method_name)
+
+        return (
+            _is_coroutine_method(original_method)
+            or self.is_marked_as_coroutine(method_name)
+            or (
+                self.spec is None
+                and method_name in _ASYNC_BY_PROTOCOL_METHODS
+            )
+        )
 
     def has_method(self, method_name: str) -> bool:
         if self.spec is None:
