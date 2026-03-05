@@ -63,6 +63,21 @@ Release 2.0.0
 - Allow `...` in fixed argument positions as an ad-hoc `any` matcher.
   Trailing positional `...` keeps its existing "rest" semantics.
 
+- Extend `captor` to be used as a rest matcher
+
+  E.g., support:
+
+  ```
+  args = captor()
+  when(freud).says(*args).thenReturn("Yes.")
+  assert freud.says("Are", "you", "dreaming?") == "Yes."
+  assert args.value == ("Are", "you", "dreaming?")
+  # or
+  kwargs = captor()
+  when(freud).does(**kwargs).thenReturn(False)
+  ```
+
+
 
 Release 1.5.5 (November 17, 2025)
 ---------------------------------

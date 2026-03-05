@@ -242,6 +242,64 @@ class ArgumentCaptorTest(TestBase):
 
         assert c.all_values == [21]
 
+    def test_captures_positional_rest_arguments_via_star_expansion(self):
+        m = mock()
+        c = captor()
+
+        when(m).do(*c).thenReturn("yes")
+
+        assert m.do("Are", "you", "dreaming?") == "yes"
+        assert c.value == ("Are", "you", "dreaming?")
+
+    def test_captures_multiple_rest_argument_tuples(self):
+        m = mock()
+        c = captor()
+
+        when(m).do(*c)
+
+        m.do("one")
+        m.do("one", "two")
+
+        assert c.all_values == [("one",), ("one", "two")]
+
+    def test_rest_captor_can_be_type_constrained(self):
+        m = mock()
+        c = captor(any_(int))
+
+        when(m).do(*c).thenReturn("ok")
+
+        assert m.do(1, 2, 3) == "ok"
+        assert m.do("1", 2, 3) is None
+        assert c.all_values == [(1, 2, 3)]
+
+    def test_captures_keyword_rest_arguments_via_doublestar_expansion(self):
+        m = mock()
+        c = captor()
+
+        when(m).do(**c).thenReturn("ok")
+
+        assert m.do(question="dreaming", answer=42) == "ok"
+        assert c.value == {"question": "dreaming", "answer": 42}
+
+    def test_keyword_rest_captor_can_be_type_constrained(self):
+        m = mock()
+        c = captor(any_(int))
+
+        when(m).do(**c).thenReturn("ok")
+
+        assert m.do(one=1, two=2) == "ok"
+        assert m.do(one=1, two="2") is None
+        assert c.all_values == [{"one": 1, "two": 2}]
+
+    def test_captures_keyword_rest_while_matching_fixed_keywords(self):
+        m = mock()
+        c = captor()
+
+        when(m).do(topic="dreams", **c).thenReturn("ok")
+
+        assert m.do(topic="dreams", mood="anxious") == "ok"
+        assert c.value == {"mood": "anxious"}
+
     def test_captures_all_values_while_verifying(self):
         m = mock()
         c = captor()
@@ -251,6 +309,26 @@ class ArgumentCaptorTest(TestBase):
         verify(m, times=2).do(c)
 
         assert c.all_values == ["any", "thing"]
+
+    def test_captures_rest_arguments_while_verifying(self):
+        m = mock()
+        c = captor()
+
+        m.do("a")
+        m.do("a", "b")
+        verify(m, times=2).do(*c)
+
+        assert c.all_values == [("a",), ("a", "b")]
+
+    def test_captures_keyword_rest_while_verifying(self):
+        m = mock()
+        c = captor()
+
+        m.do(a=1)
+        m.do(a=1, b=2)
+        verify(m, times=2).do(**c)
+
+        assert c.all_values == [{"a": 1}, {"a": 1, "b": 2}]
 
     def test_remember_last_value(self):
         m = mock()
