@@ -80,24 +80,6 @@ class Patcher:
         for patch in reversed(self._patches.copy()):
             patch.restore_and_unregister()
 
-    def apply_attribute_patch(self, patch: _AttrPatch) -> None:
-        with self._capture_restore_information(patch):
-            setattr(patch.obj, patch.attr_name, patch.replacement)
-
-    def restore_attribute_patch(self, patch: _AttrPatch) -> None:
-        stack = self._stack_for_attr_patch(patch)
-        if not stack or stack[0] is not patch:
-            return
-
-        if len(stack) > 1:
-            setattr(patch.obj, patch.attr_name, stack[1].replacement)
-            return
-
-        restore_info = self._find_restore_information(patch.obj, patch.attr_name)
-        if restore_info:
-            _restore_original_attribute(restore_info)
-            self._remove_restore_information(restore_info)
-
     def unregister_patch(self, patch: Patch) -> None:
         try:
             self._patches.remove(patch)
@@ -108,8 +90,8 @@ class Patcher:
         self._patches.append(patch)
 
     @contextmanager
-    def _capture_restore_information(self, patch: _AttrPatch):
-        has_restore_info = self._has_restore_information(patch.obj, patch.attr_name)
+    def capture_restore_information(self, patch: _AttrPatch):
+        has_restore_info = self.has_restore_information(patch.obj, patch.attr_name)
 
         if not has_restore_info:
             restore_info = _capture_restore_information(patch.obj, patch.attr_name)
@@ -122,7 +104,7 @@ class Patcher:
             if not has_restore_info:
                 self._restore_infos.append(restore_info)
 
-    def _stack_for_attr_patch(self, patch: _AttrPatch) -> list[_AttrPatch]:
+    def stack_for_attr_patch(self, patch: _AttrPatch) -> list[_AttrPatch]:
         return [
             candidate
             for candidate in reversed(self._patches)
@@ -132,10 +114,10 @@ class Patcher:
             if candidate.attr_name == patch.attr_name
         ]
 
-    def _has_restore_information(self, obj: object, attr_name: str) -> bool:
-        return self._find_restore_information(obj, attr_name) is not None
+    def has_restore_information(self, obj: object, attr_name: str) -> bool:
+        return self.find_restore_information(obj, attr_name) is not None
 
-    def _find_restore_information(
+    def find_restore_information(
         self, obj: object, attr_name: str
     ) -> _RestoreInformation | None:
         for restore_info in self._restore_infos:
@@ -143,7 +125,7 @@ class Patcher:
                 return restore_info
         return None
 
-    def _remove_restore_information(self, restore_info: _RestoreInformation) -> None:
+    def remove_restore_information(self, restore_info: _RestoreInformation) -> None:
         try:
             self._restore_infos.remove(restore_info)
         except ValueError:
@@ -229,14 +211,28 @@ class _AttrPatch(Patch):
         if self.active:
             return
 
-        self.registry.apply_attribute_patch(self)
+        with self.registry.capture_restore_information(self):
+            setattr(self.obj, self.attr_name, self.replacement)
+
         self.active = True
 
     def restore(self) -> None:
         if not self.active:
             return
 
-        self.registry.restore_attribute_patch(self)
+        stack = self.registry.stack_for_attr_patch(self)
+        if not stack or stack[0] is not self:
+            return
+
+        if len(stack) > 1:
+            setattr(self.obj, self.attr_name, stack[1].replacement)
+            return
+
+        restore_info = self.registry.find_restore_information(self.obj, self.attr_name)
+        if restore_info:
+            _restore_original_attribute(restore_info)
+            self.registry.remove_restore_information(restore_info)
+
         self.active = False
 
     def matches_unstub_target(self, obj: object) -> bool:
