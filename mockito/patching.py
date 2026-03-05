@@ -17,6 +17,14 @@ class _RestoreInformation:
     use_set_on_restore: bool
 
 
+@contextmanager
+def restore_patch_contextmanager(patch: Patch, yield_value: object = None):
+    try:
+        yield yield_value
+    finally:
+        patch.restore_and_unregister()
+
+
 class Patcher:
     def __init__(self) -> None:
         self._patches: list[Patch] = []
@@ -200,9 +208,6 @@ class Patch(ABC):
         finally:
             self.registry.unregister_patch(self)
 
-    def __exit__(self, *exc_info) -> None:
-        self.restore_and_unregister()
-
 
 class _AttrPatch(Patch):
     def __init__(
@@ -238,9 +243,6 @@ class _AttrPatch(Patch):
         return self.obj is obj or (
             self.allow_unstub_by_replacement and self.replacement is obj
         )
-
-    def __enter__(self):
-        return self.replacement
 
 
 class _DictPatch(Patch):
@@ -293,9 +295,6 @@ class _DictPatch(Patch):
 
     def matches_unstub_target(self, obj: object) -> bool:
         return self.target is obj
-
-    def __enter__(self):
-        return self.target
 
 
 def _has_data_descriptor_on_type(obj: object, attr_name: str) -> bool:

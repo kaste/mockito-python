@@ -28,7 +28,7 @@ from . import verification
 from .utils import deprecated, get_obj, get_obj_attr_tuple
 from .mocking import Chain, Mock
 from .mock_registry import mock_registry
-from .patching import patcher
+from .patching import restore_patch_contextmanager, patcher
 from .verification import VerificationError
 
 
@@ -331,12 +331,13 @@ def patch_attr(obj_or_path, attr_or_replacement, replacement=OMITTED):
     else:
         obj, name = obj_or_path, attr_or_replacement
 
-    return patcher.patch_attribute(
+    patch = patcher.patch_attribute(
         obj,
         name,
         replacement,
         allow_unstub_by_replacement=True,
     )
+    return restore_patch_contextmanager(patch, replacement)
 
 
 def patch_dict(mapping_or_path, values=None, *, clear=False, remove=None, **kwargs):
@@ -390,12 +391,13 @@ def patch_dict(mapping_or_path, values=None, *, clear=False, remove=None, **kwar
 
     updates = {} if values is None else dict(values)
     updates.update(kwargs)
-    return patcher.patch_dictionary(
+    patch = patcher.patch_dictionary(
         mapping,
         updates,
         clear=clear,
         remove=normalized_remove,
     )
+    return restore_patch_contextmanager(patch, mapping)
 
 
 def expect(obj, strict=True,
