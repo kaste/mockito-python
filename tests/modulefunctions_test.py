@@ -36,6 +36,15 @@ class ModuleFunctionsTest(TestBase):
         unstub()
         self.assertEqual(False, os.path.exists("test"))
 
+    def testUnstubsByDottedPath(self):
+        when("os.path").exists("test").thenReturn(True)
+
+        self.assertEqual(True, os.path.exists("test"))
+
+        unstub("os.path")
+
+        self.assertEqual(False, os.path.exists("test"))
+
     def testStubs(self):
         when(os.path).exists("test").thenReturn(True)
 
