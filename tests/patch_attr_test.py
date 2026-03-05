@@ -113,6 +113,32 @@ def test_nested_patch_attr_over_stubbed_method_restores_real_method():
     assert holder.value() == "original"
 
 
+def test_when_then_patch_attr_over_staticmethod_restores_original():
+    class LocalHolder:
+        @staticmethod
+        def value():
+            return "original"
+
+    when(LocalHolder).value().thenReturn("stubbed")
+    patch_attr(LocalHolder, "value", staticmethod(lambda: "patched"))
+
+    unstub()
+    assert LocalHolder.value() == "original"
+
+
+def test_when_then_patch_attr_over_classmethod_restores_original():
+    class LocalHolder:
+        @classmethod
+        def value(cls):
+            return "original"
+
+    when(LocalHolder).value().thenReturn("stubbed")
+    patch_attr(LocalHolder, "value", classmethod(lambda cls: "patched"))
+
+    unstub()
+    assert LocalHolder.value() == "original"
+
+
 def test_patch_attr_restores_inherited_lookup_without_shadowing_instance_attr():
     class Parent:
         value = "parent"

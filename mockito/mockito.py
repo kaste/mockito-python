@@ -19,8 +19,8 @@
 # THE SOFTWARE.
 
 from __future__ import annotations
+from collections.abc import Iterable, MutableMapping
 import operator
-from typing import Iterable
 
 from . import invocation
 from . import verification
@@ -28,12 +28,7 @@ from . import verification
 from .utils import deprecated, get_obj, get_obj_attr_tuple
 from .mocking import Chain, Mock
 from .mock_registry import mock_registry
-from .patching import (
-    patch_attribute,
-    patch_dictionary,
-    unstub_all_patches,
-    unstub_patches_matching,
-)
+from .patching import patcher
 from .verification import VerificationError
 
 
@@ -336,7 +331,12 @@ def patch_attr(obj_or_path, attr_or_replacement, replacement=OMITTED):
     else:
         obj, name = obj_or_path, attr_or_replacement
 
-    return patch_attribute(obj, name, replacement)
+    return patcher.patch_attribute(
+        obj,
+        name,
+        replacement,
+        allow_unstub_by_replacement=True,
+    )
 
 
 def patch_dict(mapping_or_path, values=None, *, clear=False, remove=None, **kwargs):
@@ -371,9 +371,31 @@ def patch_dict(mapping_or_path, values=None, *, clear=False, remove=None, **kwar
         else mapping_or_path
     )
 
+    if not isinstance(mapping, MutableMapping):
+        raise TypeError("target must be a mutable mapping")
+
+    if remove is all:
+        clear = True
+        remove = None
+
+    normalized_remove: tuple[object, ...]
+    if remove is None:
+        normalized_remove = ()
+    elif isinstance(remove, (str, bytes)):
+        normalized_remove = (remove,)
+    elif not isinstance(remove, Iterable):
+        raise TypeError("remove must be iterable, all, or None")
+    else:
+        normalized_remove = tuple(remove)
+
     updates = {} if values is None else dict(values)
     updates.update(kwargs)
-    return patch_dictionary(mapping, updates, clear=clear, remove=remove)
+    return patcher.patch_dictionary(
+        mapping,
+        updates,
+        clear=clear,
+        remove=normalized_remove,
+    )
 
 
 def expect(obj, strict=True,
@@ -434,10 +456,10 @@ def unstub(*objs):
             if isinstance(obj, str):
                 obj = get_obj(obj)
             mock_registry.unstub(obj)
-            unstub_patches_matching(obj)
+            patcher.unstub_matching(obj)
     else:
         mock_registry.unstub_all()
-        unstub_all_patches()
+        patcher.unstub_all()
 
 
 def forget_invocations(*objs):

@@ -41,27 +41,6 @@ def get_original_attribute(obj, attr_name, default=None):
     return getattr(obj, attr_name, default), False
 
 
-def set_mockito_stubbing_info(value, mock, method_name, restore_value):
-    setattr(
-        value, "__mockito_stubbing_info__", (mock, method_name, restore_value)
-    )
-
-
-def get_mockito_stubbing_info(value):
-    candidate = _unwrap_stubbing_info_candidate(value)
-    return getattr(candidate, "__mockito_stubbing_info__", None)
-
-
-def _unwrap_stubbing_info_candidate(value):
-    if inspect.ismethod(value):
-        return value.__func__
-
-    if isinstance(value, (staticmethod, classmethod)):
-        return value.__func__
-
-    return value
-
-
 try:
     from warnings import deprecated
 except ImportError:

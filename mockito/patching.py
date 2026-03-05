@@ -1,146 +1,207 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, MutableMapping
+from abc import ABC, abstractmethod
+from collections.abc import MutableMapping
 import inspect
-from typing import Union
 
-from .mock_registry import mock_registry
-from .utils import (
-    MISSING_ATTRIBUTE,
-    get_mockito_stubbing_info,
-    get_original_attribute,
-)
+from .utils import MISSING_ATTRIBUTE, get_original_attribute
 
 
-_Patch = Union["_AttrPatch", "_DictPatch"]
+class Patcher:
+    def __init__(self) -> None:
+        self._patches: list[Patch] = []
+        self._attr_stacks: list[_AttributeStack] = []
 
-_NO_RESTORE_OVERRIDE = object()
-_PATCHES: list[_Patch] = []
+    def patch_attribute(
+        self,
+        obj: object,
+        attr_name: str,
+        replacement: object,
+        *,
+        allow_unstub_by_replacement: bool,
+    ) -> _AttrPatch:
+        attr_patch = _AttrPatch(
+            registry=self,
+            obj=obj,
+            attr_name=attr_name,
+            replacement=replacement,
+            allow_unstub_by_replacement=allow_unstub_by_replacement,
+        )
+        attr_patch.apply()
+        self._register_patch(attr_patch)
+        return attr_patch
+
+    def patch_dictionary(
+        self,
+        target: MutableMapping[object, object],
+        updates: dict[object, object],
+        *,
+        clear: bool = False,
+        remove: tuple[object, ...] = (),
+    ) -> _DictPatch:
+        dict_patch = _DictPatch(
+            registry=self,
+            target=target,
+            updates=updates,
+            clear=clear,
+            remove=remove,
+        )
+        dict_patch.apply()
+        self._register_patch(dict_patch)
+        return dict_patch
+
+    def unstub_matching(self, obj: object) -> None:
+        matching = [
+            patch for patch in self._patches
+            if patch.matches_unstub_target(obj)
+        ]
+        for patch in reversed(matching):
+            patch.restore_and_unregister()
+
+    def unstub_all(self) -> None:
+        for patch in reversed(self._patches.copy()):
+            patch.restore_and_unregister()
+
+    def apply_attribute_patch(self, patch: _AttrPatch) -> None:
+        attr_stack, created = self._get_or_create_attr_stack(patch.obj, patch.attr_name)
+        try:
+            attr_stack.apply_patch(patch)
+        except Exception:
+            if created and attr_stack.is_empty():
+                self._remove_attr_stack(attr_stack)
+            raise
+
+    def restore_attribute_patch(self, patch: _AttrPatch) -> None:
+        attr_stack = self._find_attr_stack(patch.obj, patch.attr_name)
+        if attr_stack is None:
+            return
+
+        attr_stack.restore_patch(patch)
+        if attr_stack.is_empty():
+            self._remove_attr_stack(attr_stack)
+
+    def unregister_patch(self, patch: Patch) -> None:
+        try:
+            self._patches.remove(patch)
+        except ValueError:
+            pass
+
+    def _register_patch(self, patch: Patch) -> None:
+        self._patches.append(patch)
+
+    def _get_or_create_attr_stack(
+        self,
+        obj: object,
+        attr_name: str,
+    ) -> tuple[_AttributeStack, bool]:
+        attr_stack = self._find_attr_stack(obj, attr_name)
+        if attr_stack is not None:
+            return attr_stack, False
+
+        attr_stack = _AttributeStack(obj, attr_name)
+        self._attr_stacks.append(attr_stack)
+        return attr_stack, True
+
+    def _find_attr_stack(
+        self,
+        obj: object,
+        attr_name: str,
+    ) -> _AttributeStack | None:
+        for attr_stack in self._attr_stacks:
+            if attr_stack.matches(obj, attr_name):
+                return attr_stack
+        return None
+
+    def _remove_attr_stack(self, attr_stack: _AttributeStack) -> None:
+        try:
+            self._attr_stacks.remove(attr_stack)
+        except ValueError:
+            pass
 
 
-def patch_attribute(obj: object, attr_name: str, replacement: object) -> _AttrPatch:
-    attr_patch = _AttrPatch(obj, attr_name, replacement)
-    attr_patch.apply()
-    _register_patch(attr_patch)
-    return attr_patch
+class Patch(ABC):
+    def __init__(self, registry: Patcher) -> None:
+        self.registry = registry
+        self.active = False
+
+    @abstractmethod
+    def apply(self) -> None:
+        pass
+
+    @abstractmethod
+    def restore(self) -> None:
+        pass
+
+    @abstractmethod
+    def matches_unstub_target(self, obj: object) -> bool:
+        pass
+
+    def restore_and_unregister(self) -> None:
+        try:
+            self.restore()
+        finally:
+            self.registry.unregister_patch(self)
+
+    def __exit__(self, *exc_info) -> None:
+        self.restore_and_unregister()
 
 
-def patch_dictionary(
-    target: MutableMapping[object, object],
-    updates: dict[object, object],
-    *,
-    clear: bool = False,
-    remove: object | None = None,
-) -> _DictPatch:
-    if not isinstance(target, MutableMapping):
-        raise TypeError("target must be a mutable mapping")
-
-    if remove is all:
-        clear = True
-        remove = None
-
-    normalized_remove = _normalize_remove(remove)
-    dict_patch = _DictPatch(target, updates, clear=clear, remove=normalized_remove)
-    dict_patch.apply()
-    _register_patch(dict_patch)
-    return dict_patch
-
-
-def unstub_patches_matching(obj: object) -> None:
-    matching = [
-        patch
-        for patch in _PATCHES
-        if patch.matches(obj)
-    ]
-    for patch in reversed(matching):
-        _unstub_and_unregister_patch(patch)
-
-
-def unstub_all_patches() -> None:
-    for patch in reversed(_PATCHES.copy()):
-        _unstub_and_unregister_patch(patch)
-
-
-class _AttrPatch:
-    def __init__(self, obj: object, attr_name: str, replacement: object):
+class _AttrPatch(Patch):
+    def __init__(
+        self,
+        registry: Patcher,
+        obj: object,
+        attr_name: str,
+        replacement: object,
+        *,
+        allow_unstub_by_replacement: bool,
+    ):
+        super().__init__(registry)
         self.obj = obj
         self.attr_name = attr_name
         self.replacement = replacement
-
-        self.original = MISSING_ATTRIBUTE
-        self.restore_via_setattr = False
-        self.active = False
+        self.allow_unstub_by_replacement = allow_unstub_by_replacement
 
     def apply(self) -> None:
         if self.active:
             return
 
-        self.original, self.restore_via_setattr = get_original_attribute(
-            self.obj, self.attr_name, default=MISSING_ATTRIBUTE
-        )
-        if (
-            not self.restore_via_setattr
-            and self.original is not MISSING_ATTRIBUTE
-            and _has_data_descriptor_on_type(self.obj, self.attr_name)
-        ):
-            self.restore_via_setattr = True
-
-        setattr(self.obj, self.attr_name, self.replacement)
+        self.registry.apply_attribute_patch(self)
         self.active = True
 
-    def unstub(self) -> None:
+    def restore(self) -> None:
         if not self.active:
             return
 
-        restore_target = self._resolve_restore_target()
-        if restore_target is MISSING_ATTRIBUTE:
-            try:
-                delattr(self.obj, self.attr_name)
-            except AttributeError:
-                pass
-        else:
-            setattr(self.obj, self.attr_name, restore_target)
-
+        self.registry.restore_attribute_patch(self)
         self.active = False
 
-    def _resolve_restore_target(self) -> object:
-        if not self.restore_via_setattr:
-            return MISSING_ATTRIBUTE
-
-        restore_override = _get_restore_override_for_inactive_mock_wrapper(
-            self.obj, self.attr_name, self.original
+    def matches_unstub_target(self, obj: object) -> bool:
+        return self.obj is obj or (
+            self.allow_unstub_by_replacement and self.replacement is obj
         )
-        if restore_override is _NO_RESTORE_OVERRIDE:
-            return self.original
-
-        return restore_override
-
-    def matches(self, obj: object) -> bool:
-        return self.obj is obj or self.replacement is obj
 
     def __enter__(self):
         return self.replacement
 
-    def __exit__(self, *exc_info) -> None:
-        _unstub_and_unregister_patch(self)
 
-
-class _DictPatch:
+class _DictPatch(Patch):
     def __init__(
         self,
+        registry: Patcher,
         target: MutableMapping[object, object],
         updates: dict[object, object],
         *,
         clear: bool,
         remove: tuple[object, ...],
     ):
+        super().__init__(registry)
         self.target = target
         self.updates = updates
         self.clear = clear
         self.remove = remove
 
         self.original: dict[object, object] = {}
-        self.active = False
 
     def apply(self) -> None:
         if self.active:
@@ -163,7 +224,7 @@ class _DictPatch:
 
         self.active = True
 
-    def unstub(self) -> None:
+    def restore(self) -> None:
         if not self.active:
             return
 
@@ -172,46 +233,75 @@ class _DictPatch:
 
         self.active = False
 
-    def matches(self, obj: object) -> bool:
+    def matches_unstub_target(self, obj: object) -> bool:
         return self.target is obj
 
     def __enter__(self):
         return self.target
 
-    def __exit__(self, *exc_info) -> None:
-        _unstub_and_unregister_patch(self)
 
+class _AttributeStack:
+    def __init__(self, obj: object, attr_name: str) -> None:
+        self.obj = obj
+        self.attr_name = attr_name
 
-def _get_restore_override_for_inactive_mock_wrapper(
-    obj: object,
-    attr_name: str,
-    original: object,
-) -> object:
-    info = get_mockito_stubbing_info(original)
-    if info is None:
-        return _NO_RESTORE_OVERRIDE
+        self.base_restore_target = MISSING_ATTRIBUTE
+        self.base_restore_via_setattr = False
+        self._base_captured = False
+        self.patches: list[_AttrPatch] = []
 
-    mock, method_name, restore_value = info
-    if method_name != attr_name:
-        return _NO_RESTORE_OVERRIDE
+    def matches(self, obj: object, attr_name: str) -> bool:
+        return self.obj is obj and self.attr_name == attr_name
 
-    if mock_registry.mock_for(obj) is mock:
-        return _NO_RESTORE_OVERRIDE
+    def is_empty(self) -> bool:
+        return not self.patches
 
-    return restore_value
+    def apply_patch(self, patch: _AttrPatch) -> None:
+        if not self._base_captured:
+            self._capture_base_state()
 
+        setattr(self.obj, self.attr_name, patch.replacement)
+        self.patches.append(patch)
 
-def _normalize_remove(remove: object | None) -> tuple[object, ...]:
-    if remove is None:
-        return ()
+    def restore_patch(self, patch: _AttrPatch) -> None:
+        try:
+            patch_index = self.patches.index(patch)
+        except ValueError:
+            return
 
-    if isinstance(remove, (str, bytes)):
-        return (remove,)
+        was_top_patch = patch_index == len(self.patches) - 1
+        del self.patches[patch_index]
 
-    if not isinstance(remove, Iterable):
-        raise TypeError("remove must be iterable, all, or None")
+        if not was_top_patch:
+            return
 
-    return tuple(remove)
+        if self.patches:
+            setattr(self.obj, self.attr_name, self.patches[-1].replacement)
+            return
+
+        if self.base_restore_via_setattr:
+            setattr(self.obj, self.attr_name, self.base_restore_target)
+            return
+
+        try:
+            delattr(self.obj, self.attr_name)
+        except AttributeError:
+            pass
+
+    def _capture_base_state(self) -> None:
+        (
+            self.base_restore_target,
+            self.base_restore_via_setattr,
+        ) = get_original_attribute(self.obj, self.attr_name, default=MISSING_ATTRIBUTE)
+
+        if (
+            not self.base_restore_via_setattr
+            and self.base_restore_target is not MISSING_ATTRIBUTE
+            and _has_data_descriptor_on_type(self.obj, self.attr_name)
+        ):
+            self.base_restore_via_setattr = True
+
+        self._base_captured = True
 
 
 def _has_data_descriptor_on_type(obj: object, attr_name: str) -> bool:
@@ -226,19 +316,4 @@ def _has_data_descriptor_on_type(obj: object, attr_name: str) -> bool:
     return hasattr(type_attr, "__set__") or hasattr(type_attr, "__delete__")
 
 
-def _unstub_and_unregister_patch(patch: _Patch) -> None:
-    try:
-        patch.unstub()
-    finally:
-        _unregister_patch(patch)
-
-
-def _register_patch(patch: _Patch) -> None:
-    _PATCHES.append(patch)
-
-
-def _unregister_patch(patch: _Patch) -> None:
-    try:
-        _PATCHES.remove(patch)
-    except ValueError:
-        pass
+patcher = Patcher()
