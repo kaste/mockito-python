@@ -2,15 +2,24 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import MutableMapping
+from dataclasses import dataclass
 import inspect
 
 from .utils import MISSING_ATTRIBUTE, get_original_attribute
 
 
+@dataclass
+class _RestoreInformation:
+    obj: object
+    attr_name: str
+    original_value: object
+    use_set_on_restore: bool
+
+
 class Patcher:
     def __init__(self) -> None:
         self._patches: list[Patch] = []
-        self._attr_stacks: list[_AttributeStack] = []
+        self._restore_infos: list[_RestoreInformation] = []
 
     def patch_attribute(
         self,
@@ -63,22 +72,32 @@ class Patcher:
             patch.restore_and_unregister()
 
     def apply_attribute_patch(self, patch: _AttrPatch) -> None:
-        attr_stack, created = self._get_or_create_attr_stack(patch.obj, patch.attr_name)
-        try:
-            attr_stack.apply_patch(patch)
-        except Exception:
-            if created and attr_stack.is_empty():
-                self._remove_attr_stack(attr_stack)
-            raise
+        restore_info = self._find_restore_information(patch.obj, patch.attr_name)
+        should_store_restore_info = restore_info is None
+
+        if restore_info is None:
+            restore_info = _capture_restore_information(patch.obj, patch.attr_name)
+
+        setattr(patch.obj, patch.attr_name, patch.replacement)
+
+        if should_store_restore_info:
+            self._restore_infos.append(restore_info)
 
     def restore_attribute_patch(self, patch: _AttrPatch) -> None:
-        attr_stack = self._find_attr_stack(patch.obj, patch.attr_name)
-        if attr_stack is None:
+        if not self._is_newest_attribute_patch(patch):
             return
 
-        attr_stack.restore_patch(patch)
-        if attr_stack.is_empty():
-            self._remove_attr_stack(attr_stack)
+        previous_patch = self._find_previous_active_attribute_patch(patch)
+        if previous_patch is not None:
+            setattr(patch.obj, patch.attr_name, previous_patch.replacement)
+            return
+
+        restore_info = self._find_restore_information(patch.obj, patch.attr_name)
+        if restore_info is None:
+            return
+
+        _restore_original_attribute(restore_info)
+        self._remove_restore_information(restore_info)
 
     def unregister_patch(self, patch: Patch) -> None:
         try:
@@ -89,34 +108,96 @@ class Patcher:
     def _register_patch(self, patch: Patch) -> None:
         self._patches.append(patch)
 
-    def _get_or_create_attr_stack(
+    def _is_newest_attribute_patch(self, patch: _AttrPatch) -> bool:
+        newest_patch = self._find_newest_active_attribute_patch(
+            patch.obj,
+            patch.attr_name,
+        )
+        return newest_patch is patch
+
+    def _find_newest_active_attribute_patch(
         self,
         obj: object,
         attr_name: str,
-    ) -> tuple[_AttributeStack, bool]:
-        attr_stack = self._find_attr_stack(obj, attr_name)
-        if attr_stack is not None:
-            return attr_stack, False
-
-        attr_stack = _AttributeStack(obj, attr_name)
-        self._attr_stacks.append(attr_stack)
-        return attr_stack, True
-
-    def _find_attr_stack(
-        self,
-        obj: object,
-        attr_name: str,
-    ) -> _AttributeStack | None:
-        for attr_stack in self._attr_stacks:
-            if attr_stack.matches(obj, attr_name):
-                return attr_stack
+    ) -> _AttrPatch | None:
+        for patch in reversed(self._patches):
+            if not isinstance(patch, _AttrPatch):
+                continue
+            if not patch.active:
+                continue
+            if patch.obj is obj and patch.attr_name == attr_name:
+                return patch
         return None
 
-    def _remove_attr_stack(self, attr_stack: _AttributeStack) -> None:
+    def _find_previous_active_attribute_patch(
+        self,
+        patch: _AttrPatch,
+    ) -> _AttrPatch | None:
         try:
-            self._attr_stacks.remove(attr_stack)
+            patch_index = self._patches.index(patch)
+        except ValueError:
+            return None
+
+        for candidate in reversed(self._patches[:patch_index]):
+            if not isinstance(candidate, _AttrPatch):
+                continue
+            if not candidate.active:
+                continue
+            if candidate.obj is patch.obj and candidate.attr_name == patch.attr_name:
+                return candidate
+
+        return None
+
+    def _find_restore_information(
+        self,
+        obj: object,
+        attr_name: str,
+    ) -> _RestoreInformation | None:
+        for restore_info in self._restore_infos:
+            if restore_info.obj is obj and restore_info.attr_name == attr_name:
+                return restore_info
+        return None
+
+    def _remove_restore_information(self, restore_info: _RestoreInformation) -> None:
+        try:
+            self._restore_infos.remove(restore_info)
         except ValueError:
             pass
+
+
+def _capture_restore_information(obj: object, attr_name: str) -> _RestoreInformation:
+    original_value, use_set_on_restore = get_original_attribute(
+        obj, attr_name, default=MISSING_ATTRIBUTE
+    )
+
+    if (
+        not use_set_on_restore
+        and original_value is not MISSING_ATTRIBUTE
+        and _has_data_descriptor_on_type(obj, attr_name)
+    ):
+        use_set_on_restore = True
+
+    return _RestoreInformation(
+        obj=obj,
+        attr_name=attr_name,
+        original_value=original_value,
+        use_set_on_restore=use_set_on_restore,
+    )
+
+
+def _restore_original_attribute(restore_info: _RestoreInformation) -> None:
+    if restore_info.use_set_on_restore:
+        setattr(
+            restore_info.obj,
+            restore_info.attr_name,
+            restore_info.original_value
+        )
+        return
+
+    try:
+        delattr(restore_info.obj, restore_info.attr_name)
+    except AttributeError:
+        pass
 
 
 class Patch(ABC):
@@ -238,70 +319,6 @@ class _DictPatch(Patch):
 
     def __enter__(self):
         return self.target
-
-
-class _AttributeStack:
-    def __init__(self, obj: object, attr_name: str) -> None:
-        self.obj = obj
-        self.attr_name = attr_name
-
-        self.base_restore_target = MISSING_ATTRIBUTE
-        self.base_restore_via_setattr = False
-        self._base_captured = False
-        self.patches: list[_AttrPatch] = []
-
-    def matches(self, obj: object, attr_name: str) -> bool:
-        return self.obj is obj and self.attr_name == attr_name
-
-    def is_empty(self) -> bool:
-        return not self.patches
-
-    def apply_patch(self, patch: _AttrPatch) -> None:
-        if not self._base_captured:
-            self._capture_base_state()
-
-        setattr(self.obj, self.attr_name, patch.replacement)
-        self.patches.append(patch)
-
-    def restore_patch(self, patch: _AttrPatch) -> None:
-        try:
-            patch_index = self.patches.index(patch)
-        except ValueError:
-            return
-
-        was_top_patch = patch_index == len(self.patches) - 1
-        del self.patches[patch_index]
-
-        if not was_top_patch:
-            return
-
-        if self.patches:
-            setattr(self.obj, self.attr_name, self.patches[-1].replacement)
-            return
-
-        if self.base_restore_via_setattr:
-            setattr(self.obj, self.attr_name, self.base_restore_target)
-            return
-
-        try:
-            delattr(self.obj, self.attr_name)
-        except AttributeError:
-            pass
-
-    def _capture_base_state(self) -> None:
-        (
-            self.base_restore_target,
-            self.base_restore_via_setattr,
-        ) = get_original_attribute(self.obj, self.attr_name, default=MISSING_ATTRIBUTE)
-
-        if (
-            not self.base_restore_via_setattr
-            and self.base_restore_target is not MISSING_ATTRIBUTE
-            and _has_data_descriptor_on_type(self.obj, self.attr_name)
-        ):
-            self.base_restore_via_setattr = True
-
-        self._base_captured = True
 
 
 def _has_data_descriptor_on_type(obj: object, attr_name: str) -> bool:
