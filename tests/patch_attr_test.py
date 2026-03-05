@@ -89,6 +89,28 @@ def test_patch_attr_restores_inherited_lookup_without_shadowing_instance_attr():
     assert child.value == "updated"
 
 
+def test_patch_attr_restores_instance_data_descriptor_value():
+    class HolderWithProperty:
+        def __init__(self):
+            self._value = "original"
+
+        @property
+        def value(self):
+            return self._value
+
+        @value.setter
+        def value(self, value):
+            self._value = value
+
+    holder = HolderWithProperty()
+
+    patch_attr(holder, "value", "patched")
+    assert holder.value == "patched"
+
+    unstub(holder)
+    assert holder.value == "original"
+
+
 def test_patch_attr_failed_apply_does_not_keep_target_alive():
     class DenyAttributeWrites:
         def __setattr__(self, name, value):

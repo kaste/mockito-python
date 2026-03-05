@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, MutableMapping
+import inspect
 from typing import Union
 
 from .utils import get_original_attribute
@@ -62,16 +63,23 @@ class _AttrPatch:
         self.replacement = replacement
 
         self.original = _MISSING_ATTRIBUTE
-        self.had_attribute = False
+        self.restore_via_setattr = False
         self.active = False
 
     def apply(self) -> None:
         if self.active:
             return
 
-        self.original, self.had_attribute = get_original_attribute(
+        self.original, self.restore_via_setattr = get_original_attribute(
             self.obj, self.attr_name, default=_MISSING_ATTRIBUTE
         )
+        if (
+            not self.restore_via_setattr
+            and self.original is not _MISSING_ATTRIBUTE
+            and _has_data_descriptor_on_type(self.obj, self.attr_name)
+        ):
+            self.restore_via_setattr = True
+
         setattr(self.obj, self.attr_name, self.replacement)
         self.active = True
 
@@ -79,7 +87,7 @@ class _AttrPatch:
         if not self.active:
             return
 
-        if self.had_attribute:
+        if self.restore_via_setattr:
             setattr(self.obj, self.attr_name, self.original)
         else:
             try:
@@ -167,6 +175,18 @@ def _normalize_remove(remove: object | None) -> tuple[object, ...]:
         raise TypeError("remove must be iterable, all, or None")
 
     return tuple(remove)
+
+
+def _has_data_descriptor_on_type(obj: object, attr_name: str) -> bool:
+    if inspect.isclass(obj):
+        return False
+
+    try:
+        type_attr = inspect.getattr_static(type(obj), attr_name)
+    except AttributeError:
+        return False
+
+    return hasattr(type_attr, "__set__") or hasattr(type_attr, "__delete__")
 
 
 def _unstub_and_unregister_patch(patch: _Patch) -> None:
