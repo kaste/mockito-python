@@ -41,7 +41,7 @@ __tracebackhide__ = operator.methodcaller(
 )
 SUPPORTS_MARKCOROUTINEFUNCTION = hasattr(inspect, "markcoroutinefunction")
 
-_MISSING_ATTRIBUTE = object()
+_MISSING_ATTRIBUTE = utils.MISSING_ATTRIBUTE
 
 _CONFIG_ASYNC_PREFIX = "async "
 _ASYNC_BY_PROTOCOL_METHODS = {"__aenter__", "__aexit__", "__anext__"}
@@ -287,9 +287,10 @@ def _should_continue_with_stubbed_invocation(
 
 
 class _mocked_property:
-    def __init__(self, mock, method_name):
+    def __init__(self, mock, method_name, restore_value=utils.MISSING_ATTRIBUTE):
         self.mock = mock
         self.method_name = method_name
+        utils.set_mockito_stubbing_info(self, mock, method_name, restore_value)
 
     def __get__(self, obj, type):
         # For property/descriptors, `thenCallOriginalImplementation()` must
@@ -453,7 +454,10 @@ class Mock:
         setattr(self.mocked_obj, method_name, new_method)
 
     def replace_method(
-        self, method_name: str, original_method: object | None
+        self,
+        method_name: str,
+        original_method: object | None,
+        restore_target: object,
     ) -> None:
         discard_first_arg = self._takes_implicit_self_or_cls(original_method)
 
@@ -470,6 +474,10 @@ class Mock:
                 new_mocked_method.__module__ = original_method.__module__
             except AttributeError:
                 pass
+
+        utils.set_mockito_stubbing_info(
+            new_mocked_method, self, method_name, restore_target
+        )
 
         if (
             self.method_expects_awaitable(method_name, original_method)
@@ -503,12 +511,13 @@ class Mock:
             if was_in_spec:
                 # This indicates the original method was found directly on
                 # the spec object and should therefore be restored by unstub
-                self._methods_to_unstub[method_name] = original_method
+                restore_target = original_method
             else:
-                self._methods_to_unstub[method_name] = _MISSING_ATTRIBUTE
+                restore_target = _MISSING_ATTRIBUTE
 
+            self._methods_to_unstub[method_name] = restore_target
             self._original_methods[method_name] = original_method
-            self.replace_method(method_name, original_method)
+            self.replace_method(method_name, original_method, restore_target)
 
     def stub_property(self, method_name: str) -> None:
         try:
@@ -519,15 +528,19 @@ class Mock:
                 was_in_spec
             ) = self._get_original_method_before_stub(method_name)
 
-            self._original_methods[method_name] = original_method
-            self.set_method(method_name, _mocked_property(self, method_name))
-
             if was_in_spec:
                 # This indicates the original method was found directly on
                 # the spec object and should therefore be restored by unstub
-                self._methods_to_unstub[method_name] = original_method
+                restore_target = original_method
             else:
-                self._methods_to_unstub[method_name] = _MISSING_ATTRIBUTE
+                restore_target = _MISSING_ATTRIBUTE
+
+            self._methods_to_unstub[method_name] = restore_target
+            self._original_methods[method_name] = original_method
+            self.set_method(
+                method_name,
+                _mocked_property(self, method_name, restore_value=restore_target)
+            )
 
 
     def forget_stubbed_invocation(

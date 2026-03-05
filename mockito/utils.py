@@ -11,6 +11,8 @@ NEEDS_OS_PATH_HACK = (
     sys.platform == "win32" and sys.version_info >= (3, 12)
 )
 
+MISSING_ATTRIBUTE = object()
+
 
 def contains_strict(seq, element):
     return any(item is element for item in seq)
@@ -37,6 +39,27 @@ def get_original_attribute(obj, attr_name, default=None):
                 pass
 
     return getattr(obj, attr_name, default), False
+
+
+def set_mockito_stubbing_info(value, mock, method_name, restore_value):
+    setattr(
+        value, "__mockito_stubbing_info__", (mock, method_name, restore_value)
+    )
+
+
+def get_mockito_stubbing_info(value):
+    candidate = _unwrap_stubbing_info_candidate(value)
+    return getattr(candidate, "__mockito_stubbing_info__", None)
+
+
+def _unwrap_stubbing_info_candidate(value):
+    if inspect.ismethod(value):
+        return value.__func__
+
+    if isinstance(value, (staticmethod, classmethod)):
+        return value.__func__
+
+    return value
 
 
 try:

@@ -4,12 +4,17 @@ from collections.abc import Iterable, MutableMapping
 import inspect
 from typing import Union
 
-from .utils import get_original_attribute
+from .mock_registry import mock_registry
+from .utils import (
+    MISSING_ATTRIBUTE,
+    get_mockito_stubbing_info,
+    get_original_attribute,
+)
 
 
 _Patch = Union["_AttrPatch", "_DictPatch"]
 
-_MISSING_ATTRIBUTE = object()
+_NO_RESTORE_OVERRIDE = object()
 _PATCHES: list[_Patch] = []
 
 
@@ -62,7 +67,7 @@ class _AttrPatch:
         self.attr_name = attr_name
         self.replacement = replacement
 
-        self.original = _MISSING_ATTRIBUTE
+        self.original = MISSING_ATTRIBUTE
         self.restore_via_setattr = False
         self.active = False
 
@@ -71,11 +76,11 @@ class _AttrPatch:
             return
 
         self.original, self.restore_via_setattr = get_original_attribute(
-            self.obj, self.attr_name, default=_MISSING_ATTRIBUTE
+            self.obj, self.attr_name, default=MISSING_ATTRIBUTE
         )
         if (
             not self.restore_via_setattr
-            and self.original is not _MISSING_ATTRIBUTE
+            and self.original is not MISSING_ATTRIBUTE
             and _has_data_descriptor_on_type(self.obj, self.attr_name)
         ):
             self.restore_via_setattr = True
@@ -87,15 +92,28 @@ class _AttrPatch:
         if not self.active:
             return
 
-        if self.restore_via_setattr:
-            setattr(self.obj, self.attr_name, self.original)
-        else:
+        restore_target = self._resolve_restore_target()
+        if restore_target is MISSING_ATTRIBUTE:
             try:
                 delattr(self.obj, self.attr_name)
             except AttributeError:
                 pass
+        else:
+            setattr(self.obj, self.attr_name, restore_target)
 
         self.active = False
+
+    def _resolve_restore_target(self) -> object:
+        if not self.restore_via_setattr:
+            return MISSING_ATTRIBUTE
+
+        restore_override = _get_restore_override_for_inactive_mock_wrapper(
+            self.obj, self.attr_name, self.original
+        )
+        if restore_override is _NO_RESTORE_OVERRIDE:
+            return self.original
+
+        return restore_override
 
     def matches(self, obj: object) -> bool:
         return self.obj is obj or self.replacement is obj
@@ -162,6 +180,25 @@ class _DictPatch:
 
     def __exit__(self, *exc_info) -> None:
         _unstub_and_unregister_patch(self)
+
+
+def _get_restore_override_for_inactive_mock_wrapper(
+    obj: object,
+    attr_name: str,
+    original: object,
+) -> object:
+    info = get_mockito_stubbing_info(original)
+    if info is None:
+        return _NO_RESTORE_OVERRIDE
+
+    mock, method_name, restore_value = info
+    if method_name != attr_name:
+        return _NO_RESTORE_OVERRIDE
+
+    if mock_registry.mock_for(obj) is mock:
+        return _NO_RESTORE_OVERRIDE
+
+    return restore_value
 
 
 def _normalize_remove(remove: object | None) -> tuple[object, ...]:

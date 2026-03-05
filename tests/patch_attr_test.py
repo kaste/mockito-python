@@ -70,6 +70,49 @@ def test_nested_patch_attr_restores_correctly():
     assert holder.value == "original"
 
 
+def test_unstub_after_when_then_patch_attr_restores_real_method():
+    class LocalHolder:
+        def value(self):
+            return "original"
+
+    holder = LocalHolder()
+
+    when(holder).value().thenReturn("stubbed")
+    patch_attr(holder, "value", lambda: "patched")
+
+    unstub()
+    assert holder.value() == "original"
+
+
+def test_unstub_after_patch_attr_then_when_restores_real_method():
+    class LocalHolder:
+        def value(self):
+            return "original"
+
+    holder = LocalHolder()
+
+    patch_attr(holder, "value", lambda: "patched")
+    when(holder).value().thenReturn("stubbed")
+
+    unstub()
+    assert holder.value() == "original"
+
+
+def test_nested_patch_attr_over_stubbed_method_restores_real_method():
+    class LocalHolder:
+        def value(self):
+            return "original"
+
+    holder = LocalHolder()
+
+    when(holder).value().thenReturn("stubbed")
+    patch_attr(holder, "value", lambda: "first")
+    patch_attr(holder, "value", lambda: "second")
+
+    unstub()
+    assert holder.value() == "original"
+
+
 def test_patch_attr_restores_inherited_lookup_without_shadowing_instance_attr():
     class Parent:
         value = "parent"
