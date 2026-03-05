@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import MutableMapping
+from contextlib import contextmanager
 from dataclasses import dataclass
 import inspect
 
@@ -72,32 +73,22 @@ class Patcher:
             patch.restore_and_unregister()
 
     def apply_attribute_patch(self, patch: _AttrPatch) -> None:
-        restore_info = self._find_restore_information(patch.obj, patch.attr_name)
-        should_store_restore_info = restore_info is None
-
-        if restore_info is None:
-            restore_info = _capture_restore_information(patch.obj, patch.attr_name)
-
-        setattr(patch.obj, patch.attr_name, patch.replacement)
-
-        if should_store_restore_info:
-            self._restore_infos.append(restore_info)
+        with self._capture_restore_information(patch):
+            setattr(patch.obj, patch.attr_name, patch.replacement)
 
     def restore_attribute_patch(self, patch: _AttrPatch) -> None:
-        if not self._is_newest_attribute_patch(patch):
+        stack = self._stack_for_attr_patch(patch)
+        if not stack or stack[0] is not patch:
             return
 
-        previous_patch = self._find_previous_active_attribute_patch(patch)
-        if previous_patch is not None:
-            setattr(patch.obj, patch.attr_name, previous_patch.replacement)
+        if len(stack) > 1:
+            setattr(patch.obj, patch.attr_name, stack[1].replacement)
             return
 
         restore_info = self._find_restore_information(patch.obj, patch.attr_name)
-        if restore_info is None:
-            return
-
-        _restore_original_attribute(restore_info)
-        self._remove_restore_information(restore_info)
+        if restore_info:
+            _restore_original_attribute(restore_info)
+            self._remove_restore_information(restore_info)
 
     def unregister_patch(self, patch: Patch) -> None:
         try:
@@ -108,50 +99,36 @@ class Patcher:
     def _register_patch(self, patch: Patch) -> None:
         self._patches.append(patch)
 
-    def _is_newest_attribute_patch(self, patch: _AttrPatch) -> bool:
-        newest_patch = self._find_newest_active_attribute_patch(
-            patch.obj,
-            patch.attr_name,
-        )
-        return newest_patch is patch
+    @contextmanager
+    def _capture_restore_information(self, patch: _AttrPatch):
+        has_restore_info = self._has_restore_information(patch.obj, patch.attr_name)
 
-    def _find_newest_active_attribute_patch(
-        self,
-        obj: object,
-        attr_name: str,
-    ) -> _AttrPatch | None:
-        for patch in reversed(self._patches):
-            if not isinstance(patch, _AttrPatch):
-                continue
-            if not patch.active:
-                continue
-            if patch.obj is obj and patch.attr_name == attr_name:
-                return patch
-        return None
+        if not has_restore_info:
+            restore_info = _capture_restore_information(patch.obj, patch.attr_name)
 
-    def _find_previous_active_attribute_patch(
-        self,
-        patch: _AttrPatch,
-    ) -> _AttrPatch | None:
         try:
-            patch_index = self._patches.index(patch)
-        except ValueError:
-            return None
+            yield
+        except Exception:
+            raise
+        else:
+            if not has_restore_info:
+                self._restore_infos.append(restore_info)
 
-        for candidate in reversed(self._patches[:patch_index]):
-            if not isinstance(candidate, _AttrPatch):
-                continue
-            if not candidate.active:
-                continue
-            if candidate.obj is patch.obj and candidate.attr_name == patch.attr_name:
-                return candidate
+    def _stack_for_attr_patch(self, patch: _AttrPatch) -> list[_AttrPatch]:
+        return [
+            candidate
+            for candidate in reversed(self._patches)
+            if isinstance(candidate, _AttrPatch)
+            if candidate.active
+            if candidate.obj is patch.obj
+            if candidate.attr_name == patch.attr_name
+        ]
 
-        return None
+    def _has_restore_information(self, obj: object, attr_name: str) -> bool:
+        return self._find_restore_information(obj, attr_name) is not None
 
     def _find_restore_information(
-        self,
-        obj: object,
-        attr_name: str,
+        self, obj: object, attr_name: str
     ) -> _RestoreInformation | None:
         for restore_info in self._restore_infos:
             if restore_info.obj is obj and restore_info.attr_name == attr_name:
