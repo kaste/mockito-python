@@ -102,6 +102,11 @@ def test_patch_dict_rejects_non_mapping_target():
     assert str(exc.value) == "target must be a mutable mapping"
 
 
+def test_patch_dict_rejects_invalid_falsy_values_argument():
+    with pytest.raises(TypeError):
+        patch_dict({}, 0)
+
+
 class PartiallyFailingMapping(MutableMapping):
     def __init__(self, initial):
         self._store = dict(initial)

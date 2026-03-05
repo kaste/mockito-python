@@ -371,7 +371,7 @@ def patch_dict(mapping_or_path, values=None, *, clear=False, remove=None, **kwar
         else mapping_or_path
     )
 
-    updates = dict(values or ())
+    updates = {} if values is None else dict(values)
     updates.update(kwargs)
     return patch_dictionary(mapping, updates, clear=clear, remove=remove)
 
