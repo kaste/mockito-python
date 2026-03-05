@@ -447,23 +447,7 @@ class Mock:
         if self.spec is None:
             return None, False
 
-        try:
-            return self.spec.__dict__[method_name], True
-        except (AttributeError, KeyError):
-            # If the attr is not directly in __dict__, class specs should use
-            # static lookup so inherited descriptors are preserved as
-            # descriptors (instead of triggering __get__ via getattr).
-            if inspect.isclass(self.spec):
-                try:
-                    return inspect.getattr_static(self.spec, method_name), False
-                except AttributeError:
-                    # If static lookup misses (e.g. metaclass __getattr__),
-                    # fall back to dynamic lookup.
-                    pass
-
-            # For instance specs, keep dynamic getattr so existing
-            # bound-method/spying behavior stays unchanged.
-            return getattr(self.spec, method_name, None), False
+        return utils.get_original_attribute(self.spec, method_name, default=None)
 
     def set_method(self, method_name: str, new_method: object) -> None:
         setattr(self.mocked_obj, method_name, new_method)

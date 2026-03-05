@@ -70,6 +70,25 @@ def test_nested_patch_attr_restores_correctly():
     assert holder.value == "original"
 
 
+def test_patch_attr_restores_inherited_lookup_without_shadowing_instance_attr():
+    class Parent:
+        value = "parent"
+
+    class Child(Parent):
+        pass
+
+    child = Child()
+    assert "value" not in child.__dict__
+
+    with patch_attr(child, "value", "patched"):
+        assert child.value == "patched"
+
+    assert "value" not in child.__dict__
+
+    Parent.value = "updated"
+    assert child.value == "updated"
+
+
 def test_patch_attr_failed_apply_does_not_keep_target_alive():
     class DenyAttributeWrites:
         def __setattr__(self, name, value):

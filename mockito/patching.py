@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import inspect
 from collections.abc import Iterable, MutableMapping
 from typing import Union
+
+from .utils import get_original_attribute
 
 
 _Patch = Union["_AttrPatch", "_DictPatch"]
@@ -68,8 +69,8 @@ class _AttrPatch:
         if self.active:
             return
 
-        self.original, self.had_attribute = _get_original_attribute(
-            self.obj, self.attr_name
+        self.original, self.had_attribute = get_original_attribute(
+            self.obj, self.attr_name, default=_MISSING_ATTRIBUTE
         )
         setattr(self.obj, self.attr_name, self.replacement)
         self.active = True
@@ -153,13 +154,6 @@ class _DictPatch:
 
     def __exit__(self, *exc_info) -> None:
         _unstub_and_unregister_patch(self)
-
-
-def _get_original_attribute(obj: object, attr_name: str) -> tuple[object, bool]:
-    try:
-        return inspect.getattr_static(obj, attr_name), True
-    except AttributeError:
-        return _MISSING_ATTRIBUTE, False
 
 
 def _normalize_remove(remove: object | None) -> tuple[object, ...]:
