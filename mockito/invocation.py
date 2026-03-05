@@ -231,6 +231,11 @@ class MatchingInvocation(Invocation, ABC):
         `captor.capture_value`.
 
         """
+        call_captor = self._get_call_captor()
+        if call_captor is not None:
+            call_captor.capture_call(invocation.params, invocation.named_params)
+            return
+
         for x, p1 in enumerate(self.params):
             if matchers.is_captor_args_sentinel(p1):
                 p1.capture_value(tuple(invocation.params[x:]))
@@ -282,6 +287,17 @@ class MatchingInvocation(Invocation, ABC):
         ):
             raise TypeError('kwargs must be used as **kwargs')
 
+        has_call_captor = (
+            any(matchers.is_call_captor(p) for p in params)
+            or any(matchers.is_call_captor(v) for v in named_params.values())
+        )
+        if has_call_captor and (
+            len(params) != 1
+            or not matchers.is_call_captor(params[0])
+            or named_params
+        ):
+            raise TypeError('call_captor must be used as sole argument')
+
         def wrap(p):
             if p is any or p is matchers.any_:
                 return matchers.any_()
@@ -296,6 +312,9 @@ class MatchingInvocation(Invocation, ABC):
     def matches(self, invocation: Invocation) -> bool:  # noqa: C901, E501  (too complex)
         if self.method_name != invocation.method_name:
             return False
+
+        if self._get_call_captor() is not None:
+            return True
 
         for x, p1 in enumerate(self.params):
             if (
@@ -358,6 +377,15 @@ class MatchingInvocation(Invocation, ABC):
                 return False
 
         return True
+
+    def _get_call_captor(self):
+        if (
+            len(self.params) == 1
+            and not self.named_params
+            and matchers.is_call_captor(self.params[0])
+        ):
+            return self.params[0]
+        return None
 
 
 class VerifiableInvocation(MatchingInvocation):
