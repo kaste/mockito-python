@@ -360,6 +360,8 @@ def unstub(*objs):
 
     if objs:
         for obj in objs:
+            if isinstance(obj, str):
+                obj = get_obj(obj)
             mock_registry.unstub(obj)
     else:
         mock_registry.unstub_all()
