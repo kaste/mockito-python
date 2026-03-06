@@ -63,6 +63,24 @@ class ModuleFunctionsTest(TestBase):
         self.assertEqual(False, os.path.exists("test"))
         self.assertEqual("mocked", os.path.dirname("/tmp/file.txt"))
 
+    def testCanUnstubSingleFunctionByExplicitTargetTuple(self):
+        when(os.path).exists("test").thenReturn(True)
+        when(os.path).dirname(any(str)).thenReturn("mocked")
+
+        unstub((os.path, "exists"))
+
+        self.assertEqual(False, os.path.exists("test"))
+        self.assertEqual("mocked", os.path.dirname("/tmp/file.txt"))
+
+    def testCanUnstubSingleFunctionByExplicitTargetArguments(self):
+        when(os.path).exists("test").thenReturn(True)
+        when(os.path).dirname(any(str)).thenReturn("mocked")
+
+        unstub(os.path, "exists")
+
+        self.assertEqual(False, os.path.exists("test"))
+        self.assertEqual("mocked", os.path.dirname("/tmp/file.txt"))
+
     def testStubs(self):
         when(os.path).exists("test").thenReturn(True)
 

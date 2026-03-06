@@ -454,38 +454,109 @@ def unstub(*objs):
         unstub("os.path.exists")
         unstub(cat.meow)
 
-    In these cases only that one attribute is restored, while other stubs on
-    the same object stay active.
+    Or explicitly target one attribute by host and name, e.g.::
+
+        unstub((cat, "meow"))
+        unstub(cat, "meow")
+        unstub((cat, "meow"), (os.path, "exists"))
+
+    In these cases only the selected attributes are restored, while other stubs
+    on the same objects stay active.
 
     Note that additionally, the underlying registry will be cleaned.
     After an `unstub` you can't :func:`verify` anymore because all
     interactions will be forgotten.
     """
 
-    if objs:
-        for obj in objs:
-            if isinstance(obj, str):
-                obj = get_obj(obj)
-
-            # mock_registry.unstub(obj)
-            # patcher.unstub_matching(obj)
-            if (
-                mock_registry.unstub(obj)
-                or patcher.unstub_matching(obj)
-            ):
-                return
-
-            resolved_target = _resolve_unstub_attr_target(obj)
-            if resolved_target is None:
-                continue
-
-            host, attr_name = resolved_target
-            host_mock = mock_registry.mock_for(host)
-            if host_mock is not None:
-                host_mock.unstub_method(attr_name)
-    else:
+    if not objs:
         mock_registry.unstub_all()
         patcher.unstub_all()
+        return
+
+    explicit_attr_targets, generic_targets = _partition_unstub_targets(objs)
+
+    for host, attr_name in explicit_attr_targets:
+        _unstub_attr_target(host, attr_name)
+
+    for obj in generic_targets:
+        if isinstance(obj, str):
+            obj = get_obj(obj)
+
+        if mock_registry.unstub(obj) or patcher.unstub_matching(obj):
+            continue
+
+        resolved_target = _resolve_unstub_attr_target(obj)
+        if resolved_target is None:
+            continue
+
+        host, attr_name = resolved_target
+        _unstub_attr_target(host, attr_name)
+
+
+
+def _partition_unstub_targets(objs):
+    if _is_unstub_attr_pair_arguments(objs):
+        host, attr_name = objs
+        return [
+            _normalize_unstub_attr_target(host, attr_name)
+        ], []
+
+    explicit_attr_targets = []
+    generic_targets = []
+
+    for obj in objs:
+        explicit_attr_target = _coerce_unstub_attr_target_tuple(obj)
+        if explicit_attr_target is None:
+            generic_targets.append(obj)
+            continue
+
+        explicit_attr_targets.append(explicit_attr_target)
+
+    return explicit_attr_targets, generic_targets
+
+
+
+def _is_unstub_attr_pair_arguments(objs):
+    return (
+        len(objs) == 2
+        and not isinstance(objs[0], tuple)
+        and _looks_like_attr_name(objs[1])
+    )
+
+
+
+def _coerce_unstub_attr_target_tuple(target):
+    if not isinstance(target, tuple) or len(target) != 2:
+        return None
+
+    host, attr_name = target
+    if not _looks_like_attr_name(attr_name):
+        return None
+
+    return _normalize_unstub_attr_target(host, attr_name)
+
+
+
+def _normalize_unstub_attr_target(host, attr_name):
+    if isinstance(host, str):
+        host = get_obj(host)
+
+    return host, attr_name
+
+
+
+def _looks_like_attr_name(value):
+    return isinstance(value, str) and bool(value) and "." not in value
+
+
+
+def _unstub_attr_target(host, attr_name):
+    host_mock = mock_registry.mock_for(host)
+    if host_mock is not None:
+        host_mock.unstub_method(attr_name)
+
+    patcher.unstub_attribute(host, attr_name)
+
 
 
 def _resolve_unstub_attr_target(target):

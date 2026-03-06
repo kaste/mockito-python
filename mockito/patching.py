@@ -78,6 +78,18 @@ class Patcher:
 
         return bool(matching)
 
+    def unstub_attribute(self, obj: object, attr_name: str) -> bool:
+        matching = [
+            patch for patch in self._patches
+            if isinstance(patch, _AttrPatch)
+            if patch.obj is obj
+            if patch.attr_name == attr_name
+        ]
+        for patch in reversed(matching):
+            patch.restore_and_unregister()
+
+        return bool(matching)
+
     def unstub_all(self) -> None:
         for patch in reversed(self._patches.copy()):
             patch.restore_and_unregister()

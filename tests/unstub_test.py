@@ -77,6 +77,51 @@ class TestUntub:
 
         assert grand.sleep() == "ok"
 
+    def testPartialUnstubByExplicitTargetTuple(self):
+        cat = mock(strict=True)
+
+        when(cat).meow().thenReturn("Miau")
+        when(cat).runs().thenReturn("Yip")
+
+        unstub((cat, "meow"))
+
+        with pytest.raises(AttributeError):
+            cat.meow()
+
+        assert cat.runs() == "Yip"
+
+    def testPartialUnstubByExplicitTargetArguments(self):
+        cat = mock(strict=True)
+
+        when(cat).meow().thenReturn("Miau")
+        when(cat).runs().thenReturn("Yip")
+
+        unstub(cat, "meow")
+
+        with pytest.raises(AttributeError):
+            cat.meow()
+
+        assert cat.runs() == "Yip"
+
+    def testPartialUnstubByMultipleExplicitTargetTuples(self):
+        cat = mock(strict=True)
+        dog = mock(strict=True)
+
+        when(cat).meow().thenReturn("Miau")
+        when(cat).runs().thenReturn("Yip")
+        when(dog).waggle().thenReturn("Yup")
+        when(dog).bark().thenReturn("Wuff")
+
+        unstub((cat, "meow"), (dog, "waggle"))
+
+        with pytest.raises(AttributeError):
+            cat.meow()
+        with pytest.raises(AttributeError):
+            dog.waggle()
+
+        assert cat.runs() == "Yip"
+        assert dog.bark() == "Wuff"
+
     def testPartialUnstubByMethodReferenceForgetsMethodInvocations(self):
         cat = mock()
 
