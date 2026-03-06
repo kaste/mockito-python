@@ -19,8 +19,8 @@
 # THE SOFTWARE.
 
 from __future__ import annotations
+from collections.abc import Iterable, MutableMapping
 import operator
-from typing import Iterable
 
 from . import invocation
 from . import verification
@@ -28,6 +28,7 @@ from . import verification
 from .utils import deprecated, get_obj, get_obj_attr_tuple
 from .mocking import Chain, Mock
 from .mock_registry import mock_registry
+from .patching import restore_patch_contextmanager, patcher
 from .verification import VerificationError
 
 
@@ -304,6 +305,100 @@ def patch(fn, attr_or_replacement, replacement=None):
             theMock, name, strict=False)(Ellipsis).thenAnswer(replacement)
 
 
+def patch_attr(obj_or_path, attr_or_replacement, replacement=OMITTED):
+    """Patch/replace an attribute with a concrete value.
+
+    Unlike :func:`patch`, this does *not* record interactions and does not
+    expose verification. It is intended for simple attribute replacement like
+    ``sys.stdout`` or ``sys.argv``.
+
+    Two ways to call this. Either::
+
+        patch_attr('sys.stdout', StringIO())  # two arguments
+        # OR
+        patch_attr(sys, 'stdout', StringIO())  # three arguments
+
+    ``with`` context management is supported and restores the original value
+    on ``__exit__``. ``__enter__`` returns the replacement object.
+
+    .. note:: You must :func:`unstub` after patching, or use `with`
+        statement.
+
+    """
+    if replacement is OMITTED:
+        replacement = attr_or_replacement
+        obj, name = get_obj_attr_tuple(obj_or_path)
+    else:
+        obj, name = obj_or_path, attr_or_replacement
+
+    patch = patcher.patch_attribute(
+        obj,
+        name,
+        replacement,
+        allow_unstub_by_replacement=True,
+    )
+    return restore_patch_contextmanager(patch, replacement)
+
+
+def patch_dict(mapping_or_path, values=None, *, clear=False, remove=None, **kwargs):
+    """Patch/update a dict-like object in place.
+
+    This is a convenience function for test-time dictionary patching,
+    especially for mutable global maps like ``os.environ``.
+
+    Usage::
+
+        patch_dict(os.environ, {'USER': 'foo'})
+        patch_dict(os.environ, [('USER', 'foo')])
+        patch_dict(os.environ, USER='foo')
+        patch_dict(os.environ, remove={'USER', 'PATH'})
+        patch_dict(os.environ, remove=all)
+        patch_dict(os.environ, clear=True)
+        patch_dict('os.environ', {'USER': 'foo'})
+
+    ``with`` context management is supported and restores the original mapping
+    state on ``__exit__``. ``__enter__`` returns the patched mapping.
+
+    ``values`` can be any value accepted by ``dict(values)``.
+    ``kwargs`` are merged into ``values`` and take precedence.
+
+    .. note:: You must :func:`unstub` after patching, or use `with`
+        statement.
+
+    """
+    mapping = (
+        get_obj(mapping_or_path)
+        if isinstance(mapping_or_path, str)
+        else mapping_or_path
+    )
+
+    if not isinstance(mapping, MutableMapping):
+        raise TypeError("target must be a mutable mapping")
+
+    if remove is all:
+        clear = True
+        remove = None
+
+    normalized_remove: tuple[object, ...]
+    if remove is None:
+        normalized_remove = ()
+    elif isinstance(remove, (str, bytes)):
+        normalized_remove = (remove,)
+    elif not isinstance(remove, Iterable):
+        raise TypeError("remove must be iterable, all, or None")
+    else:
+        normalized_remove = tuple(remove)
+
+    updates = {} if values is None else dict(values)
+    updates.update(kwargs)
+    patch = patcher.patch_dictionary(
+        mapping,
+        updates,
+        clear=clear,
+        remove=normalized_remove,
+    )
+    return restore_patch_contextmanager(patch, mapping)
+
 
 def expect(obj, strict=True,
            times=None, atleast=None, atmost=None, between=None):
@@ -348,7 +443,7 @@ def expect(obj, strict=True,
 
 
 def unstub(*objs):
-    """Unstubs all stubbed methods and functions
+    """Unstubs all stubbed methods, functions, and patched attributes.
 
     If you don't pass in any argument, *all* registered mocks and
     patched modules, classes etc. will be unstubbed.
@@ -363,8 +458,10 @@ def unstub(*objs):
             if isinstance(obj, str):
                 obj = get_obj(obj)
             mock_registry.unstub(obj)
+            patcher.unstub_matching(obj)
     else:
         mock_registry.unstub_all()
+        patcher.unstub_all()
 
 
 def forget_invocations(*objs):

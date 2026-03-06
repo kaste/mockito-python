@@ -11,6 +11,8 @@ NEEDS_OS_PATH_HACK = (
     sys.platform == "win32" and sys.version_info >= (3, 12)
 )
 
+MISSING_ATTRIBUTE = object()
+
 
 def contains_strict(seq, element):
     return any(item is element for item in seq)
@@ -18,6 +20,25 @@ def contains_strict(seq, element):
 
 def newmethod(fn, obj):
     return types.MethodType(fn, obj)
+
+
+def get_original_attribute(obj, attr_name, default=None):
+    """Return ``(value, was_defined_on_obj)`` for ``obj.attr_name``."""
+    try:
+        return obj.__dict__[attr_name], True
+    except (AttributeError, KeyError):
+        # If the attr is not directly in __dict__, class specs should use
+        # static lookup so inherited descriptors are preserved as
+        # descriptors (instead of triggering __get__ via getattr).
+        if inspect.isclass(obj):
+            try:
+                return inspect.getattr_static(obj, attr_name), False
+            except AttributeError:
+                # If static lookup misses (e.g. metaclass __getattr__),
+                # fall back to dynamic lookup.
+                pass
+
+    return getattr(obj, attr_name, default), False
 
 
 try:

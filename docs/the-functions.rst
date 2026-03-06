@@ -4,11 +4,13 @@
 The functions
 =============
 
-Stable entrypoints are: :func:`when`, :func:`mock`, :func:`unstub`, :func:`verify`, :func:`spy`. New function introduced in v1 are: :func:`when2`, :func:`expect`, :func:`verifyExpectedInteractions`, :func:`verifyStubbedInvocationsAreUsed`, :func:`patch`
+Stable entrypoints are: :func:`when`, :func:`mock`, :func:`unstub`, :func:`verify`, :func:`spy`. New function introduced in v1 are: :func:`when2`, :func:`expect`, :func:`verifyExpectedInteractions`, :func:`verifyStubbedInvocationsAreUsed`, :func:`patch`, :func:`patch_attr`, :func:`patch_dict`
 
 .. autofunction:: when
 .. autofunction:: when2
 .. autofunction:: patch
+.. autofunction:: patch_attr
+.. autofunction:: patch_dict
 .. autofunction:: expect
 .. autofunction:: mock
 .. autofunction:: unstub

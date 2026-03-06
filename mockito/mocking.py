@@ -31,6 +31,7 @@ from typing import Any, AsyncIterator, Callable, Iterable, Iterator, cast
 from . import invocation, signature, utils
 from . import verification as verificationModule
 from .mock_registry import mock_registry
+from .patching import Patch, patcher
 
 
 __all__ = ['mock']
@@ -40,8 +41,6 @@ __tracebackhide__ = operator.methodcaller(
     invocation.InvocationError
 )
 SUPPORTS_MARKCOROUTINEFUNCTION = hasattr(inspect, "markcoroutinefunction")
-
-_MISSING_ATTRIBUTE = object()
 
 _CONFIG_ASYNC_PREFIX = "async "
 _ASYNC_BY_PROTOCOL_METHODS = {"__aenter__", "__aexit__", "__anext__"}
@@ -324,7 +323,7 @@ class Mock:
         self.stubbed_invocations: deque[invocation.StubbedInvocation] = deque()
 
         self._original_methods: dict[str, object | None] = {}
-        self._methods_to_unstub: dict[str, object] = {}
+        self._methods_to_unstub: dict[str, Patch] = {}
         self._signatures_store: dict[str, signature.Signature | None] = {}
         self._property_access_context: \
             list[tuple[str, object | None, object]] = []
@@ -447,30 +446,13 @@ class Mock:
         if self.spec is None:
             return None, False
 
-        try:
-            return self.spec.__dict__[method_name], True
-        except (AttributeError, KeyError):
-            # If the attr is not directly in __dict__, class specs should use
-            # static lookup so inherited descriptors are preserved as
-            # descriptors (instead of triggering __get__ via getattr).
-            if inspect.isclass(self.spec):
-                try:
-                    return inspect.getattr_static(self.spec, method_name), False
-                except AttributeError:
-                    # If static lookup misses (e.g. metaclass __getattr__),
-                    # fall back to dynamic lookup.
-                    pass
-
-            # For instance specs, keep dynamic getattr so existing
-            # bound-method/spying behavior stays unchanged.
-            return getattr(self.spec, method_name, None), False
-
-    def set_method(self, method_name: str, new_method: object) -> None:
-        setattr(self.mocked_obj, method_name, new_method)
+        return utils.get_original_attribute(self.spec, method_name, default=None)
 
     def replace_method(
-        self, method_name: str, original_method: object | None
-    ) -> None:
+        self,
+        method_name: str,
+        original_method: object | None,
+    ) -> Patch:
         discard_first_arg = self._takes_implicit_self_or_cls(original_method)
 
         def new_mocked_method(*args, **kwargs):
@@ -506,44 +488,36 @@ class Mock:
         ):
             new_mocked_method = staticmethod(new_mocked_method)
 
-        self.set_method(method_name, new_mocked_method)
+        return patcher.patch_attribute(
+            self.mocked_obj,
+            method_name,
+            new_mocked_method,
+            allow_unstub_by_replacement=False,
+        )
 
     def stub(self, method_name: str) -> None:
         try:
             self._methods_to_unstub[method_name]
         except KeyError:
-            (
-                original_method,
-                was_in_spec
-            ) = self._get_original_method_before_stub(method_name)
-            if was_in_spec:
-                # This indicates the original method was found directly on
-                # the spec object and should therefore be restored by unstub
-                self._methods_to_unstub[method_name] = original_method
-            else:
-                self._methods_to_unstub[method_name] = _MISSING_ATTRIBUTE
-
+            original_method, _ = self._get_original_method_before_stub(method_name)
             self._original_methods[method_name] = original_method
-            self.replace_method(method_name, original_method)
+            self._methods_to_unstub[method_name] = self.replace_method(
+                method_name,
+                original_method,
+            )
 
     def stub_property(self, method_name: str) -> None:
         try:
             self._methods_to_unstub[method_name]
         except KeyError:
-            (
-                original_method,
-                was_in_spec
-            ) = self._get_original_method_before_stub(method_name)
-
+            original_method, _ = self._get_original_method_before_stub(method_name)
             self._original_methods[method_name] = original_method
-            self.set_method(method_name, _mocked_property(self, method_name))
-
-            if was_in_spec:
-                # This indicates the original method was found directly on
-                # the spec object and should therefore be restored by unstub
-                self._methods_to_unstub[method_name] = original_method
-            else:
-                self._methods_to_unstub[method_name] = _MISSING_ATTRIBUTE
+            self._methods_to_unstub[method_name] = patcher.patch_attribute(
+                self.mocked_obj,
+                method_name,
+                _mocked_property(self, method_name),
+                allow_unstub_by_replacement=False,
+            )
 
 
     def forget_stubbed_invocation(
@@ -558,26 +532,18 @@ class Mock:
             inv.method_name == invocation.method_name
             for inv in self.stubbed_invocations
         ):
-            original_method = self._methods_to_unstub.pop(
-                invocation.method_name
-            )
-            self.restore_method(invocation.method_name, original_method)
+            patch = self._methods_to_unstub.pop(invocation.method_name)
+            patch.restore_and_unregister()
 
         if self.stubbed_invocations:
             return
 
         mock_registry.unstub(self.mocked_obj)
 
-    def restore_method(self, method_name: str, original_method: object) -> None:
-        if original_method is _MISSING_ATTRIBUTE:
-            delattr(self.mocked_obj, method_name)
-        else:
-            self.set_method(method_name, original_method)
-
     def unstub(self) -> None:
         while self._methods_to_unstub:
-            method_name, original_method = self._methods_to_unstub.popitem()
-            self.restore_method(method_name, original_method)
+            _, patch = self._methods_to_unstub.popitem()
+            patch.restore_and_unregister()
         self.stubbed_invocations = deque()
         self.invocations = []
         self._methods_marked_as_coroutine = set()

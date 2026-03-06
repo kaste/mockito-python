@@ -78,6 +78,14 @@ State-of-the-art, high-five argument matchers::
     when(math).sqrt(not_(number)).thenRaise(
         TypeError('argument must be a number'))
 
+Captors::
+
+    args, kwargs = captor(), captor()
+    when(mamma).said(*args, **kwargs)
+    # use it ...
+    assert args.value == ("Knock", "You", "Out")
+
+
 No need to `verify` (`assert_called_with`) all the time::
 
     # Different arguments, different answers
@@ -118,6 +126,13 @@ Full async/await support::
             return await resp.text()
 
     when(module_under_test).http_get('https://example.com', ...).thenReturn('Yep!')
+
+
+Convenience::
+
+    with patch_attr("sys.argv", ["foo", "bar"]):
+    with patch_attr("sys.stdout", StringIO()) as stdout: ...
+    with patch_dict(os.environ, {"user": "bob"}): ...
 
 
 Read
