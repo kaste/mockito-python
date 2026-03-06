@@ -56,6 +56,31 @@ def test_patch_attr_can_be_unstubbed_by_replacement_object():
     assert holder.value == "original"
 
 
+def test_patch_attr_can_be_unstubbed_by_explicit_object_and_attribute():
+    holder = Holder()
+
+    patch_attr(holder, "value", "patched")
+    assert holder.value == "patched"
+
+    unstub(holder, "value")
+    assert holder.value == "original"
+
+
+def test_explicit_unstub_attribute_restores_patch_attr_layer_over_when_stub():
+    class LocalHolder:
+        def value(self):
+            return "original"
+
+    holder = LocalHolder()
+
+    when(holder).value().thenReturn("stubbed")
+    patch_attr(holder, "value", lambda: "patched")
+    assert holder.value() == "patched"
+
+    unstub(holder, "value")
+    assert holder.value() == "original"
+
+
 def test_nested_patch_attr_restores_correctly():
     holder = Holder()
 

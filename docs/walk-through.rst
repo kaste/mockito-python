@@ -52,7 +52,7 @@ When patching, you **MUST** **not** forget to :func:`unstub` of course! You can 
 ::
 
     from mockito import unstub
-    unstub()  # restore os.path module
+    unstub()  # restore all patched/stubbed objects
 
 Usually you do this unconditionally in your `teardown` function. If you're using `pytest`, you could define a fixture instead
 

@@ -50,6 +50,15 @@ class StaticMethodsTest(TestBase):
         unstub()
         self.assertEqual("woof", Dog.bark())
 
+    def testCanUnstubSingleStaticmethodByFunctionTarget(self):
+        when(Dog).bark().thenReturn("miau")
+        when(Dog).barkHardly(1, 2).thenReturn("arf")
+
+        unstub(Dog.bark)
+
+        self.assertEqual("woof", Dog.bark())
+        self.assertEqual("arf", Dog.barkHardly(1, 2))
+
     # TODO decent test case please :) without testing irrelevant implementation
     # details
     def testUnstubShouldPreserveMethodType(self):
