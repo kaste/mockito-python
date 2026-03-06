@@ -86,6 +86,24 @@ Release 2.0.0
   (e.g. `sys.stdout`, `sys.argv`, and environment/config dictionaries) with
   context-manager support and restoration through `unstub`.
 
+  E.g.::
+
+      patch_attr("sys.argv", ["foo", "bar"])
+      with patch_attr("sys.stdout", StringIO()) as stdout: ...
+      with patch_dict(os.environ, {"user": "bob"}): ...
+
+- Added explicit partial-`unstub` targeting by host + attribute name.
+  This complements method-reference partial unstub (e.g. `unstub(cat.meow)`)
+  and supports tuple form and shorthand form, including multiple attributes
+  in one call.
+
+  E.g.::
+
+      unstub(cat.meow)
+      unstub((cat, "meow"))
+      unstub(cat, "meow")
+      unstub((cat, "meow"), (os.path, "exists"))
+
 
 
 
