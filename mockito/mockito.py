@@ -448,6 +448,15 @@ def unstub(*objs):
     If you don't pass in any argument, *all* registered mocks and
     patched modules, classes etc. will be unstubbed.
 
+    You can also unstub a single method/function target, e.g.::
+
+        unstub(os.path.exists)
+        unstub("os.path.exists")
+        unstub(cat.meow)
+
+    In these cases only that one attribute is restored, while other stubs on
+    the same object stay active.
+
     Note that additionally, the underlying registry will be cleaned.
     After an `unstub` you can't :func:`verify` anymore because all
     interactions will be forgotten.
@@ -457,11 +466,53 @@ def unstub(*objs):
         for obj in objs:
             if isinstance(obj, str):
                 obj = get_obj(obj)
-            mock_registry.unstub(obj)
-            patcher.unstub_matching(obj)
+
+            # mock_registry.unstub(obj)
+            # patcher.unstub_matching(obj)
+            if (
+                mock_registry.unstub(obj)
+                or patcher.unstub_matching(obj)
+            ):
+                return
+
+            resolved_target = _resolve_unstub_attr_target(obj)
+            if resolved_target is None:
+                continue
+
+            host, attr_name = resolved_target
+            host_mock = mock_registry.mock_for(host)
+            if host_mock is not None:
+                host_mock.unstub_method(attr_name)
     else:
         mock_registry.unstub_all()
         patcher.unstub_all()
+
+
+def _resolve_unstub_attr_target(target):
+    if not callable(target):
+        return None
+
+    host = getattr(target, "__self__", None)
+    attr_name = getattr(target, "__name__", None)
+    if host is not None and attr_name is not None:
+        return host, attr_name
+
+    target_function = _unwrap_unstub_target(target)
+    for theMock in mock_registry.get_registered_mocks():
+        for method_name, patch in theMock._methods_to_unstub.items():
+            replacement = getattr(patch, "replacement", None)
+            if _unwrap_unstub_target(replacement) is target_function:
+                return theMock.mocked_obj, method_name
+
+    return None
+
+
+
+def _unwrap_unstub_target(target):
+    if isinstance(target, (staticmethod, classmethod)):
+        return target.__func__
+
+    return getattr(target, "__func__", target)
 
 
 def forget_invocations(*objs):

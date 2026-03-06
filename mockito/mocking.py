@@ -540,6 +540,24 @@ class Mock:
 
         mock_registry.unstub(self.mocked_obj)
 
+    def unstub_method(self, method_name: str) -> None:
+        invocations = [
+            invoc
+            for invoc in self.stubbed_invocations
+            if invoc.method_name == method_name
+        ]
+        if not invocations:
+            return
+
+        for invoc in invocations:
+            invoc.forget_self()
+
+        self.invocations = [
+            invocation
+            for invocation in self.invocations
+            if invocation.method_name != method_name
+        ]
+
     def unstub(self) -> None:
         while self._methods_to_unstub:
             _, patch = self._methods_to_unstub.popitem()

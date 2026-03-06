@@ -1,6 +1,14 @@
 import pytest
 
-from mockito import mock, when, unstub, verify, ArgumentError
+from mockito import (
+    ArgumentError,
+    ensureNoUnverifiedInteractions,
+    mock,
+    patch_attr,
+    unstub,
+    verify,
+    when,
+)
 
 
 class Dog(object):
@@ -9,6 +17,10 @@ class Dog(object):
 
     def bark(self, sound='Wuff'):
         return sound
+
+
+class AttrHolder(object):
+    value = None
 
 
 class TestUntub:
@@ -37,6 +49,86 @@ class TestUntub:
         assert m.foo() == 42
         unstub(m)
         assert m.foo() is None
+
+    def testPartialUnstubByMethodReference(self):
+        cat = mock(strict=True)
+
+        when(cat).meow().thenReturn('Miau')
+        when(cat).runs().thenReturn('Yip')
+
+        unstub(cat.meow)
+
+        with pytest.raises(AttributeError):
+            cat.meow()
+
+        assert cat.runs() == 'Yip'
+
+    def testPartialUnstubByMethodReferenceKeepsDetachedChainAlive(self):
+        cat = mock(strict=True)
+
+        when(cat).meow().purr().sleep().thenReturn("ok")
+        child = cat.meow()
+        grand = child.purr()
+
+        unstub(cat.meow)
+
+        with pytest.raises(AttributeError):
+            cat.meow()
+
+        assert grand.sleep() == "ok"
+
+    def testPartialUnstubByMethodReferenceForgetsMethodInvocations(self):
+        cat = mock()
+
+        when(cat).meow().thenReturn("Miau")
+        when(cat).runs().thenReturn("Yip")
+
+        cat.meow()
+        cat.runs()
+        verify(cat).runs()
+
+        unstub(cat.meow)
+
+        ensureNoUnverifiedInteractions(cat)
+
+    def testPartialUnstubByMethodReferenceDoesNotRestoreMatchingPatchAttr(self):
+        cat = mock(strict=True)
+        holder = AttrHolder()
+
+        when(cat).meow().thenReturn("Miau")
+        replacement = cat.meow
+        patch_attr(holder, "value", replacement)
+
+        assert holder.value is replacement
+
+        unstub(cat.meow)
+
+        assert holder.value is replacement
+        with pytest.raises(AttributeError):
+            cat.meow()
+
+    @pytest.mark.xfail(
+        strict=False,
+        reason=(
+            "Characterization only: detached bound-method aliases currently "
+            "prefer patch_attr replacement matching before method-level unstub "
+            "resolution. This may change."
+        ),
+    )
+    def testCurrentBehaviorMethodAliasCanUnpatchWithoutUnstubbingMethod(self):
+        cat = mock(strict=True)
+        holder = AttrHolder()
+
+        when(cat).meow().thenReturn("Miau")
+        replacement = cat.meow
+        patch_attr(holder, "value", replacement)
+
+        assert holder.value is replacement
+
+        unstub(replacement)
+
+        assert holder.value is None
+        assert cat.meow() == "Miau"
 
 
 class TestContextManagerUnstubStrategy:

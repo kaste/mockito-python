@@ -88,13 +88,14 @@ class MockRegistry:
     def obj_for(self, mock: Mock) -> object | None:
         return self.mocks.lookup(mock)
 
-    def unstub(self, obj: object) -> None:
+    def unstub(self, obj: object) -> bool:
         try:
             mock = self.mocks.pop(obj)
         except KeyError:
-            pass
+            return False
         else:
             mock.unstub()
+            return True
 
     def unstub_mock(self, mock: Mock) -> None:
         self.mocks.pop_value(mock)

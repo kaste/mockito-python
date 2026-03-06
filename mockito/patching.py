@@ -68,13 +68,15 @@ class Patcher:
         self._register_patch(dict_patch)
         return dict_patch
 
-    def unstub_matching(self, obj: object) -> None:
+    def unstub_matching(self, obj: object) -> bool:
         matching = [
             patch for patch in self._patches
             if patch.matches_unstub_target(obj)
         ]
         for patch in reversed(matching):
             patch.restore_and_unregister()
+
+        return bool(matching)
 
     def unstub_all(self) -> None:
         for patch in reversed(self._patches.copy()):
