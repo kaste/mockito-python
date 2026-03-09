@@ -104,6 +104,7 @@ Release 2.0.0
       unstub(cat, "meow")
       unstub((cat, "meow"), (os.path, "exists"))
 
+- Also implemented `unstub("os.path")`
 
 
 
