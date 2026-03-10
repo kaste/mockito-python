@@ -67,12 +67,16 @@ Note that this does not disable the check for any explicit expectations you migh
 This roughly corresponds to the `verifyStubbedInvocationsAreUsed` contra the `verifyExpectedInteractions`
 functions.
 
+- The (limited) in-order verification mode (`inorder.verify(...)`)
+  is deprecated in favor of `InOrder(...)`.  `InOrder` support true ordered, cross-mock
+  verification.
+
 
 New in v2
 =========
 
-- `between` now supports open ranges, e.g. `between=(0, )` to check that at least 0 interactions
-  occurred.
+First-class async/await and property/descriptor support.  Chaining.  InOrder.
+Enhanced `captor`, new `patch_attr` and `patch_dict`.  Refer the `changelog<https://mockito-python.readthedocs.io/en/latest/changes.html>`.
 
 
 Development
