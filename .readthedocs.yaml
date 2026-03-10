@@ -10,8 +10,8 @@ build:
   commands:
     # Install uv and sync dependencies from uv.lock
     - pip install uv
-    # Ensure VCS tags are present so hatch-vcs computes the real project version.
-    - git fetch --force --tags || true
+    # Important: this fetch style preserves tag reachability for hatch-vcs.
+    - git fetch origin --depth 100
     - uv sync --frozen --no-dev --group docs
     - uv run sphinx-build -b html docs $READTHEDOCS_OUTPUT/html
 
