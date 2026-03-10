@@ -138,7 +138,7 @@ html_theme_options = {
 
 # The name for this set of Sphinx documents.
 # By default Sphinx appends "documentation", but we keep it shorter.
-html_title = f"{project} {release}"
+html_title = f"{project}"
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
