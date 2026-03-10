@@ -4,73 +4,79 @@ MOCKITO CHANGE LOG
 
 Release 2.0.0 (March 10, 2026)
 ------------------------------
-- Packaging is now fully defined via ``pyproject.toml`` (``hatchling`` backend);
-  the obsolete ``setup.py`` shim has been removed.
-
-- Calling `thenAnswer()` without arguments is now allowed and is treated like
-  `thenReturn()` without arguments: the stubbed method will return `None`.
-
 - Deprecate `verifyNoMoreInteractions` in favor of `ensureNoUnverifiedInteractions`.
 
 - Deprecate `verifyNoUnwantedInteractions` in favor of `verifyExpectedInteractions`.
 
 - Context managers now check usage and any expectations (set via `expect`) on exit. The usage
-  check can be disabled with the environment variable `MOCKITO_CONTEXT_MANAGERS_CHECK_USAGE="0"`.
+  check can be disabled with the environment variable ``MOCKITO_CONTEXT_MANAGERS_CHECK_USAGE="0"``.
 
 - The `between` matcher now supports open ranges, e.g. `between=(0,)` to assert that at least
   0 interactions occurred.
 
-- Added a first-class `InOrder` API via ``mockito.InOrder`` (also available as
-  ``mockito.inorder.InOrder``). The legacy in-order mode only supported one mock at a time;
+- Calling `thenAnswer()` without arguments is now allowed and is treated like
+  `thenReturn()` without arguments: the stubbed method will return `None`.
+
+- Added a first-class `InOrder` API via ``mockito.InOrder``.
+  The legacy in-order mode only supported one mock at a time;
   the new API supports true cross-mock order verification.
 
-  Migration (old limited style -> new style)::
+  Migration::
 
-      # Before (legacy, single-mock order only)
+      # Before
       from mockito import inorder
       inorder.verify(cat).meow()
       inorder.verify(cat).purr()
 
-      # Now (preferred, explicit cross-mock order)
+      # Now
       from mockito import InOrder
-      in_order = InOrder(cat, dog)
+      in_order = InOrder(cat)  # <== pass multiple objects for cross-mock verification!
       in_order.verify(cat).meow()
-      in_order.verify(dog).bark()
+      inorder.verify(cat).purr()
 
 - The legacy in-order verification mode (``inorder.verify(...)``)
   is deprecated in favor of ``InOrder(...)``.
 
 - Added first-class async/await stubbing support: async callables now preserve
-  awaitable behavior for `thenReturn`, `thenRaise`, and `thenAnswer` (including
-  sync and async answer callables), with parity across `when`, `when2`,
-  `patch`, and `expect`.
-  Note that async introspection metadata (e.g. `inspect.iscoroutinefunction`)
-  for stub wrappers is currently implemented only on Python 3.12+.
+  awaitable behavior for `thenReturn`, `thenRaise`, and `thenAnswer`.
 
-- Expanded `mock({...})` constructor shorthands:
-  - `"async <name>"` marks methods as async and supports either `...` or a function value.
-  - `{"__enter__": ...}` / `{"__aenter__": ...}` now install default matching
-    `__exit__` / `__aexit__` handlers when not provided.
-  - `{"__iter__": [..]}` and `{"__aiter__": [..]}` now normalize values into
-    proper iterator / async-iterator behavior.
-  - In constructor dict shorthands, zero-argument functions now widen to
-    accept arbitrary call arguments (e.g. `lambda: "ok"` behaves like
-    `lambda *a, **kw: "ok"`).
+  .. note::
 
-- Added first-class property/descriptor stubbing support, including class-level property
-  stubbing via `when(F).p.thenReturn(...)` and `thenCallOriginalImplementation()` support for
-  property stubs (including chained answers like
-  `thenReturn(...).thenCallOriginalImplementation()`). Stubbing instance properties now fails
-  fast with clear guidance to use class-level stubbing (`when(F).p...`).
+     Async introspection metadata (e.g. ``inspect.iscoroutinefunction``)
+     for stub wrappers is currently implemented only on Python 3.12+.
 
-- Added chained stubbing and expectations across call/property hops, e.g.
-  `when(cat).meow().purr().thenReturn(...)`, `when(User).query.filter_by(...).first()`, and
-  `expect(cat, times=1).meow().purr()`, including cleanup that preserves sibling chain branches.
+- Expanded ``mock({...})`` constructor shorthands; see :doc:`mock-shorthands`.
 
-- Allow `...` in fixed argument positions as an ad-hoc `any` matcher.
-  Trailing positional `...` keeps its existing "rest" semantics.
+- Added first-class property/descriptor stubbing support.
 
-- Extend `captor` to be used as a rest matcher
+  E.g.::
+
+      class F:
+          @property
+          def p(self):
+              return "orig"
+
+      when(F).p.thenReturn("stub")
+      assert F().p == "stub"
+
+- Added chained stubbing and expectations across call/property hops, e.g.::
+
+      when(cat).meow().purr().thenReturn(...)
+      when(User).query.filter_by(...).first()
+      expect(cat, times=1).meow().purr()
+
+- Allow ``...`` in fixed argument positions as an ad-hoc `any` matcher.
+  Trailing positional ``...`` keeps its existing "rest" semantics.
+
+  E.g.::
+
+      when(api).call("users", active=...).thenReturn("ok")
+      assert api.call("users", active=True) == "ok"
+      api.call("users")  #  will raise InvocationError, kwarg "active" is missing
+
+      when(api).call("users", ...)  # used as a rest matcher as before
+
+- Extend ``captor`` to be used as a rest matcher
 
   E.g., support::
 
@@ -89,7 +95,7 @@ Release 2.0.0 (March 10, 2026)
       mock.do(1, 2, x=3)
       assert call.value == ((1, 2), {"x": 3})
 
-- Added `patch_attr` and `patch_dict` for non-callable monkeypatch-style use cases
+- Added ``patch_attr`` and ``patch_dict`` for non-callable monkeypatch-style use cases
   (e.g. `sys.stdout`, `sys.argv`, and environment/config dictionaries) with
   context-manager support and restoration through `unstub`.
 
@@ -100,7 +106,7 @@ Release 2.0.0 (March 10, 2026)
       with patch_dict(os.environ, {"user": "bob"}): ...
 
 - Added explicit partial-`unstub` targeting by host + attribute name.
-  This complements method-reference partial unstub (e.g. `unstub(cat.meow)`)
+  This complements method-reference partial unstub (e.g. ``unstub(cat.meow)``)
   and supports tuple form and shorthand form, including multiple attributes
   in one call.
 
@@ -111,7 +117,10 @@ Release 2.0.0 (March 10, 2026)
       unstub(cat, "meow")
       unstub((cat, "meow"), (os.path, "exists"))
 
-- Also implemented `unstub("os.path")`
+- Also implemented `unstub("os.path")` - the string variant.
+
+- Packaging is now fully defined via ``pyproject.toml`` (``hatchling`` backend);
+  the obsolete ``setup.py`` shim has been removed.
 
 
 

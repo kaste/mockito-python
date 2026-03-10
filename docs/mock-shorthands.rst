@@ -1,7 +1,7 @@
 mock() configuration and shorthands
 ===================================
 
-If you really dig mock driven development, you use dumb ``mock()``s and don't patch
+If you really dig mock driven development, you use dumb `mocks` and don't patch
 real objects and modules all the time.
 
 The standard setup works as expected::
@@ -69,8 +69,8 @@ you also need to define the context/with handlers::
 .. note::
 
     ``__aenter__``, ``__aexit__``, ``__anext__`` are async by definition,
-    use either ``mock({"__aenter__": ...})`` or
-    ``mock({"async __aenter__": ...})``.
+    both ``mock({"__aenter__": ...})`` and
+    ``mock({"async __aenter__": ...})`` are equivalent.
 
 For ``__aiter__``, we have a special shortcode::
 
@@ -107,9 +107,9 @@ We have the same shortcuts available for `__enter__` and `__iter__`::
 
     mock({"__iter__": [4, 5, 6]})  # install handler and wrap in an iterator
 
-Remember or note that when you rather use specced ``mock()``s you're more or less limited by what the spec
-implements.  If you for example use ``aiohttp.ClientSession`` as the blueprint for your mock,
-we already know that ``get`` is async and you don't need to tell mockito so::
+Remember or note that when you rather use specced ``mock()``\ s you're more or less limited by
+what the spec implements.  If you for example use ``aiohttp.ClientSession`` as the blueprint
+for your mock, we already know that ``get`` is async and hence you don't need to tell mockito::
 
     mock({
         "get": lambda: response   # Look up if ClientSession defines "async def get"

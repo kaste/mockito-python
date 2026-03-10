@@ -3,13 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+Mockito
+=======
+
 .. module:: mockito
 
-Mockito is a spying framework originally based on the Java library with the same name.
-
-.. image:: https://github.com/kaste/mockito-python/actions/workflows/test-lint-go.yml/badge.svg
-    :target: https://github.com/kaste/mockito-python/actions/workflows/test-lint-go.yml
-
+Mockito is a spying framework focusing on ergonomics.
 
 
 Install
@@ -19,7 +18,7 @@ Install
 
     pip install mockito
 
-If you already use `pytest`, consider using the plugin `pytest-mockito <https://github.com/kaste/pytest-mockito>`_.
+If you already use `pytest`, consider using the plugin `pytest-mockito <https://github.com/kaste/pytest-mockito>`_ too.
 
 
 Use

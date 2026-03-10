@@ -80,7 +80,7 @@ version = '.'.join(release.split('.')[:2])
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -123,21 +123,22 @@ todo_include_todos = True
 
 # -- Options for HTML output ----------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-html_theme = 'alabaster'
+# The theme to use for HTML and HTML Help pages.
+html_theme = 'furo'
 
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-#html_theme_options = {}
+# Theme options are theme-specific and customize the look and feel of a theme.
+html_theme_options = {
+    'source_repository': 'https://github.com/kaste/mockito-python/',
+    'source_branch': 'master',
+    'source_directory': 'docs/',
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
 
 # The name for this set of Sphinx documents.
-# "<project> v<release> documentation" by default.
-#html_title = u'mockito-python v0.6.1'
+# By default Sphinx appends "documentation", but we keep it shorter.
+html_title = f"{project} {release}"
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
@@ -155,6 +156,7 @@ html_theme = 'alabaster'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+html_css_files = ['custom.css']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -170,9 +172,7 @@ html_static_path = ['_static']
 # typographically correct entities.
 #html_use_smartypants = True
 
-# Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
-html_sidebars = { '**': ['localtoc.html', 'relations.html', 'searchbox.html'], }
+# Use theme-provided sidebars.
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.

@@ -35,4 +35,5 @@ dev = [
 docs = [
     "sphinx>=7.4.7; python_version >= '3.12'",
     "sphinx-autobuild>=2021.3.14; python_version >= '3.12'",
+    "furo>=2024.8.6; python_version >= '3.12'",
 ]

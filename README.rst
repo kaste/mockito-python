@@ -90,10 +90,10 @@ to your computer, then run ``uv sync`` in the root directory.  Example usage::
 Note: development and docs tooling target Python >=3.12, while the library itself
 supports older Python versions at runtime.
 
-For docs (Python >=3.12), install only the docs dependencies with::
-
-    uv sync --no-dev --group docs
-
-Or to install everything (all dependency groups, Python >=3.12), run::
+To install everything (all dependency groups, Python >=3.12), run::
 
     uv sync --all-groups
+
+Start the sphinx server::
+
+    uv run sphinx-autobuild docs docs/_build/html
