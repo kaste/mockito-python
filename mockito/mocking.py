@@ -231,7 +231,11 @@ def _ensure_target_is_callable(theMock: Mock, method_name: str) -> None:
     if not was_in_spec and target is None:
         return
 
-    if _should_continue_with_stubbed_invocation(target, allow_classes=True):
+    if _should_continue_with_stubbed_invocation(
+        target,
+        allow_classes=True,
+        spec=theMock.spec,
+    ):
         return
 
     raise invocation.InvocationError("'%s' is not callable." % method_name)
@@ -253,7 +257,7 @@ def _ensure_target_is_not_callable(theMock: Mock, method_name: str) -> None:
         else:
             return
 
-    if _should_continue_with_stubbed_invocation(value):
+    if _should_continue_with_stubbed_invocation(value, spec=spec):
         raise invocation.InvocationError(
             f"expected an invocation of '{method_name}'"
         )
@@ -262,6 +266,7 @@ def _ensure_target_is_not_callable(theMock: Mock, method_name: str) -> None:
 def _should_continue_with_stubbed_invocation(
     value: object,
     allow_classes: bool = False,
+    spec: object | None = None,
 ) -> bool:
     if (
         inspect.isfunction(value)
@@ -276,12 +281,21 @@ def _should_continue_with_stubbed_invocation(
     ):
         return True
 
-    # Generic callable fallback, but keep custom descriptors/property-like
-    # attributes on the property stubbing path.
+    # For class specs, callable descriptors (objects implementing both
+    # `__call__` and `__get__`) are generally meant to be stubbed through
+    # the property path. For non-class specs (e.g. module attributes such as
+    # `numpy.vstack`), `__get__` should not disqualify callable targets.
+    treat_callable_descriptors_as_non_callable = inspect.isclass(spec)
+
+    # Generic callable fallback, with optional handling for callable
+    # descriptor-like objects (`__call__` + `__get__`).
     return (
         callable(value)
         and (allow_classes or not inspect.isclass(value))
-        and not hasattr(value, '__get__')
+        and (
+            not treat_callable_descriptors_as_non_callable
+            or not hasattr(value, '__get__')
+        )
     )
 
 

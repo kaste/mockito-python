@@ -29,3 +29,8 @@ class TestEnsureNumpyWorks:
         when(module).one_arg(Ellipsis).thenReturn('yep')
         assert module.one_arg(array) == 'yep'
 
+
+def test_np_vstack_is_callable():
+    when(np).vstack(...).thenReturn("ok.")
+
+    assert np.vstack([np.array([1]), np.array([2])]) == "ok."
