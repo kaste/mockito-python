@@ -50,6 +50,26 @@ def test_any_repr_handles_values_with_broken_repr():
     assert 'BrokenRepr object' in matcher_repr
 
 
+def test_value_matcher_repr_handles_values_with_broken_repr():
+    class BrokenRepr:
+        def __repr__(self):
+            raise RuntimeError('boom')
+
+    matcher_repr = repr(eq(BrokenRepr()))
+    assert matcher_repr.startswith('<Eq: <')
+    assert 'BrokenRepr object' in matcher_repr
+
+
+def test_contains_repr_handles_values_with_broken_repr():
+    class BrokenRepr:
+        def __repr__(self):
+            raise RuntimeError('boom')
+
+    matcher_repr = repr(contains(BrokenRepr()))
+    assert matcher_repr.startswith('<Contains: <')
+    assert 'BrokenRepr object' in matcher_repr
+
+
 def test_contains_repr_uses_safe_quoted_substring():
     assert repr(contains("a'b")) == "<Contains: \"a'b\">"
 
@@ -57,6 +77,14 @@ def test_contains_repr_uses_safe_quoted_substring():
 def test_matches_repr_shows_only_explicit_flags():
     assert repr(matches("f..")) == "<Matches: 'f..'>"
     assert repr(matches("f..", re.IGNORECASE)) == (
+        f"<Matches: 'f..' flags={int(re.IGNORECASE)}>"
+    )
+
+
+def test_matches_repr_shows_flags_for_compiled_patterns():
+    compiled = re.compile('f..', re.IGNORECASE)
+
+    assert repr(matches(compiled)) == (
         f"<Matches: 'f..' flags={int(re.IGNORECASE)}>"
     )
 

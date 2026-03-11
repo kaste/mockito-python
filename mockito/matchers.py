@@ -174,7 +174,10 @@ class ValueMatcher(Matcher):
         self.value = value
 
     def __repr__(self):
-        return "<%s: %r>" % (self.__class__.__name__, self.value)
+        return "<%s: %s>" % (
+            self.__class__.__name__,
+            _safe_repr(self.value),
+        )
 
 
 class Eq(ValueMatcher):
@@ -351,13 +354,13 @@ class Contains(Matcher):
         return self.sub and len(self.sub) > 0 and arg.find(self.sub) > -1
 
     def __repr__(self):
-        return "<Contains: %r>" % self.sub
+        return "<Contains: %s>" % _safe_repr(self.sub)
 
 
 class Matches(Matcher):
     def __init__(self, regex, flags=0):
         self.regex = re.compile(regex, flags)
-        self.flags = flags
+        self.flags = _explicit_regex_flags(regex, flags)
 
     def matches(self, arg):
         if not isinstance(arg, str):
@@ -369,6 +372,23 @@ class Matches(Matcher):
             return "<Matches: %r flags=%d>" % (self.regex.pattern, self.flags)
         else:
             return "<Matches: %r>" % self.regex.pattern
+
+
+def _explicit_regex_flags(regex, flags):
+    if flags:
+        return flags
+
+    compiled_flags = _safe_getattr(regex, 'flags')
+    pattern = _safe_getattr(regex, 'pattern')
+    if compiled_flags is None or pattern is None:
+        return 0
+
+    try:
+        baseline_flags = re.compile(pattern).flags
+    except Exception:
+        return compiled_flags
+
+    return compiled_flags & ~baseline_flags
 
 
 class ArgumentCaptor(Matcher, Capturing):
