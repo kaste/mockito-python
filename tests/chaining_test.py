@@ -1,6 +1,7 @@
 import pytest
 
-from mockito import expect, mock, verify, unstub, when
+from mockito import any as any_
+from mockito import arg_that, expect, mock, verify, unstub, when
 from mockito.invocation import AnswerError, InvocationError
 
 
@@ -467,6 +468,16 @@ def test_chain_matching_requires_candidate_matches_existing_direction():
 
     assert cat.meow(1) == "any"
     assert cat.meow(2).purr() == "two"
+
+
+def test_sameish_matching_does_not_evaluate_arg_that_predicate_on_matchers():
+    cat = mock()
+
+    when(cat).meow(any_()).thenReturn("any")
+    when(cat).meow(arg_that(lambda value: value > 0)).thenReturn("positive")
+
+    assert cat.meow(1) == "positive"
+    assert cat.meow(-1) == "any"
 
 
 def test_unexpected_chain_segment_arguments_raise_invocation_error_early():
