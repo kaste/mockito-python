@@ -27,6 +27,26 @@ def invocations_are_sameish(
     )
 
 
+def invocations_have_distinct_captors(
+    left: StubbedInvocation,
+    right: StubbedInvocation,
+) -> bool:
+    """Return True when equivalent selectors bind different captor instances."""
+
+    for left_value, right_value in zip(left.params, right.params):
+        if _values_bind_distinct_captors(left_value, right_value):
+            return True
+
+    for key in set(left.named_params) & set(right.named_params):
+        if _values_bind_distinct_captors(
+            left.named_params[key],
+            right.named_params[key],
+        ):
+            return True
+
+    return False
+
+
 def _params_are_sameish(left: tuple, right: tuple) -> bool:
     if len(left) != len(right):
         return False
@@ -139,6 +159,33 @@ def _matchers_are_sameish(  # noqa: C901
         return _values_are_sameish(left.matcher, right.matcher)
 
     return _equals_or_identity(left, right)
+
+
+def _values_bind_distinct_captors(left: object, right: object) -> bool:
+    left_binding = _captor_binding(left)
+    right_binding = _captor_binding(right)
+
+    return (
+        left_binding is not None
+        and right_binding is not None
+        and left_binding is not right_binding
+    )
+
+
+def _captor_binding(value: object) -> object | None:
+    if matchers.is_call_captor(value):
+        return value
+
+    if isinstance(value, matchers.ArgumentCaptor):
+        return value
+
+    if matchers.is_captor_args_sentinel(value):
+        return value.captor
+
+    if matchers.is_captor_kwargs_sentinel(value):
+        return value.captor
+
+    return None
 
 
 def _equals_or_identity(left: object, right: object) -> bool:

@@ -164,6 +164,34 @@ def test_kwargs_argument_captor_instances_are_sameish_for_root_deduping():
     )
 
 
+def test_star_argument_captors_with_different_matchers_are_not_sameish():
+    assert not sameish.invocations_are_sameish(
+        bar(1, *captor(any_(int))),
+        bar(1, *captor(any_(str))),
+    )
+
+
+def test_kwargs_argument_captors_with_different_matchers_are_not_sameish():
+    assert not sameish.invocations_are_sameish(
+        bar(1, **captor(any_(int))),
+        bar(1, **captor(any_(str))),
+    )
+
+
+def test_star_argument_captor_any_and_typed_any_are_not_sameish():
+    assert not sameish.invocations_are_sameish(
+        bar(1, *captor()),
+        bar(1, *captor(any_(int))),
+    )
+
+
+def test_kwargs_argument_captor_any_and_typed_any_are_not_sameish():
+    assert not sameish.invocations_are_sameish(
+        bar(1, **captor()),
+        bar(1, **captor(any_(int))),
+    )
+
+
 def test_argument_captor_instances_with_different_matchers_are_not_sameish():
     assert not sameish.invocations_are_sameish(
         bar(captor(any_(int))),

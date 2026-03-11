@@ -27,7 +27,7 @@ import operator
 from collections import deque
 from typing import TYPE_CHECKING, Union
 
-from . import matchers, signature
+from . import matchers, sameish, signature
 from . import verification as verificationModule
 from .mock_registry import mock_registry
 from .utils import contains_strict
@@ -628,6 +628,21 @@ class StubbedInvocation(MatchingInvocation):
         continuation = self.get_continuation()
 
         if isinstance(continuation, ChainContinuation):
+            if (
+                continuation.invocation is not self
+                and sameish.invocations_have_distinct_captors(
+                    self,
+                    continuation.invocation,
+                )
+            ):
+                self.forget_self()
+                raise InvocationError(
+                    "'%s' is already configured with a different captor "
+                    "instance for the same selector. Reuse the same "
+                    "captor() / call_captor() object across chain branches."
+                    % self.method_name
+                )
+
             self.rollback_if_not_configured_by(continuation)
             return continuation
 
