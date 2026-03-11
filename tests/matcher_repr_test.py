@@ -16,8 +16,38 @@ def test_composed_matchers_include_quoted_nested_values():
     assert repr(or_(eq("foo"), gt(1))) == "<Or: [<Eq: 'foo'>, <Gt: 1>]>"
 
 
+def test_any_repr_uses_pretty_names_for_types():
+    assert repr(any_(int)) == "<Any: int>"
+    assert repr(any_((int, str))) == "<Any: (int, str)>"
+
+
 def test_any_repr_quotes_non_type_values():
     assert repr(any_("foo")) == "<Any: 'foo'>"
+
+
+def test_any_repr_handles_types_with_broken_introspection():
+    class EvilMeta(type):
+        def __getattribute__(cls, name):
+            if name in {'__module__', '__qualname__', '__name__'}:
+                raise RuntimeError('boom')
+            return super().__getattribute__(name)
+
+    class Evil(metaclass=EvilMeta):
+        pass
+
+    matcher_repr = repr(any_(Evil))
+    assert matcher_repr.startswith("<Any: <class '")
+    assert "Evil" in matcher_repr
+
+
+def test_any_repr_handles_values_with_broken_repr():
+    class BrokenRepr:
+        def __repr__(self):
+            raise RuntimeError('boom')
+
+    matcher_repr = repr(any_(BrokenRepr()))
+    assert matcher_repr.startswith('<Any: <')
+    assert 'BrokenRepr object' in matcher_repr
 
 
 def test_contains_repr_uses_safe_quoted_substring():

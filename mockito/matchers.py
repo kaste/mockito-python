@@ -138,7 +138,35 @@ class Any(Matcher):
             return True
 
     def __repr__(self):
-        return "<Any: %r>" % self.wanted_type
+        return "<Any: %s>" % _any_wanted_type_label(self.wanted_type)
+
+
+def _any_wanted_type_label(wanted_type):
+    if isinstance(wanted_type, type):
+        return _type_label(wanted_type)
+
+    if (
+        isinstance(wanted_type, tuple)
+        and all(isinstance(t, type) for t in wanted_type)
+    ):
+        items = [_type_label(t) for t in wanted_type]
+        if len(items) == 1:
+            return '(%s,)' % items[0]
+        return '(%s)' % ', '.join(items)
+
+    return _safe_repr(wanted_type)
+
+
+def _type_label(type_):
+    module = _safe_getattr(type_, '__module__')
+    qualname = _safe_getattr(type_, '__qualname__') or _safe_getattr(type_, '__name__')
+    if qualname is None:
+        return _safe_repr(type_)
+
+    if module is None or module == 'builtins':
+        return qualname
+
+    return '%s.%s' % (module, qualname)
 
 
 class ValueMatcher(Matcher):
@@ -294,6 +322,16 @@ def _safe_getattr(value, name, default=None):
         return getattr(value, name)
     except Exception:
         return default
+
+
+def _safe_repr(value):
+    try:
+        return repr(value)
+    except Exception:
+        try:
+            return object.__repr__(value)
+        except Exception:
+            return '<unrepresentable>'
 
 
 def _label_with_line(label, line_number):
