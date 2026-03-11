@@ -42,7 +42,7 @@ jobs:
         with:
           python-version: '3.13'
       - name: Setup uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
       - name: Install dependencies
         run: uv sync --frozen --group dev
       - name: Run flake8
@@ -58,7 +58,7 @@ jobs:
         with:
           python-version: '3.13'
       - name: Setup uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
       - name: Install dependencies
         run: uv sync --frozen --group dev
       - name: Run codespell
@@ -74,7 +74,7 @@ jobs:
         with:
           python-version: '3.13'
       - name: Setup uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
       - name: Install dependencies
         run: uv sync --frozen --group dev
       - name: Run mypy
