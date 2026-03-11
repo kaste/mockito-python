@@ -37,6 +37,29 @@ def test_multiple_chain_branches_on_same_root_are_supported():
     assert cat_that_meowed.roll() == "playful"
 
 
+def test_multiple_chain_branches_with_equivalent_typed_any_matchers_share_root():
+    cat = mock()
+
+    when(cat).meow(any_(int)).purr().thenReturn("friendly")
+    when(cat).meow(any_(int)).roll().thenReturn("playful")
+
+    cat_that_meowed = cat.meow(1)
+    assert cat_that_meowed.purr() == "friendly"
+    assert cat_that_meowed.roll() == "playful"
+
+
+def test_multiple_chain_branches_with_same_arg_that_matcher_share_root():
+    cat = mock()
+    pred = arg_that(lambda value: value > 0)
+
+    when(cat).meow(pred).purr().thenReturn("friendly")
+    when(cat).meow(pred).roll().thenReturn("playful")
+
+    cat_that_meowed = cat.meow(1)
+    assert cat_that_meowed.purr() == "friendly"
+    assert cat_that_meowed.roll() == "playful"
+
+
 def test_unstub_child_chain_then_reconfigure_does_not_leave_stale_root_stub():
     cat = mock()
 

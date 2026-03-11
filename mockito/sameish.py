@@ -1,0 +1,128 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from . import matchers
+
+if TYPE_CHECKING:
+    from .invocation import StubbedInvocation
+
+
+def invocations_are_sameish(
+    left: StubbedInvocation,
+    right: StubbedInvocation,
+) -> bool:
+    """Structural signature-compatibility checks for continuation bookkeeping.
+
+    Intentionally avoids executing user-provided matcher predicates
+    (e.g. `arg_that(...)) while comparing stub signatures.
+    """
+
+    return (
+        _params_are_sameish(left.params, right.params)
+        and _named_params_are_sameish(
+            left.named_params,
+            right.named_params,
+        )
+    )
+
+
+def _params_are_sameish(left: tuple, right: tuple) -> bool:
+    if len(left) != len(right):
+        return False
+
+    return all(
+        _values_are_sameish(left_value, right_value)
+        for left_value, right_value in zip(left, right)
+    )
+
+
+def _named_params_are_sameish(left: dict, right: dict) -> bool:
+    if set(left) != set(right):
+        return False
+
+    return all(
+        _values_are_sameish(left[key], right[key])
+        for key in left
+    )
+
+
+def _values_are_sameish(left: object, right: object) -> bool:
+    if left is right:
+        return True
+
+    if left is Ellipsis or right is Ellipsis:
+        return left is right
+
+    if isinstance(left, matchers.Matcher) and isinstance(right, matchers.Matcher):
+        return _matchers_are_sameish(left, right)
+
+    if isinstance(left, matchers.Matcher) or isinstance(right, matchers.Matcher):
+        return False
+
+    return _equals_or_identity(left, right)
+
+
+def _matchers_are_sameish(  # noqa: C901
+    left: matchers.Matcher,
+    right: matchers.Matcher,
+) -> bool:
+    if left is right:
+        return True
+
+    if type(left) is not type(right):
+        return False
+
+    if isinstance(left, matchers.Any) and isinstance(right, matchers.Any):
+        return _equals_or_identity(left.wanted_type, right.wanted_type)
+
+    if (
+        isinstance(left, matchers.ValueMatcher)
+        and isinstance(right, matchers.ValueMatcher)
+    ):
+        return _values_are_sameish(left.value, right.value)
+
+    if (
+        isinstance(left, (matchers.And, matchers.Or))
+        and isinstance(right, (matchers.And, matchers.Or))
+    ):
+        return _params_are_sameish(
+            tuple(left.matchers),
+            tuple(right.matchers),
+        )
+
+    if isinstance(left, matchers.Not) and isinstance(right, matchers.Not):
+        return _values_are_sameish(left.matcher, right.matcher)
+
+    if isinstance(left, matchers.ArgThat) and isinstance(right, matchers.ArgThat):
+        return left.predicate is right.predicate
+
+    if isinstance(left, matchers.Contains) and isinstance(right, matchers.Contains):
+        return _values_are_sameish(left.sub, right.sub)
+
+    if isinstance(left, matchers.Matches) and isinstance(right, matchers.Matches):
+        return (
+            left.regex.pattern == right.regex.pattern
+            and left.flags == right.flags
+        )
+
+    if (
+        isinstance(left, matchers.ArgumentCaptor)
+        and isinstance(right, matchers.ArgumentCaptor)
+    ):
+        return _values_are_sameish(left.matcher, right.matcher)
+
+    if (
+        isinstance(left, matchers.CallCaptor)
+        and isinstance(right, matchers.CallCaptor)
+    ):
+        return False
+
+    return _equals_or_identity(left, right)
+
+
+def _equals_or_identity(left: object, right: object) -> bool:
+    try:
+        return left == right
+    except Exception:
+        return left is right
