@@ -399,16 +399,45 @@ class Mock:
     def _sameish_invocations(
         self, same: invocation.StubbedInvocation
     ) -> list[invocation.StubbedInvocation]:
-        return [
-            invoc
-            for invoc in self.stubbed_invocations
-            if (
-                invoc is not same
-                and invoc.method_name == same.method_name
-                and invoc.matches(same)
-                and same.matches(invoc)
-            )
-        ]
+        """Find prior stubs that are *mutually* signature-compatible.
+
+        This is used only for continuation bookkeeping (value-vs-chain mode),
+        not for runtime call dispatch. We intentionally do a symmetric check
+        (`a.matches(b)` and `b.matches(a)`) to approximate "same signature"
+        despite one-way matchers like `any()`.
+
+        Why this exists: repeated selectors such as
+
+            when(cat).meow().purr()
+            when(cat).meow().roll()
+
+        should share the same root continuation for `meow()`.
+        """
+        sameish: list[invocation.StubbedInvocation] = []
+        for invoc in self.stubbed_invocations:
+            if invoc is same:
+                continue
+
+            if invoc.method_name != same.method_name:
+                continue
+
+            if self._invocations_are_sameish(invoc, same):
+                sameish.append(invoc)
+
+        return sameish
+
+    def _invocations_are_sameish(
+        self,
+        left: invocation.StubbedInvocation,
+        right: invocation.StubbedInvocation,
+    ) -> bool:
+        # Be conservative in internal equivalence probing: user predicates from
+        # `arg_that` can throw when evaluated against matcher/sentinel objects.
+        # In this phase, exceptions should mean "not equivalent", not failure.
+        try:
+            return left.matches(right) and right.matches(left)
+        except Exception:
+            return False
 
     def get_original_method(self, method_name: str) -> object | None:
         return self._original_methods.get(method_name, None)
