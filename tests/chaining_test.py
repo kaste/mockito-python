@@ -1,7 +1,7 @@
 import pytest
 
 from mockito import any as any_
-from mockito import arg_that, expect, mock, verify, unstub, when
+from mockito import arg_that, call_captor, captor, expect, mock, verify, unstub, when
 from mockito.invocation import AnswerError, InvocationError
 
 
@@ -56,6 +56,39 @@ def test_multiple_chain_branches_with_same_arg_that_matcher_share_root():
     when(cat).meow(pred).roll().thenReturn("playful")
 
     cat_that_meowed = cat.meow(1)
+    assert cat_that_meowed.purr() == "friendly"
+    assert cat_that_meowed.roll() == "playful"
+
+
+def test_multiple_chain_branches_with_call_captor_roots_share_root():
+    cat = mock()
+
+    when(cat).meow(call_captor()).purr().thenReturn("friendly")
+    when(cat).meow(call_captor()).roll().thenReturn("playful")
+
+    cat_that_meowed = cat.meow(1)
+    assert cat_that_meowed.purr() == "friendly"
+    assert cat_that_meowed.roll() == "playful"
+
+
+def test_multiple_chain_branches_with_args_captor_roots_share_root():
+    cat = mock()
+
+    when(cat).meow(*captor()).purr().thenReturn("friendly")
+    when(cat).meow(*captor()).roll().thenReturn("playful")
+
+    cat_that_meowed = cat.meow(1, 2)
+    assert cat_that_meowed.purr() == "friendly"
+    assert cat_that_meowed.roll() == "playful"
+
+
+def test_multiple_chain_branches_with_kwargs_captor_roots_share_root():
+    cat = mock()
+
+    when(cat).meow(**captor()).purr().thenReturn("friendly")
+    when(cat).meow(**captor()).roll().thenReturn("playful")
+
+    cat_that_meowed = cat.meow(volume=1)
     assert cat_that_meowed.purr() == "friendly"
     assert cat_that_meowed.roll() == "playful"
 

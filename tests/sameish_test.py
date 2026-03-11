@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-from mockito import and_, any as any_, arg_that, call_captor, eq, gt, neq, or_
+from mockito import and_, any as any_, arg_that, call_captor, captor, eq, gt, neq, or_
 from mockito import sameish
 
 
@@ -108,7 +108,7 @@ def test_arg_that_predicate_side_effects_are_not_triggered():
     assert seen == []
 
 
-def test_call_captor_instances_are_not_interchangeable():
+def test_call_captor_instances_are_sameish_for_root_deduping():
     left = call_captor()
     right = call_captor()
 
@@ -116,9 +116,58 @@ def test_call_captor_instances_are_not_interchangeable():
         bar(left),
         bar(left),
     )
-    assert not sameish.invocations_are_sameish(
+    assert sameish.invocations_are_sameish(
         bar(left),
         bar(right),
+    )
+
+
+def test_argument_captor_instances_are_sameish_for_root_deduping():
+    left = captor()
+    right = captor()
+
+    assert sameish.invocations_are_sameish(
+        bar(left),
+        bar(left),
+    )
+    assert sameish.invocations_are_sameish(
+        bar(left),
+        bar(right),
+    )
+
+
+def test_star_argument_captor_instances_are_sameish_for_root_deduping():
+    left = captor()
+    right = captor()
+
+    assert sameish.invocations_are_sameish(
+        bar(1, *left),
+        bar(1, *left),
+    )
+    assert sameish.invocations_are_sameish(
+        bar(1, *left),
+        bar(1, *right),
+    )
+
+
+def test_kwargs_argument_captor_instances_are_sameish_for_root_deduping():
+    left = captor()
+    right = captor()
+
+    assert sameish.invocations_are_sameish(
+        bar(1, **left),
+        bar(1, **left),
+    )
+    assert sameish.invocations_are_sameish(
+        bar(1, **left),
+        bar(1, **right),
+    )
+
+
+def test_argument_captor_instances_with_different_matchers_are_not_sameish():
+    assert not sameish.invocations_are_sameish(
+        bar(captor(any_(int))),
+        bar(captor(any_(str))),
     )
 
 

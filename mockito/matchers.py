@@ -62,6 +62,14 @@ The one usage you should not care about is a loose signature when using
 from abc import ABC, abstractmethod
 import functools
 import re
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    try:
+        from typing import TypeGuard
+    except ImportError:
+        from typing_extensions import TypeGuard
+
 builtin_any = any
 
 __all__ = [
@@ -473,15 +481,15 @@ class CaptorKwargsSentinel:
         return "<CaptorKwargsSentinel: %r>" % self.captor
 
 
-def is_call_captor(value):
+def is_call_captor(value: object) -> 'TypeGuard[CallCaptor]':
     return isinstance(value, CallCaptor)
 
 
-def is_captor_args_sentinel(value):
+def is_captor_args_sentinel(value: object) -> 'TypeGuard[CaptorArgsSentinel]':
     return isinstance(value, CaptorArgsSentinel)
 
 
-def is_captor_kwargs_sentinel(value):
+def is_captor_kwargs_sentinel(value: object) -> 'TypeGuard[CaptorKwargsSentinel]':
     return isinstance(value, CaptorKwargsSentinel)
 
 

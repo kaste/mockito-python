@@ -54,6 +54,32 @@ def _values_are_sameish(left: object, right: object) -> bool:
     if left is Ellipsis or right is Ellipsis:
         return left is right
 
+    if matchers.is_call_captor(left) and matchers.is_call_captor(right):
+        return True
+
+    if matchers.is_call_captor(left) or matchers.is_call_captor(right):
+        return False
+
+    if (
+        matchers.is_captor_args_sentinel(left)
+        and matchers.is_captor_args_sentinel(right)
+    ):
+        return _values_are_sameish(left.captor.matcher, right.captor.matcher)
+
+    if (
+        matchers.is_captor_kwargs_sentinel(left)
+        and matchers.is_captor_kwargs_sentinel(right)
+    ):
+        return _values_are_sameish(left.captor.matcher, right.captor.matcher)
+
+    if (
+        matchers.is_captor_args_sentinel(left)
+        or matchers.is_captor_args_sentinel(right)
+        or matchers.is_captor_kwargs_sentinel(left)
+        or matchers.is_captor_kwargs_sentinel(right)
+    ):
+        return False
+
     if isinstance(left, matchers.Matcher) and isinstance(right, matchers.Matcher):
         return _matchers_are_sameish(left, right)
 
@@ -111,12 +137,6 @@ def _matchers_are_sameish(  # noqa: C901
         and isinstance(right, matchers.ArgumentCaptor)
     ):
         return _values_are_sameish(left.matcher, right.matcher)
-
-    if (
-        isinstance(left, matchers.CallCaptor)
-        and isinstance(right, matchers.CallCaptor)
-    ):
-        return False
 
     return _equals_or_identity(left, right)
 
