@@ -60,6 +60,7 @@ The one usage you should not care about is a loose signature when using
 """
 
 from abc import ABC, abstractmethod
+import functools
 import re
 builtin_any = any
 
@@ -223,7 +224,83 @@ class ArgThat(Matcher):
         return self.predicate(arg)
 
     def __repr__(self):
-        return "<ArgThat>"
+        return "<ArgThat: %s>" % _arg_that_predicate_label(self.predicate)
+
+
+def _arg_that_predicate_label(predicate):
+    try:
+        return _arg_that_predicate_label_unchecked(predicate)
+    except Exception:
+        predicate_class = _safe_getattr(
+            _safe_getattr(predicate, '__class__'),
+            '__name__',
+        )
+        if predicate_class is None:
+            return 'callable'
+
+        return 'callable %s' % predicate_class
+
+
+def _arg_that_predicate_label_unchecked(predicate):
+    if isinstance(predicate, functools.partial):
+        return _arg_that_partial_label(predicate)
+
+    function_line = _line_of_callable(predicate)
+    function_name = _safe_getattr(predicate, '__name__')
+    if function_name is not None:
+        if function_name == '<lambda>':
+            return _label_with_line('lambda', function_line)
+        return _label_with_line('def %s' % function_name, function_line)
+
+    predicate_class = _safe_getattr(
+        _safe_getattr(predicate, '__class__'),
+        '__name__',
+    )
+    if predicate_class is None:
+        predicate_class = 'object'
+
+    call = _safe_getattr(predicate, '__call__')
+    call_line = _line_of_callable(call)
+    return _label_with_line(
+        'callable %s.__call__' % predicate_class,
+        call_line,
+    )
+
+
+def _arg_that_partial_label(predicate):
+    partial_func = _safe_getattr(predicate, 'func')
+    partial_name = _safe_getattr(partial_func, '__name__')
+
+    if partial_name is not None:
+        return 'partial %s' % partial_name
+
+    return 'partial'
+
+
+def _line_of_callable(value):
+    if value is None:
+        return None
+
+    func = _safe_getattr(value, '__func__', value)
+    code = _safe_getattr(func, '__code__')
+    if code is None:
+        return None
+
+    return _safe_getattr(code, 'co_firstlineno')
+
+
+def _safe_getattr(value, name, default=None):
+    try:
+        return getattr(value, name)
+    except Exception:
+        return default
+
+
+def _label_with_line(label, line_number):
+    if line_number is None:
+        return label
+
+    return '%s at line %s' % (label, line_number)
 
 
 class Contains(Matcher):
