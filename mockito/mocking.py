@@ -152,6 +152,10 @@ def _materialize_method_segment(
     kwargs: dict[str, Any],
 ) -> Segment:
     if not chain.segments:
+        # Pre-checks here are strict-independent and validate fluent-DSL
+        # *shape* (e.g. call-vs-attribute intent) before we patch anything.
+        # Strict/spec validation remains in StubbedInvocation.__call__
+        # (`ensure_mocked_object_has_method` + signature checks).
         _ensure_target_is_callable(chain.theMock, name)
 
         invoc = invocation.StubbedInvocation(chain.theMock, name, **chain.options)
@@ -176,6 +180,10 @@ def _materialize_property_segment(
     name: str,
 ) -> Segment:
     if not chain.segments:
+        # Same rationale as method materialization above: these pre-checks are
+        # strict-independent API-shape guards for property-style stubbing.
+        # Strict/spec checks for property stubs live in
+        # StubbedPropertyAccess.__call__ (`ensure_mocked_object_has_attribute`).
         _ensure_target_is_not_callable(chain.theMock, name)
 
         if not inspect.isclass(chain.theMock.mocked_obj):
