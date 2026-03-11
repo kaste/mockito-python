@@ -60,6 +60,7 @@ The one usage you should not care about is a loose signature when using
 """
 
 from abc import ABC, abstractmethod
+import functools
 import re
 builtin_any = any
 
@@ -137,7 +138,35 @@ class Any(Matcher):
             return True
 
     def __repr__(self):
-        return "<Any: %s>" % self.wanted_type
+        return "<Any: %s>" % _any_wanted_type_label(self.wanted_type)
+
+
+def _any_wanted_type_label(wanted_type):
+    if isinstance(wanted_type, type):
+        return _type_label(wanted_type)
+
+    if (
+        isinstance(wanted_type, tuple)
+        and all(isinstance(t, type) for t in wanted_type)
+    ):
+        items = [_type_label(t) for t in wanted_type]
+        if len(items) == 1:
+            return '(%s,)' % items[0]
+        return '(%s)' % ', '.join(items)
+
+    return _safe_repr(wanted_type)
+
+
+def _type_label(type_):
+    module = _safe_getattr(type_, '__module__')
+    qualname = _safe_getattr(type_, '__qualname__') or _safe_getattr(type_, '__name__')
+    if qualname is None:
+        return _safe_repr(type_)
+
+    if module is None or module == 'builtins':
+        return qualname
+
+    return '%s.%s' % (module, qualname)
 
 
 class ValueMatcher(Matcher):
@@ -145,7 +174,10 @@ class ValueMatcher(Matcher):
         self.value = value
 
     def __repr__(self):
-        return "<%s: %s>" % (self.__class__.__name__, self.value)
+        return "<%s: %s>" % (
+            self.__class__.__name__,
+            _safe_repr(self.value),
+        )
 
 
 class Eq(ValueMatcher):
@@ -223,7 +255,93 @@ class ArgThat(Matcher):
         return self.predicate(arg)
 
     def __repr__(self):
-        return "<ArgThat>"
+        return "<ArgThat: %s>" % _arg_that_predicate_label(self.predicate)
+
+
+def _arg_that_predicate_label(predicate):
+    try:
+        return _arg_that_predicate_label_unchecked(predicate)
+    except Exception:
+        predicate_class = _safe_getattr(
+            _safe_getattr(predicate, '__class__'),
+            '__name__',
+        )
+        if predicate_class is None:
+            return 'callable'
+
+        return 'callable %s' % predicate_class
+
+
+def _arg_that_predicate_label_unchecked(predicate):
+    if isinstance(predicate, functools.partial):
+        return _arg_that_partial_label(predicate)
+
+    function_line = _line_of_callable(predicate)
+    function_name = _safe_getattr(predicate, '__name__')
+    if function_name is not None:
+        if function_name == '<lambda>':
+            return _label_with_line('lambda', function_line)
+        return _label_with_line('def %s' % function_name, function_line)
+
+    predicate_class = _safe_getattr(
+        _safe_getattr(predicate, '__class__'),
+        '__name__',
+    )
+    if predicate_class is None:
+        predicate_class = 'object'
+
+    call = _safe_getattr(predicate, '__call__')
+    call_line = _line_of_callable(call)
+    return _label_with_line(
+        'callable %s.__call__' % predicate_class,
+        call_line,
+    )
+
+
+def _arg_that_partial_label(predicate):
+    partial_func = _safe_getattr(predicate, 'func')
+    partial_name = _safe_getattr(partial_func, '__name__')
+
+    if partial_name is not None:
+        return 'partial %s' % partial_name
+
+    return 'partial'
+
+
+def _line_of_callable(value):
+    if value is None:
+        return None
+
+    func = _safe_getattr(value, '__func__', value)
+    code = _safe_getattr(func, '__code__')
+    if code is None:
+        return None
+
+    return _safe_getattr(code, 'co_firstlineno')
+
+
+def _safe_getattr(value, name, default=None):
+    try:
+        return getattr(value, name)
+    except Exception:
+        return default
+
+
+def _safe_repr(value):
+    try:
+        return repr(value)
+    except Exception:
+        try:
+            return object.__repr__(value)
+        except Exception:
+            return '<unrepresentable>'
+
+
+def _label_with_line(label, line_number):
+    if line_number is None:
+        return label
+
+    return '%s at line %s' % (label, line_number)
 
 
 class Contains(Matcher):
@@ -236,12 +354,13 @@ class Contains(Matcher):
         return self.sub and len(self.sub) > 0 and arg.find(self.sub) > -1
 
     def __repr__(self):
-        return "<Contains: '%s'>" % self.sub
+        return "<Contains: %s>" % _safe_repr(self.sub)
 
 
 class Matches(Matcher):
     def __init__(self, regex, flags=0):
         self.regex = re.compile(regex, flags)
+        self.flags = _explicit_regex_flags(regex, flags)
 
     def matches(self, arg):
         if not isinstance(arg, str):
@@ -249,11 +368,27 @@ class Matches(Matcher):
         return self.regex.match(arg) is not None
 
     def __repr__(self):
-        if self.regex.flags:
-            return "<Matches: %s flags=%d>" % (self.regex.pattern,
-                                               self.regex.flags)
+        if self.flags:
+            return "<Matches: %r flags=%d>" % (self.regex.pattern, self.flags)
         else:
-            return "<Matches: %s>" % self.regex.pattern
+            return "<Matches: %r>" % self.regex.pattern
+
+
+def _explicit_regex_flags(regex, flags):
+    if flags:
+        return flags
+
+    compiled_flags = _safe_getattr(regex, 'flags')
+    pattern = _safe_getattr(regex, 'pattern')
+    if compiled_flags is None or pattern is None:
+        return 0
+
+    try:
+        baseline_flags = re.compile(pattern).flags
+    except Exception:
+        return compiled_flags
+
+    return compiled_flags & ~baseline_flags
 
 
 class ArgumentCaptor(Matcher, Capturing):
