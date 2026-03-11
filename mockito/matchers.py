@@ -137,7 +137,7 @@ class Any(Matcher):
             return True
 
     def __repr__(self):
-        return "<Any: %s>" % self.wanted_type
+        return "<Any: %r>" % self.wanted_type
 
 
 class ValueMatcher(Matcher):
@@ -145,7 +145,7 @@ class ValueMatcher(Matcher):
         self.value = value
 
     def __repr__(self):
-        return "<%s: %s>" % (self.__class__.__name__, self.value)
+        return "<%s: %r>" % (self.__class__.__name__, self.value)
 
 
 class Eq(ValueMatcher):
@@ -236,12 +236,13 @@ class Contains(Matcher):
         return self.sub and len(self.sub) > 0 and arg.find(self.sub) > -1
 
     def __repr__(self):
-        return "<Contains: '%s'>" % self.sub
+        return "<Contains: %r>" % self.sub
 
 
 class Matches(Matcher):
     def __init__(self, regex, flags=0):
         self.regex = re.compile(regex, flags)
+        self.flags = flags
 
     def matches(self, arg):
         if not isinstance(arg, str):
@@ -249,11 +250,10 @@ class Matches(Matcher):
         return self.regex.match(arg) is not None
 
     def __repr__(self):
-        if self.regex.flags:
-            return "<Matches: %s flags=%d>" % (self.regex.pattern,
-                                               self.regex.flags)
+        if self.flags:
+            return "<Matches: %r flags=%d>" % (self.regex.pattern, self.flags)
         else:
-            return "<Matches: %s>" % self.regex.pattern
+            return "<Matches: %r>" % self.regex.pattern
 
 
 class ArgumentCaptor(Matcher, Capturing):
