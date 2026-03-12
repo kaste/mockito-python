@@ -30,7 +30,9 @@ dev = [
     "ipython>=7.34.0",
     "mypy>=1.4.1",
     "numpy>=1.21.6",
+    "pyyaml>=6.0.2",
     "pytest>=7.4.4",
+    "types-pyyaml>=6.0.12.20241230",
 ]
 docs = [
     "sphinx>=7.4.7; python_version >= '3.12'",

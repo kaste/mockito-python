@@ -87,6 +87,19 @@ to your computer, then run ``uv sync`` in the root directory.  Example usage::
 
     uv run pytest
 
+To run the full supported Python matrix in parallel::
+
+    uv run python scripts/run-pytest-matrix.py
+
+To run only selected versions::
+
+    uv run python scripts/run-pytest-matrix.py -p 3.8 -p 3.14
+
+The matrix runner keeps per-version virtual environments in ``.runner/``
+(``.venv-3.8``, etc.) so runs can execute safely in parallel while only
+``outcome-*.txt`` files are wiped each run.  Use ``--recreate-envs`` to
+rebuild those environments.
+
 Note: development and docs tooling target Python >=3.12, while the library itself
 supports older Python versions at runtime.
 
