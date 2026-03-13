@@ -1,7 +1,7 @@
 import pytest
 
 from mockito import any as any_
-from mockito import arg_that, expect, mock, verify, unstub, when
+from mockito import arg_that, call_captor, captor, expect, mock, verify, unstub, when
 from mockito.invocation import AnswerError, InvocationError
 
 
@@ -35,6 +35,101 @@ def test_multiple_chain_branches_on_same_root_are_supported():
     cat_that_meowed = cat.meow()
     assert cat_that_meowed.purr() == "friendly"
     assert cat_that_meowed.roll() == "playful"
+
+
+def test_multiple_chain_branches_with_equivalent_typed_any_matchers_share_root():
+    cat = mock()
+
+    when(cat).meow(any_(int)).purr().thenReturn("friendly")
+    when(cat).meow(any_(int)).roll().thenReturn("playful")
+
+    cat_that_meowed = cat.meow(1)
+    assert cat_that_meowed.purr() == "friendly"
+    assert cat_that_meowed.roll() == "playful"
+
+
+def test_multiple_chain_branches_with_same_arg_that_matcher_share_root():
+    cat = mock()
+    pred = arg_that(lambda value: value > 0)
+
+    when(cat).meow(pred).purr().thenReturn("friendly")
+    when(cat).meow(pred).roll().thenReturn("playful")
+
+    cat_that_meowed = cat.meow(1)
+    assert cat_that_meowed.purr() == "friendly"
+    assert cat_that_meowed.roll() == "playful"
+
+
+def test_multiple_chain_branches_with_same_call_captor_instance_share_root():
+    cat = mock()
+    call = call_captor()
+
+    when(cat).meow(call).purr().thenReturn("friendly")
+    when(cat).meow(call).roll().thenReturn("playful")
+
+    cat_that_meowed = cat.meow(1)
+    assert cat_that_meowed.purr() == "friendly"
+    assert cat_that_meowed.roll() == "playful"
+
+
+def test_multiple_chain_branches_with_distinct_call_captor_roots_are_rejected():
+    cat = mock()
+
+    when(cat).meow(call_captor()).purr().thenReturn("friendly")
+
+    with pytest.raises(InvocationError) as exc:
+        when(cat).meow(call_captor()).roll().thenReturn("playful")
+
+    assert str(exc.value) == (
+        "'meow' is already configured with a different captor instance for "
+        "the same selector. Reuse the same captor() / call_captor() object "
+        "across chain branches."
+    )
+
+
+def test_multiple_chain_branches_with_distinct_args_captor_roots_are_rejected():
+    cat = mock()
+
+    when(cat).meow(*captor()).purr().thenReturn("friendly")
+
+    with pytest.raises(InvocationError) as exc:
+        when(cat).meow(*captor()).roll().thenReturn("playful")
+
+    assert str(exc.value) == (
+        "'meow' is already configured with a different captor instance for "
+        "the same selector. Reuse the same captor() / call_captor() object "
+        "across chain branches."
+    )
+
+
+def test_multiple_chain_branches_with_distinct_kwargs_captor_roots_are_rejected():
+    cat = mock()
+
+    when(cat).meow(**captor()).purr().thenReturn("friendly")
+
+    with pytest.raises(InvocationError) as exc:
+        when(cat).meow(**captor()).roll().thenReturn("playful")
+
+    assert str(exc.value) == (
+        "'meow' is already configured with a different captor instance for "
+        "the same selector. Reuse the same captor() / call_captor() object "
+        "across chain branches."
+    )
+
+
+def test_multiple_chain_branches_with_distinct_typed_args_captor_roots_are_rejected():
+    cat = mock()
+
+    when(cat).meow(*captor(any_(int))).purr().thenReturn("friendly")
+
+    with pytest.raises(InvocationError) as exc:
+        when(cat).meow(*captor(any_(int))).roll().thenReturn("playful")
+
+    assert str(exc.value) == (
+        "'meow' is already configured with a different captor instance for "
+        "the same selector. Reuse the same captor() / call_captor() object "
+        "across chain branches."
+    )
 
 
 def test_unstub_child_chain_then_reconfigure_does_not_leave_stale_root_stub():

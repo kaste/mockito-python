@@ -28,7 +28,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any, AsyncIterator, Callable, Iterable, Iterator, cast
 
-from . import invocation, signature, utils
+from . import invocation, sameish, signature, utils
 from . import verification as verificationModule
 from .mock_registry import mock_registry
 from .patching import Patch, patcher
@@ -407,12 +407,12 @@ class Mock:
     def _sameish_invocations(
         self, same: invocation.StubbedInvocation
     ) -> list[invocation.StubbedInvocation]:
-        """Find prior stubs that are *mutually* signature-compatible.
+        """Find prior stubs that are signature-compatible.
 
         This is used only for continuation bookkeeping (value-vs-chain mode),
-        not for runtime call dispatch. We intentionally do a symmetric check
-        (`a.matches(b)` and `b.matches(a)`) to approximate "same signature"
-        despite one-way matchers like `any()`.
+        not for runtime call dispatch. The comparison is structural and avoids
+        executing matcher predicates, so `arg_that(...)` and other custom
+        matchers cannot crash internal equivalence probing.
 
         Why this exists: repeated selectors such as
 
@@ -439,13 +439,7 @@ class Mock:
         left: invocation.StubbedInvocation,
         right: invocation.StubbedInvocation,
     ) -> bool:
-        # Be conservative in internal equivalence probing: user predicates from
-        # `arg_that` can throw when evaluated against matcher/sentinel objects.
-        # In this phase, exceptions should mean "not equivalent", not failure.
-        try:
-            return left.matches(right) and right.matches(left)
-        except Exception:
-            return False
+        return sameish.invocations_are_sameish(left, right)
 
     def get_original_method(self, method_name: str) -> object | None:
         return self._original_methods.get(method_name, None)
