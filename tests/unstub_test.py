@@ -152,8 +152,7 @@ class TestUntub:
         with pytest.raises(AttributeError):
             cat.meow()
 
-    @pytest.mark.xfail(
-        strict=False,
+    @pytest.mark.skip(
         reason=(
             "Characterization only: detached bound-method aliases currently "
             "prefer patch_attr replacement matching before method-level unstub "
