@@ -51,20 +51,18 @@ To build up a complete `aiohttp` example::
 
 you also need to define the context/with handlers::
 
-    resp = mock({
-        "__aenter__": ...,
-        "async text": lambda: "Fake!"
-    })
-
     session = mock({
+        "async get": lambda: resp,   #  <== install async method with *args, **kwargs
+                                     #      equivalent to when(session).get(...).thenReturn(resp)
+    })
+    resp = mock({
         # since __aenter__ is async by protocol "async __aenter__" is not needed (but allowed)
         "__aenter__": ...,           #  <== ... denotes to install a standard return value of self
                                      #  it always installs a standard __aexit__ returning None or False
                                      #  if not provided by the user
-
-        "async get": lambda: resp,   #  <== install async method with *args, **kwargs
-                                     #      equivalent to when(session).get(...).thenReturn(resp)
+        "async text": lambda: "Fake!"
     })
+
 
 .. note::
 
@@ -81,7 +79,7 @@ For ``__aiter__``, we have a special shortcode::
         ...
 
 
-You can also just mark a function async::
+You can also just mark a function async using the Ellipsis::
 
     session = mock({
         "__aenter__": ...,

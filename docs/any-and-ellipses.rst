@@ -1,7 +1,7 @@
 Any markers and ellipses
 =========================
 
-Let's look at how the Ellipsis marker (`...`) works in mockito.
+Let's look at how the Ellipsis marker (``...``) works in mockito.
 
 Assume:
 
@@ -17,7 +17,7 @@ Given
 
     when(C).function(...)
 
-The sole `...` denotes a "whatever" matcher.
+The sole ``...`` denotes a "whatever" matcher.
 
 These are allowed:
 
@@ -39,7 +39,7 @@ When configured as:
 
     when(C).function(2, ...)
 
-The trailing `...` denotes a rest matcher. We match up to the `2`; the rest is accepted.
+The trailing ``...`` denotes a rest matcher. We match up to the `2`; the rest is accepted.
 
 ::
 
@@ -67,10 +67,10 @@ Allows:
     function(1, 2, three=3)
 
 
-Fixed-position ellipsis (`...`) as `any`
+Relation to `any`
 ----------------------------------------
 
-`...` can also be used in a fixed position as an ad-hoc `any` matcher.
+``...`` can also be used in a fixed position as an ad-hoc `any` matcher.
 
 Assume:
 
@@ -149,12 +149,13 @@ With that configuration, naturally follows::
 Relation to `*args`
 -------------------
 
-If you want to match `*args` (multiple arguments), use `args`:
+If you want to match `*args` (multiple arguments), use ``args``:
 
 ::
 
     def sum(*args): ...
 
+    from mockito import args
     when(C).sum(1, 2, *args)
 
 Allows:
@@ -164,7 +165,7 @@ Allows:
     sum(1, 2, 3)
     sum(1, 2, 3, 4)
 
-That is similar to plain trailing `...`, but `args` also composes with keyword arguments.
+That is similar to plain trailing ``...``, but ``args`` also composes with keyword arguments.
 
 Assume:
 
@@ -172,6 +173,7 @@ Assume:
 
     def sum(*args, init=0): ...
 
+    from mockito import args
     when(C).sum(1, 2, *args, init=5)
 
 Allows:
@@ -187,7 +189,7 @@ But:
 
     when(C).sum(1, 2, ..., init=5)
 
-uses fixed-position `...` (one value), so it allows:
+uses fixed-position ``...`` (one value), so it allows:
 
 ::
 
@@ -210,10 +212,11 @@ Ideally we could write:
 
     when(C).fetch("https://example.com/", retry=..., ...)
 
-but that's not valid Python syntax. Use `kwargs` instead:
+but that's not valid Python syntax. Use ``kwargs`` instead:
 
 ::
 
+    from mockito import kwargs
     when(C).fetch("https://example.com/", retry=..., **kwargs)
 
 Allows:
@@ -226,6 +229,7 @@ And:
 
 ::
 
+    from mockito import kwargs
     when(C).fetch(..., retry=2, **kwargs)
 
 Allows:
@@ -236,5 +240,5 @@ Allows:
     fetch("https://foobar.com/", retry=2)
     fetch("https://foobar.com/", retry=2, headers={})
 
-Use `kwargs` as the rest marker where `...` is not syntactically available
+Use ``kwargs`` as the rest marker where ``...`` is not syntactically available
 because specific keyword arguments are already configured.

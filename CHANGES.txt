@@ -32,7 +32,7 @@ Release 2.0.0 (March 10, 2026)
       from mockito import InOrder
       in_order = InOrder(cat)  # <== pass multiple objects for cross-mock verification!
       in_order.verify(cat).meow()
-      inorder.verify(cat).purr()
+      in_order.verify(cat).purr()
 
 - The legacy in-order verification mode (``inorder.verify(...)``)
   is deprecated in favor of ``InOrder(...)``.
