@@ -362,8 +362,30 @@ class TestEnsureStubsAreUsed:
         when(Dog).bark('Miau').thenReturn('Yep').thenReturn('Nop')
         rex = Dog()
         rex.bark('Miau')
-        with pytest.raises(VerificationError):
+        with pytest.raises(VerificationError) as exc:
             verifyStubbedInvocationsAreUsed(Dog)
+
+        assert str(exc.value) == (
+            "\nOnly 1 of 2 answers were used for bark('Miau')"
+        )
+
+    def testFailOnlyTwoOfThreeAnswersUsed(self):
+        (
+            when(Dog)
+            .bark('Miau')
+            .thenReturn('Yep')
+            .thenReturn('Nop')
+            .thenReturn('Nope')
+        )
+        rex = Dog()
+        rex.bark('Miau')
+        rex.bark('Miau')
+        with pytest.raises(VerificationError) as exc:
+            verifyStubbedInvocationsAreUsed(Dog)
+
+        assert str(exc.value) == (
+            "\nOnly 2 of 3 answers were used for bark('Miau')"
+        )
 
 
 @pytest.mark.usefixtures('unstub')
