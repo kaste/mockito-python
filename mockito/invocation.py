@@ -715,9 +715,23 @@ class StubbedInvocation(MatchingInvocation):
             self.verification.verify(self, self.used)
 
     def check_used(self) -> None:
-        if not self.allow_zero_invocations and self.used < len(self.answers):
+        if self.allow_zero_invocations:
+            return
+
+        expected_uses = len(self.answers)
+        if self.used >= expected_uses:
+            return
+
+        if self.used == 0:
             raise verificationModule.VerificationError(
-                "\nUnused stub: %s" % self)
+                "\nUnused stub: %s" % self
+            )
+        else:
+            raise verificationModule.VerificationError(
+                "\nOnly %s of %s answers were used for %s"
+                % (self.used, expected_uses, self)
+            )
+
 
 class StubbedPropertyAccess(StubbedInvocation):
     def ensure_mocked_object_has_attribute(self, method_name: str) -> None:
